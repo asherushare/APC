@@ -172,3 +172,20 @@ body {
   }
 }
 
+/* ===================================
+   Mobile Interaction & Stacking Context Fixes
+   =================================== */
+
+/* Prevent body scrolling when mobile menu overlay is active */
+body.mobile-menu-open {
+  overflow: hidden !important;
+}
+
+/* Hide WhatsApp widget when mobile menu is open to prevent click interception */
+body.mobile-menu-open .whatsapp-btn-container {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(20px) scale(0.95);
+}
+
+

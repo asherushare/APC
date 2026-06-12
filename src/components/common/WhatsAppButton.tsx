@@ -57,7 +57,8 @@ export function WhatsAppButton() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end" ref={menuRef}>
+    <div className="whatsapp-btn-container fixed bottom-6 right-6 z-[9999] flex flex-col items-end transition-all duration-300" ref={menuRef}>
+
       {/* Floating Menu Popover */}
       <div
         className={`

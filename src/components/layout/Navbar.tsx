@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { navLinks } from '@/data/navigation';
@@ -12,6 +12,7 @@ export function Navbar() {
   const [currentLang, setCurrentLang] = useState<'en' | 'or'>('en');
   const [showToast, setShowToast] = useState(false);
   const pathname = usePathname();
+  const languageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -19,22 +20,47 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Sync mobile menu open class with body to prevent background scrolls/clicks
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+    return () => document.body.classList.remove('mobile-menu-open');
+  }, [isMobileOpen]);
+
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
 
+  // Clean up language timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (languageTimeoutRef.current) {
+        clearTimeout(languageTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle language switch
   const handleLanguageChange = (lang: 'en' | 'or') => {
+    // Clear any active language timeout
+    if (languageTimeoutRef.current) {
+      clearTimeout(languageTimeoutRef.current);
+      languageTimeoutRef.current = null;
+    }
+
     if (lang === 'or') {
       setCurrentLang('or');
       setShowToast(true);
       // Revert to English UI after a short delay since it is a mock shell
-      const timer = setTimeout(() => {
+      languageTimeoutRef.current = setTimeout(() => {
         setCurrentLang('en');
         setShowToast(false);
+        languageTimeoutRef.current = null;
       }, 3500);
-      return () => clearTimeout(timer);
     } else {
       setCurrentLang('en');
       setShowToast(false);
@@ -43,9 +69,14 @@ export function Navbar() {
 
   // Close toast manually
   const closeToast = () => {
+    if (languageTimeoutRef.current) {
+      clearTimeout(languageTimeoutRef.current);
+      languageTimeoutRef.current = null;
+    }
     setShowToast(false);
     setCurrentLang('en');
   };
+
 
   return (
     <>
@@ -155,6 +186,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={() => setIsMobileOpen(false)}
                     className={cn(
                       'block py-2 text-body-lg transition-colors',
                       isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
@@ -194,6 +226,7 @@ export function Navbar() {
 
               <Link
                 href="/join"
+                onClick={() => setIsMobileOpen(false)}
                 className="block w-full text-center bg-primary text-white py-3 rounded-lg text-label-md font-medium mt-4"
               >
                 Join APC
