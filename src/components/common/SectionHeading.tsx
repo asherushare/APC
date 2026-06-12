@@ -6,6 +6,7 @@ interface SectionHeadingProps {
   subtitle?: string;
   align?: 'center' | 'left';
   light?: boolean;
+  isMainHeading?: boolean;
 }
 
 export function SectionHeading({
@@ -14,7 +15,10 @@ export function SectionHeading({
   subtitle,
   align = 'center',
   light = false,
+  isMainHeading = false,
 }: SectionHeadingProps) {
+  const HeadingTag = isMainHeading ? 'h1' : 'h2';
+
   return (
     <div
       className={cn(
@@ -32,14 +36,14 @@ export function SectionHeading({
           {label}
         </p>
       )}
-      <h2
+      <HeadingTag
         className={cn(
           'text-headline-md md:text-display-mobile',
           light ? 'text-white' : 'text-on-surface'
         )}
       >
         {title}
-      </h2>
+      </HeadingTag>
       {subtitle && (
         <p
           className={cn(
@@ -54,3 +58,4 @@ export function SectionHeading({
     </div>
   );
 }
+

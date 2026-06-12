@@ -11,6 +11,8 @@ export const companyInfo: CompanyInfo = {
   vision:
     'Build a self-reliant tribal society where tradition and technology coexist to create lasting prosperity for generations, establishing Odisha as a global hub for organic, artisanal, and high-value agricultural products owned entirely by its producers.',
   phone: '+91 9348747578',
+  whatsapp: '+91 9348747578',
+  emergencyPhone: '+91 9348747578',
   email: 'contact@apc.in',
   address: {
     street: 'Sai Temple Road',
@@ -21,4 +23,8 @@ export const companyInfo: CompanyInfo = {
   },
   founded: '2019',
   registrationType: 'Producer Company',
+  workingHours: {
+    days: 'Monday – Saturday',
+    time: '9:00 AM – 6:00 PM',
+  },
 };

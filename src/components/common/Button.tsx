@@ -9,6 +9,7 @@ interface ButtonProps {
   className?: string;
   type?: 'button' | 'submit';
   id?: string;
+  onClick?: () => void;
 }
 
 const variantStyles = {
@@ -36,6 +37,7 @@ export function Button({
   className,
   type = 'button',
   id,
+  onClick,
 }: ButtonProps) {
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 active:scale-[0.98] cursor-pointer',
@@ -53,7 +55,7 @@ export function Button({
   }
 
   return (
-    <button type={type} className={classes} id={id}>
+    <button type={type} className={classes} id={id} onClick={onClick}>
       {children}
     </button>
   );

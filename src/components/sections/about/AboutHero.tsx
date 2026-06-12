@@ -42,13 +42,14 @@ export function AboutHero() {
             <Button variant="primary" size="lg" href="#story" id="about-hero-explore">
               Explore Our Journey
             </Button>
-            <Button variant="secondary" size="lg" href="#video" id="about-hero-video">
-              {/* Play icon */}
+            <Button variant="secondary" size="lg" href="/leadership" id="about-hero-leadership">
+              {/* Users icon */}
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A11.386 11.386 0 0110.089 20M14.214 16.058A8.17 8.17 0 0010 15.06a8.17 8.17 0 00-4.214.998m10.028-3.99A4.5 4.5 0 1112 6.25a4.5 4.5 0 012.214 5.818M19.5 10.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
-              Watch Video
+              Meet Our Leaders
             </Button>
+
           </div>
         </div>
       </Container>

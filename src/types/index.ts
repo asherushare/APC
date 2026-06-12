@@ -15,6 +15,9 @@ export interface Stat {
   icon?: string;
 }
 
+/** Service category */
+export type ServiceCategory = 'documents' | 'finance' | 'travel' | 'digital' | 'government' | 'consultancy';
+
 /** Service offered by APC */
 export interface Service {
   id: string;
@@ -23,6 +26,8 @@ export interface Service {
   icon: string;
   features: string[];
   featured?: boolean;
+  category: ServiceCategory;
+  price: string;
 }
 
 /** Board director or founder */
@@ -75,6 +80,8 @@ export interface CompanyInfo {
   mission: string;
   vision: string;
   phone: string;
+  whatsapp: string;
+  emergencyPhone: string;
   email: string;
   address: {
     street: string;
@@ -85,6 +92,10 @@ export interface CompanyInfo {
   };
   founded?: string;
   registrationType?: string;
+  workingHours: {
+    days: string;
+    time: string;
+  };
 }
 
 /** Timeline event for company history */
@@ -101,3 +112,16 @@ export interface GovernancePoint {
   description: string;
   icon: string;
 }
+
+/** Notices & Updates item */
+export interface Notice {
+  id: string;
+  title: string;
+  date: string;
+  category: 'scheme' | 'announcement' | 'event' | 'story';
+  summary: string;
+  content: string;
+  pdfUrl?: string;
+  imageUrl?: string;
+}
+

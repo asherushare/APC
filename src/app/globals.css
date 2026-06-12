@@ -158,3 +158,17 @@ body {
   line-height: 16px;
   font-weight: 600;
 }
+
+/* ===================================
+   Animations
+   =================================== */
+
+@keyframes whatsapp-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(37, 211, 102, 0);
+  }
+}
+

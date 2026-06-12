@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { WhatsAppButton } from '@/components/common/WhatsAppButton';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -27,7 +28,25 @@ export const metadata: Metadata = {
     'digital services',
     'tribal development',
   ],
+  openGraph: {
+    title: 'APC Odisha — Empowering Tribal Communities',
+    description:
+      'Adivasi Producer Company — building opportunities for tribal communities through entrepreneurship, digital services, education, and sustainable development in Odisha, India.',
+    url: 'https://apcodisha.org',
+    siteName: 'APC Odisha',
+    images: [
+      {
+        url: '/images/hero-home.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'APC Odisha — Empowering Tribal Communities',
+      },
+    ],
+    locale: 'en_IN',
+    type: 'website',
+  },
 };
+
 
 export default function RootLayout({
   children,
@@ -40,6 +59,7 @@ export default function RootLayout({
         <Navbar />
         <main className="pt-[72px]">{children}</main>
         <Footer />
+        <WhatsAppButton />
       </body>
     </html>
   );

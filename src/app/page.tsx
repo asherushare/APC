@@ -1,3 +1,4 @@
+import { NoticesSlider } from '@/components/sections/home/NoticesSlider';
 import { HeroSection } from '@/components/sections/home/HeroSection';
 import { CorePillars } from '@/components/sections/home/CorePillars';
 import { StatsBar } from '@/components/sections/home/StatsBar';
@@ -12,6 +13,7 @@ import { CTASection } from '@/components/sections/home/CTASection';
 export default function HomePage() {
   return (
     <>
+      <NoticesSlider />
       <HeroSection />
       <CorePillars />
       <StatsBar />
@@ -25,3 +27,4 @@ export default function HomePage() {
     </>
   );
 }
+
