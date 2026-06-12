@@ -26,7 +26,7 @@ export function MissionVision() {
             </p>
 
             {/* Heading */}
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface">
               Driven by Community, Empowered by Tech
             </h2>
 

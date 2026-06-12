@@ -13,6 +13,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://apcodisha.org'),
   title: {
     default: 'APC Odisha — Empowering Tribal Communities',
     template: '%s | APC Odisha',

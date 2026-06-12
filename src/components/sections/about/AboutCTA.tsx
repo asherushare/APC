@@ -7,7 +7,7 @@ export function AboutCTA() {
       <Container>
         <div className="text-center max-w-2xl mx-auto space-y-6">
           {/* Heading */}
-          <h2 className="text-display-mobile md:text-headline-md text-on-primary">
+          <h2 className="text-headline-md md:text-display-mobile text-on-primary">
             Be a Part of the Movement
           </h2>
 

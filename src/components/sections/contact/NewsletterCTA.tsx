@@ -9,7 +9,7 @@ export function NewsletterCTA() {
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="md:max-w-lg">
-            <h2 className="text-display-mobile md:text-headline-md text-white mb-3">
+            <h2 className="text-headline-md md:text-display-mobile text-white mb-3">
               Stay Informed
             </h2>
             <p className="text-body-lg text-white/70">

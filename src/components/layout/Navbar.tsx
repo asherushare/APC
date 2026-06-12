@@ -178,7 +178,7 @@ export function Navbar() {
 
         {/* Mobile Menu Overlay */}
         {isMobileOpen && (
-          <div className="md:hidden bg-surface border-t border-outline-variant">
+          <div className="md:hidden bg-surface border-t border-outline-variant max-h-[calc(100vh-80px)] overflow-y-auto">
             <div className="px-5 py-6 space-y-4">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;

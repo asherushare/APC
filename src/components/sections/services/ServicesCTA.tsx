@@ -5,9 +5,10 @@ export function ServicesCTA() {
   return (
     <section className="py-16 md:py-24 bg-primary">
       <Container className="text-center">
-        <h2 className="text-display-lg text-white mb-4">
+        <h2 className="text-display-mobile md:text-display-lg text-white mb-4">
           Ready to empower your community?
         </h2>
+
 
         <p className="text-body-lg text-white/80 max-w-2xl mx-auto mb-10">
           Connect with our local agents or visit a hub near you to access

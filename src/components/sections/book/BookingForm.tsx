@@ -65,7 +65,7 @@ export function BookingForm() {
               </svg>
             </div>
 
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface">
               Booking Confirmed!
             </h2>
 

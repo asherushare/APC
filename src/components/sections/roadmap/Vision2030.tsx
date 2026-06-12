@@ -51,7 +51,8 @@ export function Vision2030() {
             </div>
 
             {/* Stat Cards Row */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
               <div className="bg-primary rounded-xl p-6 text-center flex flex-col justify-center">
                 <p className="text-display-mobile text-white mb-1">1 Million+</p>
                 <p className="text-label-md text-white/80">Lives impacted through direct engagement</p>

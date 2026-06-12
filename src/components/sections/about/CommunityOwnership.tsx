@@ -13,7 +13,7 @@ export function CommunityOwnership() {
           </p>
 
           {/* Heading */}
-          <h2 className="text-display-mobile md:text-headline-md text-on-surface mb-6">
+          <h2 className="text-headline-md md:text-display-mobile text-on-surface mb-6">
             100% Community Owned
           </h2>
 

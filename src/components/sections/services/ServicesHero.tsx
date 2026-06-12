@@ -12,9 +12,10 @@ export function ServicesHero() {
           <div className="space-y-6">
             <Badge>OUR IMPACT</Badge>
 
-            <h1 className="text-display-lg text-on-surface">
+            <h1 className="text-display-mobile md:text-display-lg text-on-surface">
               Comprehensive Services for Sustainable Growth
             </h1>
+
 
             <p className="text-body-lg text-on-surface-variant max-w-lg">
               Bridging tribal tradition and modern digital governance, APC

@@ -5,7 +5,7 @@ export function JoinCTA() {
   return (
     <section className="py-16 md:py-24">
       <Container className="text-center">
-        <h2 className="text-display-mobile md:text-headline-md text-on-surface mb-4">
+        <h2 className="text-headline-md md:text-display-mobile text-on-surface mb-4">
           Have Questions?
         </h2>
         <p className="text-body-lg text-on-surface-variant max-w-xl mx-auto mb-8">

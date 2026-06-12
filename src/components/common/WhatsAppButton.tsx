@@ -57,7 +57,7 @@ export function WhatsAppButton() {
   };
 
   return (
-    <div className="whatsapp-btn-container fixed bottom-6 right-6 z-[9999] flex flex-col items-end transition-all duration-300" ref={menuRef}>
+    <div className={`whatsapp-btn-container fixed bottom-6 right-6 z-[9999] flex flex-col items-end transition-all duration-300 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} ref={menuRef}>
 
       {/* Floating Menu Popover */}
       <div
@@ -129,6 +129,7 @@ export function WhatsAppButton() {
           shadow-lg hover:shadow-xl
           transition-all duration-300
           hover:scale-115 active:scale-95 cursor-pointer
+          pointer-events-auto
           ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
         `}
         style={{

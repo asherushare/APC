@@ -29,7 +29,7 @@ export function TransparentGovernance() {
             className="rounded-xl object-cover w-full"
           />
           <div>
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface mb-8">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface mb-8">
               Transparent Governance
             </h2>
             <div className="space-y-6">

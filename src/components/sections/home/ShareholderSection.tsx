@@ -11,7 +11,7 @@ export function ShareholderSection() {
             <span className="inline-block bg-tribal-gold/15 text-tribal-gold px-3.5 py-1 rounded-full text-label-sm font-semibold uppercase tracking-wider">
               100% COMMUNITY OWNED
             </span>
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface">
               Owned by the People, Guided by Tradition
             </h2>
             <p className="text-body-md text-on-surface-variant leading-relaxed">

@@ -9,10 +9,11 @@ export function StatCard({ stat, light = false }: StatCardProps) {
   return (
     <div className="text-center space-y-1">
       <p
-        className={`text-[40px] font-bold leading-tight ${
+        className={`text-display-mobile md:text-[40px] font-bold leading-tight ${
           light ? 'text-white' : 'text-on-primary-container'
         }`}
       >
+
         {stat.value}
       </p>
       <p

@@ -30,7 +30,7 @@ export function ContactFormSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Left: Contact Info */}
           <div>
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface mb-4">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface mb-4">
               Contact Information
             </h2>
             <p className="text-body-md text-on-surface-variant mb-8">

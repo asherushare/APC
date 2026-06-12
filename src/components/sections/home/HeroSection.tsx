@@ -37,14 +37,15 @@ export function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-wrap gap-4 pt-2">
-            <Button variant="primary" size="lg" href="/join" id="hero-join-btn">
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <Button variant="primary" size="lg" href="/join" id="hero-join-btn" className="w-full sm:w-auto">
               Join APC
             </Button>
-            <Button variant="secondary" size="lg" href="/services" id="hero-services-btn">
+            <Button variant="secondary" size="lg" href="/services" id="hero-services-btn" className="w-full sm:w-auto">
               Explore Services
             </Button>
           </div>
+
         </div>
       </Container>
     </section>

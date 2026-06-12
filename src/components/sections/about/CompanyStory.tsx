@@ -30,7 +30,7 @@ export function CompanyStory() {
               WHO WE ARE
             </p>
 
-            <h2 className="text-display-mobile md:text-headline-md text-on-surface">
+            <h2 className="text-headline-md md:text-display-mobile text-on-surface">
               The APC Story
             </h2>
 

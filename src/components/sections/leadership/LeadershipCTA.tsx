@@ -6,7 +6,7 @@ export function LeadershipCTA() {
     <section className="py-16 md:py-24">
       <Container>
         <div className="bg-primary rounded-2xl px-8 py-16 md:px-16 text-center text-white">
-          <h2 className="text-display-mobile md:text-headline-md mb-4">
+          <h2 className="text-headline-md md:text-display-mobile mb-4">
             Partner with Odisha&apos;s Producers
           </h2>
           <p className="text-body-lg text-white/80 max-w-xl mx-auto mb-8">
