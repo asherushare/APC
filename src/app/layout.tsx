@@ -15,8 +15,8 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL('https://apcodisha.org'),
   title: {
-    default: 'APC Odisha — Empowering Tribal Communities',
-    template: '%s | APC Odisha',
+    default: 'Adivasi Producer Company (APC) — Empowering Tribal Communities',
+    template: '%s | Adivasi Producer Company (APC)',
   },
   description:
     'Adivasi Producer Company — building opportunities for tribal communities through entrepreneurship, digital services, education, and sustainable development in Odisha, India.',
@@ -29,18 +29,23 @@ export const metadata: Metadata = {
     'digital services',
     'tribal development',
   ],
+  icons: {
+    icon: '/images/APC_official_logo.png',
+    shortcut: '/images/APC_official_logo.png',
+    apple: '/images/APC_official_logo.png',
+  },
   openGraph: {
-    title: 'APC Odisha — Empowering Tribal Communities',
+    title: 'Adivasi Producer Company (APC) — Empowering Tribal Communities',
     description:
       'Adivasi Producer Company — building opportunities for tribal communities through entrepreneurship, digital services, education, and sustainable development in Odisha, India.',
     url: 'https://apcodisha.org',
-    siteName: 'APC Odisha',
+    siteName: 'Adivasi Producer Company (APC)',
     images: [
       {
         url: '/images/hero-home.jpg',
         width: 1200,
         height: 630,
-        alt: 'APC Odisha — Empowering Tribal Communities',
+        alt: 'Adivasi Producer Company (APC) — Empowering Tribal Communities',
       },
     ],
     locale: 'en_IN',

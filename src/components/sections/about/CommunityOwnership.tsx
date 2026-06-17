@@ -19,7 +19,7 @@ export function CommunityOwnership() {
 
           {/* Description */}
           <p className="text-body-lg text-on-surface-variant mb-8 max-w-2xl">
-            Unlike conventional corporations, APC Odisha is entirely owned by
+            Unlike conventional corporations, Adivasi Producer Company (APC) is entirely owned by
             the tribal communities it serves. Every decision, every profit, and
             every innovation flows back to the people who make it possible.
           </p>

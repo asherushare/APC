@@ -1,7 +1,7 @@
 import type { CompanyInfo } from '@/types';
 
 export const companyInfo: CompanyInfo = {
-  name: 'APC Odisha',
+  name: 'Adivasi Producer Company (APC)',
   fullName: 'Adivasi Producer Company',
   tagline: 'Income • Innovation • Improvement',
   description:
@@ -13,7 +13,7 @@ export const companyInfo: CompanyInfo = {
   phone: '+91 9348747578',
   whatsapp: '+91 9348747578',
   emergencyPhone: '+91 9348747578',
-  email: 'contact@apc.in',
+  email: 'adivasiproducercompany@gmail.com',
   address: {
     street: 'Sai Temple Road',
     area: 'New Colony',

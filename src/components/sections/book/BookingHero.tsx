@@ -41,7 +41,7 @@ export function BookingHero() {
           <div className="relative">
             <Image
               src="/images/hero-services.jpg"
-              alt="APC Odisha service center"
+              alt="Adivasi Producer Company (APC) service center"
               width={600}
               height={500}
               className="rounded-xl object-cover w-full h-auto"

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { companyInfo } from '@/data/company';
 import { navLinks } from '@/data/navigation';
 
@@ -12,8 +13,15 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="text-headline-sm text-primary font-bold">
-              APC Odisha
+            <Link href="/" className="flex items-center gap-2 text-headline-sm text-primary font-bold">
+              <Image
+                src="/images/APC_official_logo.png"
+                alt="Adivasi Producer Company (APC) Logo"
+                width={32}
+                height={32}
+                className="object-contain w-8 h-8 shrink-0"
+              />
+              <span>Adivasi Producer Company (APC)</span>
             </Link>
             <p className="text-body-md text-on-surface-variant leading-relaxed">
               Empowering tribal producers of Odisha through Heritage Tech and communal innovation.
@@ -88,7 +96,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-outline-variant text-center text-body-md text-on-surface-variant">
-          © {new Date().getFullYear()} APC Odisha. All rights reserved.
+          © {new Date().getFullYear()} Adivasi Producer Company (APC). All rights reserved.
         </div>
       </div>
     </footer>

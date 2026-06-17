@@ -18,10 +18,10 @@ export function ServicesHero() {
 
 
             <p className="text-body-lg text-on-surface-variant max-w-lg">
-              Bridging tribal tradition and modern digital governance, APC
-              Odisha delivers end-to-end services that empower producers,
-              simplify compliance, and unlock new economic opportunities across
-              rural Odisha.
+              Bridging tribal tradition and modern digital governance, Adivasi
+              Producer Company (APC) delivers end-to-end services that empower
+              producers, simplify compliance, and unlock new economic opportunities
+              across rural Odisha.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">
@@ -38,7 +38,7 @@ export function ServicesHero() {
           <div className="relative">
             <Image
               src="/images/hero-services.jpg"
-              alt="APC Odisha team delivering digital services to tribal communities"
+              alt="Adivasi Producer Company (APC) team delivering digital services to tribal communities"
               width={600}
               height={500}
               className="rounded-xl object-cover w-full h-auto"

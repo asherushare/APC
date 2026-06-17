@@ -21,11 +21,11 @@ export const notices: Notice[] = [
   },
   {
     id: 'annual-general-meeting-2026',
-    title: 'Notice for 7th Annual General Meeting (AGM) of APC Odisha',
+    title: 'Notice for 7th Annual General Meeting (AGM) of Adivasi Producer Company (APC)',
     date: '2026-06-01',
     category: 'announcement',
     summary: 'All shareholder members and board directors are cordially invited to the 7th AGM to be held on June 25, 2026, at the Rayagada Town Hall.',
-    content: 'Notice is hereby given that the 7th Annual General Meeting of Adivasi Producer Company (APC Odisha) will be held at Rayagada Town Hall at 10:00 AM on Thursday, June 25, 2026. The agenda includes: review and approval of the financial statements for the fiscal year 2025-26, election of board members, declaration of dividend distributions to shareholders, and presentation of the 5-year strategic digital roadmap. Lunch will be provided for all registered members.',
+    content: 'Notice is hereby given that the 7th Annual General Meeting of Adivasi Producer Company (APC) will be held at Rayagada Town Hall at 10:00 AM on Thursday, June 25, 2026. The agenda includes: review and approval of the financial statements for the fiscal year 2025-26, election of board members, declaration of dividend distributions to shareholders, and presentation of the 5-year strategic digital roadmap. Lunch will be provided for all registered members.',
     pdfUrl: '/documents/agm-notice-2026.pdf'
   },
   {
@@ -34,7 +34,7 @@ export const notices: Notice[] = [
     date: '2026-05-20',
     category: 'announcement',
     summary: 'We have expanded our operations with a new brick-and-mortar digital helpdesk at Bissamcuttack to serve over 80 tribal villages.',
-    content: 'To bring services closer to tribal doorsteps, APC Odisha has inaugurated a new permanent Digital Services Helpdesk in Bissamcuttack block. The center will provide internet assistance, certificate applications (caste, income, resident), banking services, travel bookings, and direct access to APC agriculture advisors. The center is open from 9:00 AM to 6:00 PM, Monday through Saturday.',
+    content: 'To bring services closer to tribal doorsteps, Adivasi Producer Company (APC) has inaugurated a new permanent Digital Services Helpdesk in Bissamcuttack block. The center will provide internet assistance, certificate applications (caste, income, resident), banking services, travel bookings, and direct access to APC agriculture advisors. The center is open from 9:00 AM to 6:00 PM, Monday through Saturday.',
   },
   {
     id: 'turmeric-farmers-success',
@@ -42,7 +42,7 @@ export const notices: Notice[] = [
     date: '2026-05-15',
     category: 'story',
     summary: 'How a collective of 120 tribal women farmers doubled their income by grading and marketing organic turmeric under the APC brand.',
-    content: 'Muniguda block is known for high-curcumin organic turmeric, but local farmers previously sold their raw harvests at low rates to local middlemen. Through APC Odisha, 120 tribal women farmers organized a processing cluster. APC provided training, grading machinery, and facilitated bulk sales to national buyers. By selling processed, graded turmeric directly, the group achieved a 110% increase in net profits this season. "We no longer sell raw turmeric at a loss. APC has given us ownership of our hard work," says Sabita Majhi, Lead Producer.',
+    content: 'Muniguda block is known for high-curcumin organic turmeric, but local farmers previously sold their raw harvests at low rates to local middlemen. Through Adivasi Producer Company (APC), 120 tribal women farmers organized a processing cluster. APC provided training, grading machinery, and facilitated bulk sales to national buyers. By selling processed, graded turmeric directly, the group achieved a 110% increase in net profits this season. "We no longer sell raw turmeric at a loss. APC has given us ownership of our hard work," says Sabita Majhi, Lead Producer.',
     imageUrl: '/images/success-turmeric.jpg'
   },
   {
@@ -51,7 +51,7 @@ export const notices: Notice[] = [
     date: '2026-05-02',
     category: 'story',
     summary: 'APC’s door-to-door digital drive helps tribal youth obtain caste and income certificates required for scholarship applications.',
-    content: 'Many tribal families in remote hamlets face difficulties traveling to government offices and navigating online portals. APC Odisha launched a 90-day "Certificates on Wheels" drive using mobile digital kits. Our agents visited 42 remote villages, collected necessary documentation, processed applications online, and delivered caste and resident certificates directly to 835 students. This enabled them to apply for post-matric scholarships before state deadlines.',
+    content: 'Many tribal families in remote hamlets face difficulties traveling to government offices and navigating online portals. Adivasi Producer Company (APC) launched a 90-day "Certificates on Wheels" drive using mobile digital kits. Our agents visited 42 remote villages, collected necessary documentation, processed applications online, and delivered caste and resident certificates directly to 835 students. This enabled them to apply for post-matric scholarships before state deadlines.',
     imageUrl: '/images/success-students.jpg'
   }
 ];

@@ -11,7 +11,7 @@ export function CompanyStory() {
           <div className="relative">
             <Image
               src="/images/about-story.jpg"
-              alt="APC Odisha community empowerment story"
+              alt="Adivasi Producer Company (APC) community empowerment story"
               width={600}
               height={500}
               className="rounded-2xl object-cover w-full h-auto shadow-tribal"
@@ -40,7 +40,7 @@ export function CompanyStory() {
 
             <p className="text-body-md text-on-surface-variant">
               Born from the aspirations of tribal communities in Odisha,{' '}
-              {companyInfo.fullName} ({companyInfo.name}) is a first-of-its-kind
+              {companyInfo.name} is a first-of-its-kind
               producer company fully owned and operated by indigenous
               communities. We combine traditional knowledge with digital
               innovation to create sustainable livelihoods.

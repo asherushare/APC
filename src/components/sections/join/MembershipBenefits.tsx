@@ -37,7 +37,7 @@ export function MembershipBenefits() {
         <SectionHeading
           label="MEMBERSHIP BENEFITS"
           title="Why Join APC?"
-          subtitle="Explore the exclusive advantages of becoming a registered cooperative shareholder in APC Odisha."
+          subtitle="Explore the exclusive advantages of becoming a registered cooperative shareholder in Adivasi Producer Company (APC)."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

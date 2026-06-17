@@ -3,7 +3,7 @@ import { SectionHeading } from '@/components/common/SectionHeading';
 
 export function LegalIdentity() {
   const legalDetails = [
-    { label: 'Registered Entity Name', value: 'Adivasi Producer Company Limited (APC Odisha)' },
+    { label: 'Registered Entity Name', value: 'Adivasi Producer Company Limited (APC)' },
     { label: 'Corporate ID Number (CIN)', value: 'U01110OR2019PTC032284', isCode: true },
     { label: 'Entity Type', value: 'Farmer Producer Company (FPO / FPC)' },
     { label: 'Date of Incorporation', value: 'December 12, 2019' },
@@ -19,7 +19,7 @@ export function LegalIdentity() {
         <SectionHeading
           label="COMPLIANCE & STANDARDS"
           title="Legal Identity"
-          subtitle="APC Odisha is fully registered and compliant with the Ministry of Corporate Affairs, ensuring transparency and institutional trust."
+          subtitle="Adivasi Producer Company (APC) is fully registered and compliant with the Ministry of Corporate Affairs, ensuring transparency and institutional trust."
         />
 
         <div className="max-w-4xl mx-auto bg-surface-container-lowest border border-outline-variant/35 rounded-2xl p-6 md:p-10 shadow-tribal overflow-hidden relative">

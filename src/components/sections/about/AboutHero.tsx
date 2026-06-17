@@ -32,9 +32,9 @@ export function AboutHero() {
 
           {/* Subtitle */}
           <p className="text-body-lg text-on-surface-variant max-w-xl">
-            Discover how APC Odisha bridges centuries-old tribal wisdom with
-            modern technology to build a self-reliant future for indigenous
-            communities across Odisha.
+            Discover how Adivasi Producer Company (APC) bridges centuries-old
+            tribal wisdom with modern technology to build a self-reliant future
+            for indigenous communities across Odisha.
           </p>
 
           {/* Buttons */}

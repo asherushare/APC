@@ -4,9 +4,9 @@ import { BookingHero } from '@/components/sections/book/BookingHero';
 import { BookingForm } from '@/components/sections/book/BookingForm';
 
 export const metadata: Metadata = {
-  title: 'Book a Service | APC',
+  title: 'Book a Service | Adivasi Producer Company (APC)',
   description:
-    'Schedule a service appointment with APC Odisha — document help, government schemes, business consultancy, farming guidance, and more.',
+    'Schedule a service appointment with Adivasi Producer Company (APC) — document help, government schemes, business consultancy, farming guidance, and more.',
 };
 
 export default function BookServicePage() {

@@ -25,7 +25,7 @@ export function HeadquartersMap() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             className="w-full h-full grayscale-[10%] contrast-[102%]"
-            title="APC Odisha Headquarters Location Map"
+            title="Adivasi Producer Company (APC) Headquarters Location Map"
           />
           <div className="glass-card absolute bottom-4 left-4 right-4 md:right-auto md:bottom-6 md:left-6 p-5 md:p-6 rounded-lg max-w-sm border border-outline-variant/35 shadow-lg">
             <h3 className="text-headline-sm text-on-surface mb-2 font-bold">Rayagada Office</h3>

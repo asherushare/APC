@@ -15,7 +15,7 @@ export function ShareholderSection() {
               Owned by the People, Guided by Tradition
             </h2>
             <p className="text-body-md text-on-surface-variant leading-relaxed">
-              Every Adivasi producer we serve is a shareholder. APC Odisha is entirely owned and directed by the community, returning 100% of profits, growth, and governance to our member cooperatives.
+              Every Adivasi producer we serve is a shareholder. Adivasi Producer Company (APC) is entirely owned and directed by the community, returning 100% of profits, growth, and governance to our member cooperatives.
             </p>
           </div>
 

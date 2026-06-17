@@ -11,7 +11,7 @@ export function JoinHero() {
 
           {/* Heading */}
           <h1 className="text-display-mobile md:text-display-lg text-on-primary">
-            Join the APC Odisha Community
+            Join the Adivasi Producer Company (APC) Community
           </h1>
 
           {/* Subtitle */}

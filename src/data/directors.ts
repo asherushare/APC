@@ -2,11 +2,11 @@ import type { Director } from '@/types';
 
 export const founder: Director = {
   name: 'Bijaya Kumar Mellaka',
-  role: 'Managing Director',
-  location: 'Rayagada, Odisha',
-  image: '/images/founder-placeholder.jpg',
+  role: 'Founder',
+  location: 'Adivasi Producer Company (APC)',
+  image: '/images/founder-bijaya-kumar-mellaka.jpeg',
   quote:
-    'True progress is only possible when we carry our roots with us. Our mission at APC is to turn the ancestral expertise of our farmers into a global competitive advantage, while ensuring every family has a seat at the table of prosperity.',
+    'Transparency, accountability, innovation, and community participation are the core values of APC. Together, we can transform challenges into opportunities and create lasting positive change.',
   isFounder: true,
 };
 

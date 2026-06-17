@@ -12,7 +12,7 @@ export function ServiceCard({ service, variant = 'default' }: ServiceCardProps) 
   return (
     <article
       className={cn(
-        'bg-surface-container-lowest rounded-lg shadow-tribal hover:-translate-y-1 hover:shadow-tribal-hover transition-all duration-300 p-6 flex flex-col',
+        'bg-surface-container-lowest border border-primary/10 rounded-2xl shadow-tribal hover:-translate-y-1.5 hover:shadow-tribal-hover transition-all duration-300 p-6 flex flex-col',
         variant === 'featured' && 'border-t-4 border-tribal-gold'
       )}
       id={`service-${service.id}`}

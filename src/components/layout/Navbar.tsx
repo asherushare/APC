@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { navLinks } from '@/data/navigation';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,10 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentLang, setCurrentLang] = useState<'en' | 'or'>('en');
   const [showToast, setShowToast] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isMobileAboutOpen, setIsMobileAboutOpen] = useState(false);
+  const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
   const pathname = usePathname();
   const languageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -33,6 +38,8 @@ export function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false);
+    setIsMobileAboutOpen(false);
+    setIsMobileServicesOpen(false);
   }, [pathname]);
 
   // Clean up language timeout on unmount
@@ -92,35 +99,233 @@ export function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 text-primary font-bold text-headline-md whitespace-nowrap"
+            className="flex items-center gap-2.5 text-primary font-bold text-headline-md whitespace-nowrap"
             id="nav-logo"
           >
-            <svg className="w-8 h-8" viewBox="0 0 32 32" fill="currentColor">
-              <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm0 4c1.5 0 2.8.6 3.8 1.6L16 11.4l-3.8-3.8A5.4 5.4 0 0116 6zm-6 10c0-1.5.6-2.8 1.6-3.8L15.4 16l-3.8 3.8A5.4 5.4 0 0110 16zm6 6c-1.5 0-2.8-.6-3.8-1.6L16 16.6l3.8 3.8A5.4 5.4 0 0116 22zm3.8-2.2L16 16l3.8-3.8c1 1 1.6 2.3 1.6 3.8s-.6 2.8-1.6 3.8z" />
-            </svg>
-            APC Odisha
+            <Image
+              src="/images/APC_official_logo.png"
+              alt="APC Logo"
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8 shrink-0"
+              priority
+            />
+            <span>APC</span>
           </Link>
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
+            {/* Home */}
+            <Link
+              href="/"
+              className={cn(
+                'text-label-md transition-colors',
+                pathname === '/'
+                  ? 'text-primary font-bold border-b-2 border-primary pb-1'
+                  : 'text-on-surface-variant hover:text-primary'
+              )}
+              id="nav-home"
+            >
+              Home
+            </Link>
+
+            {/* About Dropdown */}
+            <div
+              className="relative py-2"
+              onMouseEnter={() => setIsAboutOpen(true)}
+              onMouseLeave={() => setIsAboutOpen(false)}
+            >
+              <button
+                className={cn(
+                  'flex items-center gap-1 text-label-md transition-colors cursor-pointer',
+                  pathname === '/about' || pathname === '/roadmap'
+                    ? 'text-primary font-bold border-b-2 border-primary pb-0.5'
+                    : 'text-on-surface-variant hover:text-primary'
+                )}
+                aria-expanded={isAboutOpen}
+                id="nav-about-btn"
+              >
+                About
+                <svg
                   className={cn(
-                    'text-label-md transition-colors',
-                    isActive
-                      ? 'text-primary font-bold border-b-2 border-primary pb-1'
-                      : 'text-on-surface-variant hover:text-primary'
+                    'w-3.5 h-3.5 transition-transform duration-200',
+                    isAboutOpen ? 'rotate-180' : ''
                   )}
-                  id={`nav-${link.label.toLowerCase()}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
                 >
-                  {link.label}
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu Box */}
+              <div
+                className={cn(
+                  'absolute top-full left-0 mt-1 w-48 bg-surface-container-lowest border border-outline-variant/40 rounded-xl shadow-xl py-2 transition-all duration-200 transform origin-top-left z-50',
+                  isAboutOpen
+                    ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                    : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                )}
+              >
+                <Link
+                  href="/about"
+                  className={cn(
+                    'block px-4 py-2.5 text-body-md transition-colors hover:bg-surface-container-low hover:text-primary',
+                    pathname === '/about' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                  )}
+                >
+                  About APC
                 </Link>
-              );
-            })}
+                <Link
+                  href="/roadmap"
+                  className={cn(
+                    'block px-4 py-2.5 text-body-md transition-colors hover:bg-surface-container-low hover:text-primary',
+                    pathname === '/roadmap' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                  )}
+                >
+                  Roadmap
+                </Link>
+              </div>
+            </div>
+
+            {/* Leadership */}
+            <Link
+              href="/leadership"
+              className={cn(
+                'text-label-md transition-colors',
+                pathname === '/leadership'
+                  ? 'text-primary font-bold border-b-2 border-primary pb-1'
+                  : 'text-on-surface-variant hover:text-primary'
+              )}
+              id="nav-leadership"
+            >
+              Leadership
+            </Link>
+
+            {/* Services Dropdown */}
+            <div
+              className="relative py-2"
+              onMouseEnter={() => setIsServicesOpen(true)}
+              onMouseLeave={() => setIsServicesOpen(false)}
+            >
+              <button
+                className={cn(
+                  'flex items-center gap-1 text-label-md transition-colors cursor-pointer',
+                  pathname === '/services' || pathname === '/book'
+                    ? 'text-primary font-bold border-b-2 border-primary pb-0.5'
+                    : 'text-on-surface-variant hover:text-primary'
+                )}
+                aria-expanded={isServicesOpen}
+                id="nav-services-btn"
+              >
+                Services
+                <svg
+                  className={cn(
+                    'w-3.5 h-3.5 transition-transform duration-200',
+                    isServicesOpen ? 'rotate-180' : ''
+                  )}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu Box */}
+              <div
+                className={cn(
+                  'absolute top-full left-0 mt-1 w-64 bg-surface-container-lowest border border-outline-variant/40 rounded-xl shadow-xl py-2 transition-all duration-200 transform origin-top-left z-50',
+                  isServicesOpen
+                    ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                    : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                )}
+              >
+                <Link
+                  href="/services"
+                  className={cn(
+                    'block px-4 py-2.5 text-body-md transition-colors hover:bg-surface-container-low hover:text-primary font-semibold border-b border-outline-variant/20',
+                    pathname === '/services' && !pathname.includes('/book') ? 'text-primary' : 'text-on-surface'
+                  )}
+                >
+                  All Services
+                </Link>
+                <Link
+                  href="/book"
+                  className={cn(
+                    'block px-4 py-2.5 text-body-md transition-colors hover:bg-surface-container-low hover:text-primary font-semibold border-b border-outline-variant/20',
+                    pathname === '/book' ? 'text-primary' : 'text-on-surface'
+                  )}
+                >
+                  Book Service
+                </Link>
+                
+                {/* Specific Category Links */}
+                <div className="py-1">
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  >
+                    Internet Support
+                  </Link>
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  >
+                    Document Help
+                  </Link>
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  >
+                    Government Scheme Guidance
+                  </Link>
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  >
+                    Business Consultancy
+                  </Link>
+                  <Link
+                    href="/services"
+                    className="block px-4 py-2 text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-primary"
+                  >
+                    Farming Consultancy
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Notices */}
+            <Link
+              href="/notices"
+              className={cn(
+                'text-label-md transition-colors',
+                pathname === '/notices'
+                  ? 'text-primary font-bold border-b-2 border-primary pb-1'
+                  : 'text-on-surface-variant hover:text-primary'
+              )}
+              id="nav-notices"
+            >
+              Notices
+            </Link>
+
+            {/* Contact */}
+            <Link
+              href="/contact"
+              className={cn(
+                'text-label-md transition-colors',
+                pathname === '/contact'
+                  ? 'text-primary font-bold border-b-2 border-primary pb-1'
+                  : 'text-on-surface-variant hover:text-primary'
+              )}
+              id="nav-contact"
+            >
+              Contact
+            </Link>
           </div>
 
           {/* Desktop Right items: Language Switch + Join CTA */}
@@ -180,22 +385,196 @@ export function Navbar() {
         {isMobileOpen && (
           <div className="md:hidden bg-surface border-t border-outline-variant max-h-[calc(100vh-80px)] overflow-y-auto">
             <div className="px-5 py-6 space-y-4">
-              {navLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
+              {/* Home */}
+              <Link
+                href="/"
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  'block py-2 text-body-lg transition-colors',
+                  pathname === '/' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                )}
+              >
+                Home
+              </Link>
+
+              {/* About Accordion */}
+              <div>
+                <button
+                  onClick={() => setIsMobileAboutOpen(!isMobileAboutOpen)}
+                  className={cn(
+                    'w-full flex items-center justify-between py-2 text-body-lg transition-colors cursor-pointer text-left',
+                    pathname === '/about' || pathname === '/roadmap'
+                      ? 'text-primary font-semibold'
+                      : 'text-on-surface-variant'
+                  )}
+                >
+                  <span>About</span>
+                  <svg
+                    className={cn(
+                      'w-5 h-5 transition-transform duration-200',
+                      isMobileAboutOpen ? 'rotate-180' : ''
+                    )}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                <div
+                  className={cn(
+                    'pl-4 overflow-hidden transition-all duration-300 ease-in-out',
+                    isMobileAboutOpen ? 'max-h-40 opacity-100 mt-2 space-y-1' : 'max-h-0 opacity-0'
+                  )}
+                >
                   <Link
-                    key={link.href}
-                    href={link.href}
+                    href="/about"
                     onClick={() => setIsMobileOpen(false)}
                     className={cn(
-                      'block py-2 text-body-lg transition-colors',
-                      isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                      'block py-2 text-body-md transition-colors',
+                      pathname === '/about' ? 'text-primary font-semibold' : 'text-on-surface-variant/80'
                     )}
                   >
-                    {link.label}
+                    About APC
                   </Link>
-                );
-              })}
+                  <Link
+                    href="/roadmap"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={cn(
+                      'block py-2 text-body-md transition-colors',
+                      pathname === '/roadmap' ? 'text-primary font-semibold' : 'text-on-surface-variant/80'
+                    )}
+                  >
+                    Roadmap
+                  </Link>
+                </div>
+              </div>
+
+              {/* Leadership */}
+              <Link
+                href="/leadership"
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  'block py-2 text-body-lg transition-colors',
+                  pathname === '/leadership' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                )}
+              >
+                Leadership
+              </Link>
+
+              {/* Services Accordion */}
+              <div>
+                <button
+                  onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
+                  className={cn(
+                    'w-full flex items-center justify-between py-2 text-body-lg transition-colors cursor-pointer text-left',
+                    pathname === '/services' || pathname === '/book'
+                      ? 'text-primary font-semibold'
+                      : 'text-on-surface-variant'
+                  )}
+                >
+                  <span>Services</span>
+                  <svg
+                    className={cn(
+                      'w-5 h-5 transition-transform duration-200',
+                      isMobileServicesOpen ? 'rotate-180' : ''
+                    )}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                <div
+                  className={cn(
+                    'pl-4 overflow-hidden transition-all duration-300 ease-in-out',
+                    isMobileServicesOpen ? 'max-h-[350px] opacity-100 mt-2 space-y-1' : 'max-h-0 opacity-0'
+                  )}
+                >
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={cn(
+                      'block py-2 text-body-md font-semibold transition-colors border-b border-outline-variant/10',
+                      pathname === '/services' ? 'text-primary' : 'text-on-surface'
+                    )}
+                  >
+                    All Services
+                  </Link>
+                  <Link
+                    href="/book"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={cn(
+                      'block py-2 text-body-md font-semibold transition-colors border-b border-outline-variant/10',
+                      pathname === '/book' ? 'text-primary' : 'text-on-surface'
+                    )}
+                  >
+                    Book Service
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block py-1.5 text-body-md text-on-surface-variant/80"
+                  >
+                    Internet Support
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block py-1.5 text-body-md text-on-surface-variant/80"
+                  >
+                    Document Help
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block py-1.5 text-body-md text-on-surface-variant/80"
+                  >
+                    Government Scheme Guidance
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block py-1.5 text-body-md text-on-surface-variant/80"
+                  >
+                    Business Consultancy
+                  </Link>
+                  <Link
+                    href="/services"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block py-1.5 text-body-md text-on-surface-variant/80"
+                  >
+                    Farming Consultancy
+                  </Link>
+                </div>
+              </div>
+
+              {/* Notices */}
+              <Link
+                href="/notices"
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  'block py-2 text-body-lg transition-colors',
+                  pathname === '/notices' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                )}
+              >
+                Notices
+              </Link>
+
+              {/* Contact */}
+              <Link
+                href="/contact"
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  'block py-2 text-body-lg transition-colors',
+                  pathname === '/contact' ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                )}
+              >
+                Contact
+              </Link>
 
               <hr className="border-outline-variant/50 my-2" />
 

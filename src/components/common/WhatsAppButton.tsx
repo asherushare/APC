@@ -69,7 +69,7 @@ export function WhatsAppButton() {
         {/* Header */}
         <div className="bg-primary text-white p-4 flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-label-lg leading-tight">APC Odisha Helpdesk</h3>
+            <h3 className="font-bold text-label-lg leading-tight font-sans">Adivasi Producer Company (APC) Helpdesk</h3>
             <p className="text-[11px] text-white/85">Instant assistance on WhatsApp</p>
           </div>
           <button

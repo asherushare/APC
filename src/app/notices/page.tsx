@@ -4,8 +4,8 @@ import { Container } from '@/components/common/Container';
 import { NoticesContent } from '@/components/sections/notices/NoticesContent';
 
 export const metadata: Metadata = {
-  title: 'Notices & Updates | APC Odisha',
-  description: 'Stay updated with the latest government schemes, tribal achievements, success stories, and board announcements from APC Odisha.',
+  title: 'Notices & Updates | Adivasi Producer Company (APC)',
+  description: 'Stay updated with the latest government schemes, tribal achievements, success stories, and board announcements from Adivasi Producer Company (APC).',
 };
 
 export default function NoticesPage() {

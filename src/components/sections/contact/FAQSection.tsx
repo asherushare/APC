@@ -9,7 +9,7 @@ export function FAQSection() {
       <Container className="max-w-2xl mx-auto">
         <SectionHeading
           title="Frequently Asked Questions"
-          subtitle="Quick answers to common questions about APC Odisha."
+          subtitle="Quick answers to common questions about Adivasi Producer Company (APC)."
         />
         <div className="space-y-4">
           {faqs.map((faq) => (

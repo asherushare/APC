@@ -8,7 +8,7 @@ export function BenefitsSection() {
     <section className="py-16 md:py-24 bg-surface-container-low">
       <Container>
         <SectionHeading
-          title="Why Join APC Odisha?"
+          title="Why Join Adivasi Producer Company (APC)?"
           subtitle="Discover the benefits of community ownership and structured scaling for Adivasi producers"
           label="MEMBERSHIP BENEFITS"
         />

@@ -8,7 +8,7 @@ const timelineEntries: TimelineEvent[] = [
     year: '2019',
     title: 'The Seed is Sown',
     description:
-      'A group of visionary tribal leaders from Rayagada and Koraput came together to form APC Odisha — a bold experiment in community-owned enterprise. With just a handful of founding members and a dream of self-reliance, the foundation was laid.',
+      'A group of visionary tribal leaders from Rayagada and Koraput came together to form Adivasi Producer Company (APC) — a bold experiment in community-owned enterprise. With just a handful of founding members and a dream of self-reliance, the foundation was laid.',
     image: '/images/about-timeline-1.jpg',
   },
   {
@@ -22,7 +22,7 @@ const timelineEntries: TimelineEvent[] = [
     year: 'Today',
     title: 'A Global Blueprint',
     description:
-      'Today, APC Odisha stands as a replicable model for community-led development. With partnerships spanning government, NGOs, and international bodies, we are building a global heritage brand rooted in tribal wisdom and sustainable enterprise.',
+      'Today, Adivasi Producer Company (APC) stands as a replicable model for community-led development. With partnerships spanning government, NGOs, and international bodies, we are building a global heritage brand rooted in tribal wisdom and sustainable enterprise.',
     image: '/images/about-timeline-3.jpg',
   },
 ];
