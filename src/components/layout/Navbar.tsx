@@ -204,7 +204,7 @@ export function Navbar() {
               Leadership
             </Link>
 
-            {/* Services Dropdown */}
+            {/* APC Digital Dropdown */}
             <div
               className="relative py-2"
               onMouseEnter={() => setIsServicesOpen(true)}
@@ -213,14 +213,14 @@ export function Navbar() {
               <button
                 className={cn(
                   'flex items-center gap-1 text-label-md transition-colors cursor-pointer',
-                  pathname === '/services' || pathname === '/book'
+                  pathname.startsWith('/digital') || pathname === '/services' || pathname === '/book'
                     ? 'text-primary font-bold border-b-2 border-primary pb-0.5'
                     : 'text-on-surface-variant hover:text-primary'
                 )}
                 aria-expanded={isServicesOpen}
                 id="nav-services-btn"
               >
-                Services
+                APC Digital
                 <svg
                   className={cn(
                     'w-3.5 h-3.5 transition-transform duration-200',
@@ -244,6 +244,15 @@ export function Navbar() {
                     : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                 )}
               >
+                <Link
+                  href="/digital"
+                  className={cn(
+                    'block px-4 py-2.5 text-body-md transition-colors hover:bg-surface-container-low hover:text-primary font-bold border-b border-outline-variant/20',
+                    pathname === '/digital' ? 'text-primary' : 'text-on-surface'
+                  )}
+                >
+                  Digital Portal Hub
+                </Link>
                 <Link
                   href="/services"
                   className={cn(
@@ -463,18 +472,18 @@ export function Navbar() {
                 Leadership
               </Link>
 
-              {/* Services Accordion */}
+              {/* APC Digital Accordion */}
               <div>
                 <button
                   onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
                   className={cn(
                     'w-full flex items-center justify-between py-2 text-body-lg transition-colors cursor-pointer text-left',
-                    pathname === '/services' || pathname === '/book'
+                    pathname.startsWith('/digital') || pathname === '/services' || pathname === '/book'
                       ? 'text-primary font-semibold'
                       : 'text-on-surface-variant'
                   )}
                 >
-                  <span>Services</span>
+                  <span>APC Digital</span>
                   <svg
                     className={cn(
                       'w-5 h-5 transition-transform duration-200',
@@ -491,9 +500,19 @@ export function Navbar() {
                 <div
                   className={cn(
                     'pl-4 overflow-hidden transition-all duration-300 ease-in-out',
-                    isMobileServicesOpen ? 'max-h-[350px] opacity-100 mt-2 space-y-1' : 'max-h-0 opacity-0'
+                    isMobileServicesOpen ? 'max-h-[380px] opacity-100 mt-2 space-y-1' : 'max-h-0 opacity-0'
                   )}
                 >
+                  <Link
+                    href="/digital"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={cn(
+                      'block py-2 text-body-md font-bold transition-colors border-b border-outline-variant/10',
+                      pathname === '/digital' ? 'text-primary' : 'text-on-surface'
+                    )}
+                  >
+                    Digital Portal Hub
+                  </Link>
                   <Link
                     href="/services"
                     onClick={() => setIsMobileOpen(false)}
