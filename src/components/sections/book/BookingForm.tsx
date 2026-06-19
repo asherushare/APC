@@ -34,7 +34,10 @@ export function BookingForm() {
   useEffect(() => {
     const serviceParam = searchParams.get('service');
     if (serviceParam && services.some((s) => s.id === serviceParam)) {
-      setFormData((prev) => ({ ...prev, service: serviceParam }));
+      const timer = setTimeout(() => {
+        setFormData((prev) => ({ ...prev, service: serviceParam }));
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [searchParams]);
 

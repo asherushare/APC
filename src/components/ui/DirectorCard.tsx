@@ -75,7 +75,7 @@ export function DirectorCard({ director, variant = 'board' }: DirectorCardProps)
             >
               {/* Header */}
               <div className="sticky top-0 bg-surface-container-lowest border-b border-outline-variant/30 px-6 py-4 flex items-center justify-between z-10">
-                <h3 className="font-bold text-headline-sm text-primary">Founder's Message</h3>
+                <h3 className="font-bold text-headline-sm text-primary">Founder&apos;s Message</h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-1 rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer"

@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { navLinks } from '@/data/navigation';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -37,9 +36,12 @@ export function Navbar() {
 
   // Close mobile menu on route change
   useEffect(() => {
-    setIsMobileOpen(false);
-    setIsMobileAboutOpen(false);
-    setIsMobileServicesOpen(false);
+    const timer = setTimeout(() => {
+      setIsMobileOpen(false);
+      setIsMobileAboutOpen(false);
+      setIsMobileServicesOpen(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   // Clean up language timeout on unmount

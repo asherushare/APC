@@ -2,123 +2,208 @@
 
 import { useState } from 'react';
 import { Container } from '@/components/common/Container';
-import { SectionHeading } from '@/components/common/SectionHeading';
 import { Hero } from '@/components/digital/Hero';
+import { TrustSection } from '@/components/digital/TrustSection';
 import { WhyChooseUs } from '@/components/digital/WhyChooseUs';
-import { Categories } from '@/components/digital/Categories';
 import { ServiceCard } from '@/components/digital/ServiceCard';
 import { RecentlyUsed } from '@/components/digital/RecentlyUsed';
 import { CustomServiceCTA } from '@/components/digital/CustomServiceCTA';
 import { FAQ } from '@/components/digital/FAQ';
 import { ContactCTA } from '@/components/digital/ContactCTA';
 import { Booking } from '@/components/digital/Booking';
-import { demoServices, featuredServices } from '@/data/digital';
+import { featuredServices } from '@/data/digital';
+import { getAllServices } from '@/data/digital/services';
 import { DigitalService } from '@/types/digital';
+import { useServiceDiscovery } from '@/hooks/useServiceDiscovery';
+import { FilterPanel } from '@/components/digital/ui/FilterPanel';
+import { SortSelector } from '@/components/digital/ui/SortSelector';
+import { DiscoverySection } from '@/components/digital/DiscoverySection';
 
 export default function DigitalPage() {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<DigitalService | null>(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Filter services by category if selected, otherwise show popular items
-  const displayServices = demoServices.filter((service) => {
-    if (activeCategory === null) {
-      return service.popular; // Default popular list
-    }
-    return service.categoryId === activeCategory; // Selected category match
-  });
+  const allServices = getAllServices();
+  
+  const {
+    filters,
+    toggleFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    filteredAndSortedServices
+  } = useServiceDiscovery(allServices);
+
+  const hasActiveFilters = Object.values(filters).some(arr => arr.length > 0);
+  const displayServices = filteredAndSortedServices.slice(0, 12);
+  const hasMore = filteredAndSortedServices.length > 12;
+
+  // Derive Popular services for Discovery Section
+  const popularServices = allServices.filter(s => s.popular && !s.featured).slice(0, 6);
 
   return (
     <>
       {/* 1. Hero + Intelligent Search */}
       <Hero />
 
-      {/* 2. Featured Services */}
-      {featuredServices.length > 0 && (
-        <section className="py-12 bg-surface">
-          <Container>
-            <SectionHeading
-              title="Featured Digital Services"
-              subtitle="Quick access to our highest-traffic digital, AI, and business licensing tools."
-              align="center"
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              {featuredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onBookClick={setSelectedService}
-                />
-              ))}
-            </div>
-          </Container>
-        </section>
+      {/* 2. Trust & Security Section */}
+      <TrustSection />
+
+      {/* 3. Discovery Sections (Featured & Popular) */}
+      {!hasActiveFilters && (
+        <>
+          <DiscoverySection
+            title="Featured Digital Services"
+            subtitle="Quick access to our highest-traffic digital, AI, and business licensing tools."
+            services={featuredServices}
+            onBookClick={setSelectedService}
+            background="surface"
+          />
+          <DiscoverySection
+            title="Most Popular in Your Area"
+            subtitle="Services frequently requested by users in your region."
+            services={popularServices}
+            onBookClick={setSelectedService}
+            background="white"
+          />
+        </>
       )}
 
-      {/* 3. Recently Used Services */}
+      {/* 4. Recently Used Services */}
       <RecentlyUsed />
 
-      {/* 4. Why Choose APC Digital */}
-      <WhyChooseUs />
-
-      {/* 5. Browse Categories */}
-      <section className="bg-surface-container-low border-b border-outline-variant/30 py-4 select-none">
+      {/* 5. Enterprise Catalog Experience */}
+      <section className="py-12 md:py-20 bg-surface border-b border-outline-variant/30 relative">
         <Container>
-          <div className="text-center max-w-xl mx-auto mb-6">
-            <h2 className="text-headline-sm font-bold text-on-surface">Browse by Category</h2>
-            <p className="text-body-sm text-on-surface-variant mt-1">
-              Select a category tab to filter the most popular digital services below.
-            </p>
-          </div>
-        </Container>
-        <Categories
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-        />
-      </section>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 md:gap-12 items-start relative">
+            
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:block lg:col-span-1 sticky top-28 z-10">
+              <FilterPanel 
+                filters={filters} 
+                toggleFilter={toggleFilter} 
+                clearFilters={clearFilters} 
+              />
+            </aside>
 
-      {/* 6. Popular / Category Services */}
-      <section className="py-12 bg-surface border-b border-outline-variant/30">
-        <Container>
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <h2 className="text-headline-md font-bold text-on-surface">
-              {activeCategory ? 'Matching Category Services' : 'Most Popular Digital Services'}
-            </h2>
-            <p className="text-body-md text-on-surface-variant mt-2">
-              Browse our catalog of services. Select 'Book' to submit details directly to our WhatsApp helpdesk.
-            </p>
-          </div>
-
-          {displayServices.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onBookClick={setSelectedService}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 border border-dashed border-outline-variant/60 rounded-2xl p-8 bg-white max-w-md mx-auto space-y-4 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-primary/5 text-primary flex items-center justify-center mx-auto text-xl font-bold">
-                📁
+            {/* Mobile Filter Drawer Overlay */}
+            {isMobileFilterOpen && (
+              <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMobileFilterOpen(false)} />
+                <div className="relative w-[320px] max-w-[85vw] h-full bg-surface-container-lowest shadow-2xl overflow-y-auto animate-slide-in-right">
+                  <div className="sticky top-0 bg-surface-container-lowest z-10 p-4 flex items-center justify-between border-b border-outline-variant/30">
+                    <h3 className="font-bold text-headline-sm">Filters</h3>
+                    <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 bg-surface-container-low rounded-full hover:bg-outline-variant/30 text-on-surface">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <FilterPanel 
+                      filters={filters} 
+                      toggleFilter={toggleFilter} 
+                      clearFilters={clearFilters}
+                      className="border-none shadow-none p-0 bg-transparent"
+                    />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-body-lg font-black text-on-surface">Coming Soon to This Category</h3>
-              <p className="text-body-sm text-on-surface-variant leading-relaxed">
-                We are actively integrating 500+ grassroots services into this category. If you need any immediate assistance, click below to chat directly with our local helpdesk.
-              </p>
-              <a
-                href="https://wa.me/919348747578?text=Hello%20APC%20Digital%2C%20I%20need%20assistance%20with%20a%20service%20in%20this%20category."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebd59] text-white font-extrabold py-2.5 px-6 rounded-full shadow-md text-label-md transition-all cursor-pointer hover:shadow-lg active:scale-95 uppercase tracking-wider text-[11px]"
-              >
-                Inquire via WhatsApp
-              </a>
+            )}
+
+            {/* Main Content Area */}
+            <div className="col-span-1 lg:col-span-3 space-y-8">
+              
+              {/* Accessible live region for screen-readers */}
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {filteredAndSortedServices.length === 0
+                  ? 'No services match the current filters.'
+                  : `Showing ${filteredAndSortedServices.length} service${filteredAndSortedServices.length === 1 ? '' : 's'}.`}
+              </div>
+
+              {/* Header & Sort/Filter Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm">
+                <div>
+                  <h2 className="text-headline-md font-black text-on-surface">
+                    {hasActiveFilters ? 'Filtered Service Catalog' : 'Complete Service Catalog'}
+                  </h2>
+                  <p className="text-body-md text-on-surface-variant mt-1.5">
+                    Showing {filteredAndSortedServices.length} matching services.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                  <SortSelector sortBy={sortBy} setSortBy={setSortBy} />
+                  
+                  {/* Mobile Filter Trigger */}
+                  <button 
+                    onClick={() => setIsMobileFilterOpen(true)} 
+                    className="lg:hidden flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 py-3 px-5 rounded-xl text-label-md font-bold text-primary hover:bg-primary/20 active:scale-95 transition-all shadow-sm"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                    </svg>
+                    Filters {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-red-500 absolute top-2 right-2 sm:static sm:w-auto sm:h-auto sm:bg-transparent sm:text-primary sm:top-auto sm:right-auto">(Active)</span>}
+                  </button>
+                </div>
+              </div>
+
+              {displayServices.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {displayServices.map((service) => (
+                      <ServiceCard
+                        key={service.id}
+                        service={service}
+                        onBookClick={setSelectedService}
+                      />
+                    ))}
+                  </div>
+                  
+                  {hasMore && (
+                    <div className="mt-12 flex justify-center">
+                      <button className="group px-8 py-3.5 rounded-full border-2 border-outline-variant text-on-surface font-extrabold text-label-md uppercase tracking-wider hover:bg-surface-container-low hover:border-primary/50 hover:text-primary transition-all duration-300 active:scale-95 flex items-center gap-2 shadow-sm hover:shadow-md">
+                        Load More Services
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-16 border border-dashed border-outline-variant/60 rounded-3xl p-8 bg-surface-container-lowest max-w-lg mx-auto space-y-5 shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-primary/5 text-primary flex items-center justify-center mx-auto text-3xl font-bold">
+                    📁
+                  </div>
+                  <div>
+                    <h3 className="text-headline-sm font-black text-on-surface">No matching services</h3>
+                    <p className="text-body-md text-on-surface-variant leading-relaxed mt-2">
+                      Try adjusting your filters or sorting to find what you need. Or tap the button below to clear all filters.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 max-w-[250px] mx-auto pt-2">
+                    <button 
+                      onClick={clearFilters}
+                      className="bg-primary hover:bg-dark-green text-white font-extrabold py-3 px-6 rounded-full transition-all shadow-md active:scale-95 text-label-md"
+                    >
+                      Clear All Filters
+                    </button>
+                    <a
+                      href="https://wa.me/919348747578?text=Hello%20APC%20Digital%2C%20I%20need%20assistance%20finding%20a%20service."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 border border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5 font-extrabold py-3 px-6 rounded-full transition-all active:scale-95 text-label-md"
+                    >
+                      WhatsApp Support
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </Container>
       </section>
+
+      {/* 6. Why Choose APC Digital */}
+      <WhyChooseUs />
 
       {/* 7. Need a Custom Service? */}
       <CustomServiceCTA />

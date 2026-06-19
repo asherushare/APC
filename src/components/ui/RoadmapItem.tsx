@@ -26,7 +26,7 @@ const statusDotColors: Record<RoadmapPhase['status'], string> = {
   planned: 'bg-surface-container-highest border-surface',
 };
 
-export function RoadmapItem({ phase, index, isLast = false }: RoadmapItemProps) {
+export function RoadmapItem({ phase, isLast = false }: RoadmapItemProps) {
   const isCompleted = ['established', 'operational', 'active'].includes(phase.status);
 
   return (

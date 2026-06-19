@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Container } from '@/components/common/Container';
 import { DigitalService } from '@/types/digital';
 import { ServiceIcon } from '@/lib/icons';
-import { demoServices } from '@/data/digital';
+import { getAllServices } from '@/data/digital/services';
 import Link from 'next/link';
 
 export function RecentlyUsed() {
@@ -17,10 +17,13 @@ export function RecentlyUsed() {
       if (rawHistory) {
         const slugs: string[] = JSON.parse(rawHistory);
         // Map slugs back to their full service records from the database
+        const allServices = getAllServices();
         const mapped = slugs
-          .map(slug => demoServices.find(s => s.slug === slug))
+          .map(slug => allServices.find(s => s.slug === slug))
           .filter((s): s is DigitalService => !!s);
-        setRecentServices(mapped);
+        setTimeout(() => {
+          setRecentServices(mapped);
+        }, 0);
       }
     } catch (e) {
       console.warn('Failed to load recent services from localStorage:', e);

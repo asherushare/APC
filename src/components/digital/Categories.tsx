@@ -1,14 +1,16 @@
 'use client';
 
-import { categories, demoServices } from '@/data/digital';
+import { categories } from '@/data/digital';
+import { getAllServices } from '@/data/digital/services';
 import { cn } from '@/lib/utils';
 
 interface CategoriesProps {
   activeCategory: string | null;
   onSelectCategory: (id: string | null) => void;
+  orientation?: 'horizontal' | 'vertical';
 }
 
-export function Categories({ activeCategory, onSelectCategory }: CategoriesProps) {
+export function Categories({ activeCategory, onSelectCategory, orientation = 'horizontal' }: CategoriesProps) {
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'shield':
@@ -69,25 +71,38 @@ export function Categories({ activeCategory, onSelectCategory }: CategoriesProps
     }
   };
 
-  const allCount = demoServices.length;
+  const allServices = getAllServices();
+  const allCount = allServices.length;
   const getCategoryCount = (catId: string) =>
-    demoServices.filter((s) => s.categoryId === catId).length;
+    allServices.filter((s) => s.categoryId === catId).length;
+
+  const isVertical = orientation === 'vertical';
 
   return (
-    <div className="w-full border-b border-outline-variant/30 bg-surface py-3 z-30 select-none">
-      <div className="max-w-[1280px] mx-auto px-5 md:px-16">
-        {/* Mobile Swipe / Desktop flex Container */}
-        <div className="flex items-center gap-2.5 overflow-x-auto whitespace-nowrap scrollbar-none snap-x pb-1 md:pb-0">
+    <div className={cn(
+      "z-30 select-none",
+      isVertical ? "w-full" : "w-full border-b border-outline-variant/30 bg-surface py-3"
+    )}>
+      <div className={cn(
+        isVertical ? "" : "max-w-[1280px] mx-auto px-5 md:px-16"
+      )}>
+        <div className={cn(
+          "flex gap-2.5",
+          isVertical 
+            ? "flex-col" 
+            : "items-center overflow-x-auto whitespace-nowrap scrollbar-none snap-x pb-1 md:pb-0"
+        )}>
           <button
             onClick={() => onSelectCategory(null)}
             className={cn(
-              "inline-flex items-center px-4.5 py-2 text-label-sm font-extrabold uppercase tracking-wider rounded-full border cursor-pointer snap-start transition-all duration-200 active:scale-95 shadow-sm",
+              "inline-flex items-center text-label-sm font-extrabold uppercase tracking-wider rounded-full border cursor-pointer transition-all duration-200 shadow-sm",
+              isVertical ? "px-5 py-3 w-full justify-between" : "px-4.5 py-2 snap-start active:scale-95",
               activeCategory === null
                 ? "bg-primary border-primary text-white shadow-md shadow-primary/10"
                 : "bg-surface border-outline-variant text-on-surface-variant hover:bg-surface-container-low hover:text-primary hover:border-primary/40"
             )}
           >
-            All Categories
+            <span>All Categories</span>
             <span
               className={cn(
                 "ml-2 text-[10px] px-2 py-0.5 rounded-full font-extrabold transition-colors duration-200",
@@ -108,14 +123,17 @@ export function Categories({ activeCategory, onSelectCategory }: CategoriesProps
                 key={category.id}
                 onClick={() => onSelectCategory(category.id)}
                 className={cn(
-                  "inline-flex items-center px-4.5 py-2 text-label-sm font-extrabold uppercase tracking-wider rounded-full border cursor-pointer snap-start transition-all duration-200 active:scale-95 shadow-sm",
+                  "inline-flex items-center text-label-sm font-extrabold uppercase tracking-wider rounded-full border cursor-pointer transition-all duration-200 shadow-sm",
+                  isVertical ? "px-5 py-3 w-full justify-between" : "px-4.5 py-2 snap-start active:scale-95",
                   isActive
                     ? "bg-primary border-primary text-white shadow-md shadow-primary/10"
                     : "bg-surface border-outline-variant text-on-surface-variant hover:bg-surface-container-low hover:text-primary hover:border-primary/40"
                 )}
               >
-                {getCategoryIcon(category.icon)}
-                <span>{category.name}</span>
+                <div className="flex items-center">
+                  {getCategoryIcon(category.icon)}
+                  <span>{category.name}</span>
+                </div>
                 <span
                   className={cn(
                     "ml-2 text-[10px] px-2 py-0.5 rounded-full font-extrabold transition-colors duration-200",

@@ -26,7 +26,7 @@ export function generateBookingMessage(
   return `*NEW DIGITAL SERVICE BOOKING REQUEST*
 ---------------------------------------
 *Service:* ${service.title}
-*Price:* ${service.price}
+*Price:* ${service.pricing?.displayPrice || 'N/A'}
 *Est. Time:* ${service.processingTime}
 
 *Client Details:*

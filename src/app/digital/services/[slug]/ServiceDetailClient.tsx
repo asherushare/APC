@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Container } from '@/components/common/Container';
 import { DigitalService } from '@/types/digital';
 import { Booking } from '@/components/digital/Booking';
@@ -9,6 +9,12 @@ import { getWhatsAppLink, generateSupportMessage } from '@/lib/whatsapp';
 import { ServiceIcon } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { StatusBadge } from '@/components/digital/ui/StatusBadge';
+import { TimelineStep } from '@/components/digital/ui/TimelineStep';
+import { DocumentCard } from '@/components/digital/ui/DocumentCard';
+import { ServiceCarousel } from '@/components/digital/ui/ServiceCarousel';
+import { getAllServices } from '@/data/digital/services';
+import { getRecommendedServices } from '@/lib/recommendations';
 
 interface ClientProps {
   service: DigitalService;
@@ -17,8 +23,7 @@ interface ClientProps {
 
 export default function ServiceDetailClient({ service, categoryName }: ClientProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-
-  // History logger hook to track visited services in localStorage
+  const relatedServices = getRecommendedServices(service, getAllServices(), 6);
   useEffect(() => {
     try {
       const rawHistory = localStorage.getItem('apc_recent_services');
@@ -39,31 +44,7 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
     }
   }, [service.slug]);
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'active':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-label-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Active Service
-          </span>
-        );
-      case 'coming-soon':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-label-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
-            Coming Soon
-          </span>
-        );
-      case 'temporarily-unavailable':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-label-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
-            Unavailable
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   const isComingSoon = service.status === 'coming-soon';
   const isUnavailable = service.status === 'temporarily-unavailable';
@@ -80,7 +61,7 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
                 <span className="text-label-sm font-bold text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">
                   {categoryName}
                 </span>
-                {getStatusBadge(service.status)}
+                <StatusBadge status={service.status} />
               </div>
               <h1 className="text-display-mobile md:text-headline-lg font-extrabold text-on-surface">
                 {service.title}
@@ -116,11 +97,8 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
                 </p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 select-none">
                   {service.requiredDocuments.map((doc, idx) => (
-                    <li key={idx} className="flex items-start gap-3 bg-white border border-outline-variant/40 p-4 rounded-xl text-body-sm font-semibold text-on-surface shadow-sm hover:border-primary/20 duration-200 transition-all">
-                      <span className="w-5.5 h-5.5 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px] uppercase">
-                        Doc
-                      </span>
-                      <span className="leading-snug">{doc}</span>
+                    <li key={idx}>
+                      <DocumentCard title={doc.title} mandatory={true} />
                     </li>
                   ))}
                 </ul>
@@ -134,35 +112,29 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
                   </svg>
                   Processing Milestone Path
                 </h3>
-                <div className="relative border-l-2 border-primary/15 ml-4.5 pl-6 space-y-6 py-2 select-none">
-                  <div className="relative group">
-                    <span className="absolute -left-[32px] top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-white ring-2 ring-primary/20 shrink-0 transition-all duration-300 group-hover:scale-110" />
-                    <h4 className="text-body-md font-extrabold text-on-surface">Step 1: Submit Booking</h4>
-                    <p className="text-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
-                      Complete our dynamic booking drawer form. Submitting will compile details and open WhatsApp.
-                    </p>
-                  </div>
-                  <div className="relative group">
-                    <span className="absolute -left-[32px] top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-white ring-2 ring-primary/20 shrink-0 transition-all duration-300 group-hover:scale-110" />
-                    <h4 className="text-body-md font-extrabold text-on-surface">Step 2: Document Handover</h4>
-                    <p className="text-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
-                      Our block verification agent contacts you to collect documents and details before submission.
-                    </p>
-                  </div>
-                  <div className="relative group">
-                    <span className="absolute -left-[32px] top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-white ring-2 ring-primary/20 shrink-0 transition-all duration-300 group-hover:scale-110" />
-                    <h4 className="text-body-md font-extrabold text-on-surface">Step 3: Processing Status</h4>
-                    <p className="text-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
-                      We process your request through official state channels. Estimated time is *{service.processingTime}*.
-                    </p>
-                  </div>
-                  <div className="relative group">
-                    <span className="absolute -left-[32px] top-1.5 w-4 h-4 rounded-full bg-tribal-gold border-2 border-white ring-2 ring-tribal-gold/20 shrink-0 transition-all duration-300 group-hover:scale-110" />
-                    <h4 className="text-body-md font-extrabold text-on-surface">Step 4: Secure Delivery</h4>
-                    <p className="text-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
-                      Digital copies are sent instantly online. Physical certificates can be collected at the local APC branch.
-                    </p>
-                  </div>
+                <div className="pt-2 pl-2">
+                  <TimelineStep
+                    stepNumber={1}
+                    title="Submit Booking"
+                    description="Complete our dynamic booking drawer form. Submitting will compile details and open WhatsApp."
+                    isActive={true}
+                  />
+                  <TimelineStep
+                    stepNumber={2}
+                    title="Document Handover"
+                    description="Our block verification agent contacts you to collect documents and details before submission."
+                  />
+                  <TimelineStep
+                    stepNumber={3}
+                    title="Processing Status"
+                    description={`We process your request through official state channels. Estimated time is ${service.processingTime}.`}
+                  />
+                  <TimelineStep
+                    stepNumber={4}
+                    title="Secure Delivery"
+                    description="Digital copies are sent instantly online. Physical certificates can be collected at the local APC branch."
+                    isLast={true}
+                  />
                 </div>
               </div>
 
@@ -180,7 +152,7 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
                 <div className="space-y-1">
                   <span className="text-label-xs uppercase font-extrabold tracking-wider text-on-surface-variant">Flat Processing Fee</span>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-[36px] font-black text-primary leading-none">{service.price}</span>
+                    <span className="text-[36px] font-black text-primary leading-none">{service.pricing?.displayPrice}</span>
                     <span className="text-body-sm text-on-surface-variant font-medium">(All-inclusive)</span>
                   </div>
                 </div>
@@ -234,14 +206,35 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
               </Link>
             </div>
           </div>
-      </Container>
-    </section>
+        </Container>
+      </section>
+
+      {/* Related Services */}
+      {relatedServices.length > 0 && (
+        <section className="py-12 bg-surface-container-low border-t border-outline-variant/30">
+          <Container>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-headline-sm font-bold text-on-surface">Frequently Booked Together</h3>
+                <p className="text-body-sm text-on-surface-variant mt-1">Explore other services in the {categoryName} category.</p>
+              </div>
+              <Link href="/digital" className="text-primary hover:text-dark-green font-bold text-label-md transition-colors hidden sm:block">
+                View All →
+              </Link>
+            </div>
+            <div className="-mx-2">
+              <ServiceCarousel services={relatedServices} onBookClick={() => setIsBookingOpen(true)} />
+            </div>
+          </Container>
+        </section>
+      )}
+
 
     {/* Mobile Sticky Action Bar */}
     <div className="lg:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant/30 p-4 z-40 flex items-center justify-between shadow-2xl">
       <div className="flex flex-col">
         <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant">Cost:</span>
-        <span className="text-body-lg font-extrabold text-primary leading-none">{service.price}</span>
+        <span className="text-body-lg font-extrabold text-primary leading-none">{service.pricing?.displayPrice}</span>
       </div>
       <div className="flex gap-2 w-2/3 max-w-[280px]">
         <button
@@ -269,7 +262,7 @@ export default function ServiceDetailClient({ service, categoryName }: ClientPro
     </div>
 
     {/* Booking Form Drawer Modal */}
-    <Booking service={service} onClose={() => setIsBookingOpen(false)} />
+    <Booking service={isBookingOpen ? service : null} onClose={() => setIsBookingOpen(false)} />
   </>
   );
 }

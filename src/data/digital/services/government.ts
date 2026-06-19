@@ -1,6 +1,6 @@
-import { DigitalService } from '@/types/digital';
+import { DigitalService } from "@/types/service";
 
-export const demoServices: DigitalService[] = [
+export const governmentServices: DigitalService[] = [
   {
     id: 'aadhaar-services',
     slug: 'aadhaar-services',
@@ -22,6 +22,11 @@ export const demoServices: DigitalService[] = [
     status: 'active',
     featured: true,
     popular: true,
+    intents: ['identity proof', 'address change', 'fingerprint update', 'uidai', 'link mobile'],
+    pairedServices: ['pan-card', 'passport'],
+    tags: ['identity', 'government', 'documentation'],
+    keywords: ['Aadhaar', 'UIDAI', 'e-Aadhaar', 'Aadhaar update', 'Aadhaar correction', 'biometric', 'UID'],
+    synonyms: ['aadhar', 'adhar', 'adhar card', 'aadhaar card', 'uid card'],
     thumbnail: '/images/services-hero.jpg',
     banner: '/images/hero-services.jpg',
     faqs: [
@@ -56,6 +61,11 @@ export const demoServices: DigitalService[] = [
     status: 'active',
     featured: true,
     popular: true,
+    intents: ['tax', 'business registration', 'bank account opening', 'financial proof', 'income tax'],
+    pairedServices: ['aadhaar-services', 'income-certificate'],
+    tags: ['identity', 'tax', 'government', 'documentation'],
+    keywords: ['PAN', 'PAN card', 'permanent account number', 'income tax', 'NSDL', 'UTI PAN', 'e-PAN'],
+    synonyms: ['pan card', 'paan card', 'permanent account number card', 'pan registration'],
     thumbnail: '/images/services-hero.jpg',
     banner: '/images/hero-services.jpg',
     faqs: [
@@ -91,6 +101,11 @@ export const demoServices: DigitalService[] = [
     status: 'active',
     featured: false,
     popular: true,
+    intents: ['scholarship', 'subsidy', 'college admission', 'pension', 'income proof', 'government benefit'],
+    pairedServices: ['pm-kisan', 'pan-card'],
+    tags: ['certificate', 'government', 'income', 'documentation'],
+    keywords: ['income certificate', 'income proof', 'salary certificate', 'tahasildar', 'revenue officer', 'scholarship proof'],
+    synonyms: ['income proof certificate', 'income verification', 'aaay praman patra'],
     thumbnail: '/images/services-hero.jpg',
     banner: '/images/hero-services.jpg',
     faqs: [
@@ -122,6 +137,11 @@ export const demoServices: DigitalService[] = [
     status: 'active',
     featured: false,
     popular: true,
+    intents: ['travel abroad', 'international travel', 'visa', 'foreign trip', 'passport renewal'],
+    pairedServices: ['aadhaar-services', 'pan-card'],
+    tags: ['identity', 'government', 'travel', 'documentation'],
+    keywords: ['passport', 'PSK', 'Passport Seva Kendra', 'travel document', 'passport renewal', 'fresh passport', 'ECR', 'non-ECR'],
+    synonyms: ['passport apply', 'passport registration', 'travel passport'],
     thumbnail: '/images/services-hero.jpg',
     banner: '/images/hero-services.jpg',
     faqs: [
@@ -153,103 +173,17 @@ export const demoServices: DigitalService[] = [
     status: 'active',
     featured: false,
     popular: false,
+    intents: ['farmer', 'agriculture', 'subsidy', 'kisan', 'kheti', 'crop', 'farming benefit'],
+    pairedServices: ['income-certificate', 'aadhaar-services'],
+    tags: ['agriculture', 'government', 'subsidy', 'farmer'],
+    keywords: ['PM Kisan', 'Pradhan Mantri Kisan', 'farmer subsidy', 'kisan registration', 'e-KYC kisan', 'PM-KISAN installment'],
+    synonyms: ['kisan samman nidhi', 'pm kisan yojana', 'farmer scheme registration', 'kisaan'],
     thumbnail: '/images/services-hero.jpg',
     banner: '/images/hero-services.jpg',
     faqs: [
       {
         question: 'What is e-KYC in PM Kisan?',
         answer: 'It is a mandatory identity verification process using Aadhaar OTP verification to check eligible farmer banking accounts.'
-      }
-    ]
-  },
-  {
-    id: 'gst-registration',
-    slug: 'gst-registration',
-    title: 'GST Registration',
-    categoryId: 'business',
-    description: 'Get Goods and Services Tax Identification Number (GSTIN) for your business or local co-op society.',
-    icon: 'briefcase',
-    pricing: {
-      total: 1200,
-      currency: 'INR',
-      displayPrice: '₹1200'
-    },
-    processingTime: '5-7 Working Days',
-    requiredDocuments: [
-      { id: 'doc-19', title: 'PAN Card of Business/Proprietor', mandatory: true },
-      { id: 'doc-20', title: 'Aadhaar Card', mandatory: true },
-      { id: 'doc-21', title: 'Proof of Business Address (Utility Bill/Rent Agreement)', mandatory: true },
-      { id: 'doc-22', title: 'Bank Statement', mandatory: true }
-    ],
-    status: 'active',
-    featured: true,
-    popular: false,
-    thumbnail: '/images/services-hero.jpg',
-    banner: '/images/hero-services.jpg',
-    faqs: [
-      {
-        question: 'Is a physical business address required for GST?',
-        answer: 'Yes, a valid registered office address is mandatory. A electricity bill or rent agreement can be provided as proof.'
-      }
-    ]
-  },
-  {
-    id: 'ai-content-writing',
-    slug: 'ai-content-writing',
-    title: 'AI Content Writing & Translation',
-    categoryId: 'ai',
-    description: 'Generate marketing copy, professional Odia/English translations, and digital newsletters powered by custom AI tools.',
-    icon: 'education',
-    pricing: {
-      total: 300,
-      currency: 'INR',
-      displayPrice: '₹300'
-    },
-    processingTime: '1-2 Working Days',
-    requiredDocuments: [
-      { id: 'doc-23', title: 'Draft text or project details', mandatory: true },
-      { id: 'doc-24', title: 'Keywords list', mandatory: false },
-      { id: 'doc-25', title: 'Target audience info', mandatory: false }
-    ],
-    status: 'coming-soon',
-    featured: false,
-    popular: false,
-    thumbnail: '/images/services-hero.jpg',
-    banner: '/images/hero-services.jpg',
-    faqs: [
-      {
-        question: 'Is the content unique and plagiarism-free?',
-        answer: 'Yes. All generated content is customized, reviewed by our editors, and cross-checked for plagiarism.'
-      }
-    ]
-  },
-  {
-    id: 'resume-creation',
-    slug: 'resume-creation',
-    title: 'Professional Resume Creation',
-    categoryId: 'creative',
-    description: 'Create premium, ATS-friendly resumes and job profiles tailored for local, corporate, or technology roles.',
-    icon: 'certificate',
-    pricing: {
-      total: 200,
-      currency: 'INR',
-      displayPrice: '₹200'
-    },
-    processingTime: '2-3 Working Days',
-    requiredDocuments: [
-      { id: 'doc-26', title: 'Educational certificates', mandatory: true },
-      { id: 'doc-27', title: 'Work experience details', mandatory: true },
-      { id: 'doc-28', title: 'Passport photo', mandatory: false }
-    ],
-    status: 'active',
-    featured: false,
-    popular: false,
-    thumbnail: '/images/services-hero.jpg',
-    banner: '/images/hero-services.jpg',
-    faqs: [
-      {
-        question: 'Do you provide editable copies of the resume?',
-        answer: 'Yes, we provide both a ready-to-print PDF file and an editable document file.'
       }
     ]
   }

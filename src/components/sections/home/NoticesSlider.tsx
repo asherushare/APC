@@ -18,7 +18,6 @@ export function NoticesSlider() {
 
   if (activeNotices.length === 0) return null;
 
-  const currentNotice = activeNotices[currentIndex];
 
   const getCategoryLabel = (category: string) => {
     switch (category) {

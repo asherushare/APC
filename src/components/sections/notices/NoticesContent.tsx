@@ -24,18 +24,22 @@ export function NoticesContent() {
     const noticeId = searchParams.get('id');
     const categoryParam = searchParams.get('category');
     
-    if (noticeId) {
-      const match = notices.find((n) => n.id === noticeId);
-      if (match) {
-        setSelectedNotice(match);
+    const timer = setTimeout(() => {
+      if (noticeId) {
+        const match = notices.find((n) => n.id === noticeId);
+        if (match) {
+          setSelectedNotice(match);
+        }
+      } else {
+        setSelectedNotice(null);
       }
-    } else {
-      setSelectedNotice(null);
-    }
 
-    if (categoryParam && ['scheme', 'announcement', 'story'].includes(categoryParam)) {
-      setActiveCategory(categoryParam as CategoryFilter);
-    }
+      if (categoryParam && ['scheme', 'announcement', 'story'].includes(categoryParam)) {
+        setActiveCategory(categoryParam as CategoryFilter);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [searchParams]);
 
   // Handle category change
@@ -274,6 +278,7 @@ export function NoticesContent() {
 
               {selectedNotice.imageUrl && (
                 <div className="relative rounded-xl overflow-hidden aspect-video w-full border border-outline-variant/30 shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedNotice.imageUrl}
                     alt={selectedNotice.title}

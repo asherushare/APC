@@ -5,6 +5,7 @@ import { ServiceIcon } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 import { DigitalService } from '@/types/digital';
 import { categories } from '@/data/digital';
+import { StatusBadge } from './ui/StatusBadge';
 
 interface ServiceCardProps {
   service: DigitalService;
@@ -14,31 +15,7 @@ interface ServiceCardProps {
 export function ServiceCard({ service, onBookClick }: ServiceCardProps) {
   const category = categories.find((c) => c.id === service.categoryId);
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'active':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Active
-          </span>
-        );
-      case 'coming-soon':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
-            Coming Soon
-          </span>
-        );
-      case 'temporarily-unavailable':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-200">
-            Unavailable
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   const isComingSoon = service.status === 'coming-soon';
   const isUnavailable = service.status === 'temporarily-unavailable';
@@ -46,21 +23,21 @@ export function ServiceCard({ service, onBookClick }: ServiceCardProps) {
   return (
     <article
       className={cn(
-        "bg-white border border-outline-variant/40 rounded-2xl p-6 flex flex-col hover:-translate-y-1.5 hover:shadow-tribal-hover hover:border-primary/30 duration-300 transition-all shadow-sm",
+        "group bg-white/80 backdrop-blur-md border border-outline-variant/40 rounded-2xl p-6 flex flex-col hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 duration-300 transition-all shadow-sm",
         service.featured && "border-t-4 border-t-tribal-gold border-x-outline-variant/30 border-b-outline-variant/30 shadow-primary/5 shadow-md"
       )}
     >
       {/* Category & Status */}
       <div className="flex items-center justify-between mb-4 select-none">
-        <span className="text-label-xs font-extrabold text-primary uppercase tracking-widest bg-primary/5 px-2.5 py-0.5 rounded-md">
+        <span className="text-label-xs font-extrabold text-primary uppercase tracking-widest bg-primary/5 px-2.5 py-0.5 rounded-md border border-primary/10">
           {category ? category.name : 'Service'}
         </span>
-        {getStatusBadge(service.status)}
+        <StatusBadge status={service.status} />
       </div>
 
       {/* Title & Icon */}
       <div className="flex items-start gap-3.5 mb-3.5">
-        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary/20">
           <ServiceIcon name={service.icon} />
         </div>
         <h3 className="text-body-lg font-black text-on-surface leading-snug tracking-tight">
@@ -99,7 +76,7 @@ export function ServiceCard({ service, onBookClick }: ServiceCardProps) {
       <div className="flex items-center justify-between mt-auto gap-3.5">
         <div className="flex flex-col bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10 select-none shrink-0 min-w-[80px]">
           <span className="text-[9px] uppercase font-black tracking-widest text-primary/80 leading-none">Flat Fee</span>
-          <span className="text-body-md font-black text-primary mt-1.5 leading-none">{service.price}</span>
+          <span className="text-body-md font-black text-primary mt-1.5 leading-none">{service.pricing?.displayPrice}</span>
         </div>
         <div className="flex gap-2 flex-1">
           <Link
@@ -112,10 +89,14 @@ export function ServiceCard({ service, onBookClick }: ServiceCardProps) {
             onClick={() => onBookClick(service)}
             disabled={isComingSoon || isUnavailable}
             className={cn(
-              "flex-1 text-center bg-primary hover:bg-dark-green text-white active:scale-[0.98] rounded-xl py-2.5 text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md select-none",
-              (isComingSoon || isUnavailable) && "bg-slate-200 border-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed active:scale-100 shadow-none"
+              "flex-1 text-center bg-primary hover:bg-dark-green text-white active:scale-[0.98] rounded-xl py-2.5 text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer shadow-md select-none group-hover:shadow-lg relative overflow-hidden",
+              (isComingSoon || isUnavailable) && "bg-slate-200 border-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed active:scale-100 shadow-none group-hover:shadow-none"
             )}
           >
+            {/* Shimmer effect on hover */}
+            {!isComingSoon && !isUnavailable && (
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
+            )}
             Book
           </button>
         </div>
