@@ -1,0 +1,106 @@
+# Project Status
+
+> **Last Updated**: 2026-06-21
+> **Last Verified Build**: 2026-06-21 — `npm run lint` ✅ | `npm run build` ✅ (22/22 pages)
+
+---
+
+## What is Currently Live and Working
+
+### Pages & Routes
+
+| Route | Status | Description |
+|-------|--------|-------------|
+| `/` | ✅ Working | Homepage — Hero, Mission, Stats, Core Pillars, Services Preview, Notices Slider, Shareholder Section, Leadership Preview, Roadmap Preview, CTA |
+| `/about` | ✅ Working | About APC — history, mission, vision, governance, timeline |
+| `/services` | ✅ Working | Physical services listing page |
+| `/digital` | ✅ Working | Digital services catalog — search autocomplete, filter panel, sort selector, service cards |
+| `/digital/services/[slug]` | ✅ Working | Individual service detail pages (SSG via `generateStaticParams`) |
+| `/book` | ✅ Working | Digital service booking wizard — multi-step, WhatsApp submission |
+| `/contact` | ✅ Working | Contact page with WhatsApp and phone CTAs |
+| `/join` | ✅ Working | Shareholder membership portal — 9-step wizard, document upload, PDF generation, success dashboard |
+| `/leadership` | ✅ Working | Board of directors |
+| `/notices` | ✅ Working | Notices and updates listing |
+| `/roadmap` | ✅ Working | Company roadmap (7 phases) |
+| `/api/digital/search` | ✅ Working | Dynamic search API route — Levenshtein scoring |
+
+### Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Shareholder Application Wizard | ✅ Complete | 9 steps: Identity → Address → Eligibility → Shares → Nominee → Bank → Upload → Review → Declaration |
+| Document Upload (Step 7) | ✅ Complete | 5 documents in 4 groups; format/size validation; thumbnails; replace/remove |
+| Application Review (Step 8) | ✅ Complete | Structured review grid; inline Edit buttons preserve all state |
+| Application Summary PDF | ✅ Complete | jsPDF 2-page A4 receipt generated on submission; stored in memory; download on demand |
+| WhatsApp Submission | ✅ Complete | Full structured application including document filenames sent as WhatsApp deep link |
+| Success Dashboard | ✅ Complete | Application ID, timestamp, 5-step onboarding timeline, 4 action buttons |
+| Digital Service Search | ✅ Complete | Levenshtein typo-tolerance, intent-based scoring, autocomplete |
+| Service Discovery Filters | ✅ Complete | Category, status, price range, processing time, tags |
+| Digital Booking Wizard | ✅ Complete | Multi-step drawer, WhatsApp submission |
+| WhatsApp Button | ✅ Complete | Floating global button; hidden when mobile menu is open |
+| Navbar | ✅ Complete | Desktop + mobile menu; "Become a Shareholder" CTA |
+| Quick Summary Cards | ✅ Complete | 5 info cards on `/join` |
+| Collapsible Info Hub | ✅ Complete | Benefits, Eligibility, Process, Documents, FAQ — collapsed by default |
+
+---
+
+## Current Architecture Constraints
+
+These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECISIONS.md) for the reasoning behind each.
+
+| Constraint | Interim Approach | Future Approach |
+|-----------|-----------------|----------------|
+| No backend | WhatsApp deep links for form submissions | Node.js + Prisma + PostgreSQL (Phase 7) |
+| No file storage | Files validated/previewed client-side; filenames sent via WhatsApp | Server-side file upload with cloud storage (Phase 7) |
+| No authentication | None | Admin authentication for dashboard (Phase 8) |
+| No server-generated IDs | `APC-YYYY-XXXXXX` generated client-side in `src/lib/application-id.ts` | Server-generated UUID (Phase 7) |
+| No analytics | `console.log` placeholders in `src/components/digital/Search.tsx` | Real telemetry pipeline (TBD) |
+
+---
+
+## Pending Placements (Action Required)
+
+| Item | Status | Action |
+|------|--------|--------|
+| Official APC paper application form | ⏳ Not placed | Place PDF at `public/documents/apc-shareholder-application.pdf` |
+
+---
+
+## Known Technical Debt
+
+| Item | Location | Severity |
+|------|----------|---------|
+| Console analytics logger | `src/components/digital/Search.tsx` | Low — replace with real telemetry |
+| Temporary Application ID generator | `src/lib/application-id.ts` | Low — replace with server ID in Phase 7 |
+| Search typo threshold is static | `src/lib/search.ts` | Low — make configurable for large datasets |
+| No search result pagination | `src/hooks/useServiceDiscovery.ts` | Low — needed when > ~100 services |
+
+---
+
+## Last Completed Phase
+
+**Phase 6D Extension — Shareholder Application Wizard** (completed 2026-06-21)
+
+- 9-step application wizard with full validation
+- Grouped document upload zones (4 groups, 5 documents)
+- Pre-submission application review with inline Edit navigation
+- jsPDF 2-page A4 application summary receipt
+- Premium success dashboard with 5-step onboarding timeline
+- WhatsApp submission with document metadata
+- Offline application download card
+
+---
+
+## Last Build Verification
+
+```
+npm run lint   → ✅ Zero errors, zero warnings (2026-06-21)
+npm run build  → ✅ 22/22 pages generated, zero errors (2026-06-21)
+               → Compiled in 35.7s | TypeScript in 30.1s | Static pages in 5.1s
+```
+
+---
+
+## Production URL
+
+Configured in `src/app/layout.tsx` → `metadata.metadataBase`. Updated here after deployment is confirmed.
