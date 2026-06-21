@@ -4,51 +4,51 @@ import { SectionHeading } from '@/components/common/SectionHeading';
 const steps = [
   {
     number: '01',
-    title: 'Submit Interest',
-    description: 'Fill out the simple online registration form below with your location and occupation details.',
+    title: 'Submit Application',
+    description: 'Complete the digital form wizard and submit details via WhatsApp to the APC helpdesk.',
   },
   {
     number: '02',
-    title: 'Verification',
-    description: 'Our local agent coordinates with you to verify your credentials and tribal collective alignment.',
+    title: 'Field Verification',
+    description: 'A block coordinator visits your cluster to verify producer activity and collect physical copies of documents.',
   },
   {
     number: '03',
-    title: 'Approval',
-    description: 'The regional APC advisory board approves the application for collective shareholder onboarding.',
+    title: 'Board Approval',
+    description: 'The regional APC advisory board reviews the field reports and approves your shareholder entry.',
   },
   {
     number: '04',
-    title: 'Activation',
-    description: 'Receive your membership ID, equity share details, and full access to our digital service network.',
+    title: 'Share Allotment',
+    description: 'Deposit confirmation, allocation of your unique Membership ID, and share certificate dispatch.',
   },
 ];
 
 export function MembershipProcess() {
   return (
-    <section className="py-16 md:py-24 bg-surface-container-low saura-pattern">
+    <section className="py-16 md:py-24 bg-surface saura-pattern border-b border-outline-variant/30">
       <Container>
         <SectionHeading
-          label="THE PROCESS"
+          label="TIMELINE"
           title="Onboarding Roadmap"
-          subtitle="Four clear steps to activate your membership and join the cooperative board."
+          subtitle="Four clear steps to finalize your equity subscription and activate your cooperative shareholder role."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pt-4">
           {steps.map((step, index) => (
-            <article key={step.number} className="relative flex flex-col items-center text-center space-y-4">
-              {/* Process dot line connector (desktop only) */}
+            <article key={step.number} className="relative flex flex-col items-center text-center space-y-4 select-none">
+              {/* Process line connector (desktop only) */}
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-7 left-[60%] right-[-40%] h-0.5 bg-primary/20 z-0" />
               )}
 
               {/* Number Circle */}
-              <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg z-10 shadow-md">
+              <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-black text-lg z-10 shadow-md">
                 {step.number}
               </div>
 
               {/* Title */}
-              <h3 className="text-headline-sm text-on-surface font-semibold">
+              <h3 className="text-headline-sm text-on-surface font-extrabold">
                 {step.title}
               </h3>
 

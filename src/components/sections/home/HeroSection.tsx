@@ -13,7 +13,7 @@ const slides = [
     badge: 'Heritage Technology Pioneer',
     title: 'Adivasi Producer Company (APC)',
     description: 'Empowering tribal communities through enterprise and innovation. We bridge traditional wisdom with modern technology to build sustainable, self-reliant communities across Odisha.',
-    ctaPrimary: 'Join APC',
+    ctaPrimary: 'Become a Shareholder',
     ctaPrimaryHref: '/join',
     ctaSecondary: 'Explore Services',
     ctaSecondaryHref: '/services',

@@ -21,7 +21,7 @@ export function CTASection() {
           {/* Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button variant="gold" size="lg" href="/join" id="cta-register-btn">
-              Register Now
+              Become a Shareholder
             </Button>
             <Button
               variant="secondary"

@@ -22,7 +22,7 @@ export function ShareholderSection() {
           {/* Right Action */}
           <div className="flex-shrink-0">
             <Button variant="gold" size="lg" href="/join" id="shareholder-join-btn">
-              Become a Member
+              Become a Shareholder
             </Button>
           </div>
         </div>

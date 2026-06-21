@@ -368,7 +368,7 @@ export function Navbar() {
               className="bg-primary text-white px-6 py-2.5 rounded-full text-label-md font-medium hover:bg-dark-green transition-colors shadow-md"
               id="nav-join-cta"
             >
-              Join APC
+              Become a Shareholder
             </Link>
           </div>
 
@@ -629,7 +629,7 @@ export function Navbar() {
                 onClick={() => setIsMobileOpen(false)}
                 className="block w-full text-center bg-primary text-white py-3 rounded-lg text-label-md font-medium mt-4"
               >
-                Join APC
+                Become a Shareholder
               </Link>
             </div>
           </div>

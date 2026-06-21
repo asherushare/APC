@@ -30,7 +30,7 @@ export function AboutCTA() {
               id="about-cta-support"
               className="border-white/30 text-on-primary hover:bg-white/10"
             >
-              Support the Cause
+              Become a Shareholder
             </Button>
           </div>
         </div>
