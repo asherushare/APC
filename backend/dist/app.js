@@ -12,6 +12,8 @@ const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const requestTrace_1 = require("./middleware/requestTrace");
 const errorHandler_1 = require("./middleware/errorHandler");
 const system_1 = __importDefault(require("./routes/system"));
+const auth_1 = __importDefault(require("./routes/auth"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const logger_1 = require("./utils/logger");
 const env_1 = require("./config/env");
 const swagger_json_1 = __importDefault(require("./config/swagger.json"));
@@ -80,7 +82,8 @@ app.use((0, cors_1.default)({
     origin: env_1.env.NODE_ENV === 'production' ? false : true, // restrict in prod, open in dev
     credentials: true,
 }));
-// 5. Body Parsing
+// 5. Cookie & Body Parsing
+app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // 6. Rate Limiting Middleware
@@ -101,6 +104,7 @@ app.use(limiter);
 // 7. API Routes Mapping
 app.use('/', system_1.default); // Root level endpoints (/health, /version)
 app.use('/api/v1', system_1.default); // Mount on v1 prefix too
+app.use('/api/v1/auth', auth_1.default); // Auth routes
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
 // 9. 404 Route Catch Handler

@@ -26,6 +26,10 @@
 | `[backend] /health` | ✅ Working | API health endpoint (verifies database & storage connection) |
 | `[backend] /version` | ✅ Working | API version metrics (version, build, environment) |
 | `[backend] /api-docs` | ✅ Working | Swagger OpenAPI 3.0 API documentation UI |
+| `[backend] /api/v1/auth/login` | ✅ Working | User login with sequential IP & Email brute-force rate limiters, Bcrypt to Argon2id progressive upgrade |
+| `[backend] /api/v1/auth/refresh` | ✅ Working | Token refresh rotation (RTR) and reuse revocation theft protection |
+| `[backend] /api/v1/auth/logout` | ✅ Working | Revoke active refresh token and clear HTTP-only cookie |
+| `[backend] /api/v1/auth/me` | ✅ Working | Fetch authenticated user details gated by JWT authMiddleware |
 
 ### Features
 
@@ -47,6 +51,10 @@
 | Request Tracing | ✅ Complete | Unique Request ID generated per query and stored in context and headers |
 | Structured Logging | ✅ Complete | Winston logger setup to pipe console logs and trace Request IDs |
 | API Docs Integration | ✅ Complete | Swagger UI compiled statically via OpenAPI config |
+| Staff & Admin Authentication | ✅ Complete | JWT + Refresh Token Rotation (RTR) with HTTP-only, secure, SameSite=Strict cookies |
+| Brute-Force Rate Limiting | ✅ Complete | Double protection applying sequential IP-based and Email-based rate limiters |
+| Progressive Hashing Upgrade | ✅ Complete | Automatic rehashing of legacy Bcrypt user password hashes to Argon2id upon login |
+| Auth Audit Logging | ✅ Complete | Records login successes, failures, logouts, refreshes, and reuse detections in database |
 
 ---
 
@@ -58,7 +66,7 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 |-----------|-----------------|----------------|
 | No backend | WhatsApp deep links for form submissions | Node.js + Prisma + PostgreSQL (Phase 7) |
 | No file storage | Files validated/previewed client-side; filenames sent via WhatsApp | Server-side file upload with cloud storage (Phase 7) |
-| No authentication | None | Admin authentication for dashboard (Phase 8) |
+| No authentication | Resolved in Phase 7B | Admin authentication via JWT and Refresh Cookies implemented |
 | No server-generated IDs | `APC-YYYY-XXXXXX` generated client-side in `src/lib/application-id.ts` | Server-generated UUID (Phase 7) |
 | No analytics | `console.log` placeholders in `src/components/digital/Search.tsx` | Real telemetry pipeline (TBD) |
 
@@ -84,6 +92,18 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 7B — Authentication** (completed 2026-06-22)
+
+- Password security utility utilizing Argon2id with legacy Bcrypt fallback
+- Progressive password upgrades (Bcrypt to Argon2id rehashing upon successful login)
+- JWT Access (15-min) and Refresh (7-day) Token signing/verification
+- Refresh Token Rotation (RTR) and database hash storage
+- Session hijacking mitigation (token reuse revokes all active user sessions)
+- Dual login rate limiting by IP and Email address
+- Gated API routes middleware (`authMiddleware`, `requireRole`)
+- Audit logging of crucial authentication lifecycle events
+- Complete backend integration test script (`test-auth.ts`)
 
 **Phase 7A — Backend Foundation** (completed 2026-06-22)
 

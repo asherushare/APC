@@ -1,32 +1,32 @@
-## Current Task: Phase 7B — Authentication
+## Current Task: Phase 7C — Applications API
 
-**Objective**: Implement secure staff and admin authentication using Argon2id password hashing, JSON Web Tokens (JWT), Refresh Token Rotation (RTR), and secure cookies.
+**Objective**: Implement public shareholder application persistence endpoints (`POST /api/v1/applications`) with column-level AES-256-GCM encryption for sensitive data (Aadhaar, PAN, Bank Account Number) and uniqueness checks.
+
 **Status**: Planning
 
 ### Requirements
-1. Implement password security utility (`backend/src/utils/auth.ts`) utilizing Argon2id for hashing and verification, with a fallback to bcrypt (12 rounds) if Argon2 is not supported.
-2. Implement JWT signing and validation utilities (15-minute Access Tokens, 7-day Refresh Tokens).
-3. Create `RefreshToken` queries in services to persist token hashes (SHA-256) and handle revocation.
-4. Implement `POST /api/v1/auth/login` returning HTTP-only, secure, SameSite=Strict cookies.
-5. Implement `POST /api/v1/auth/refresh` executing Refresh Token Rotation (marking old token revoked, issuing new token pair).
-6. Implement `POST /api/v1/auth/logout` revoking the current session's refresh token.
-7. Create `authMiddleware` to gate and authenticate v1 routes.
+1. Implement a symmetric encryption utility (`backend/src/utils/crypto.ts`) using AES-256-GCM and the 256-bit `ENCRYPTION_KEY` from environment variables.
+2. Build Zod validation schemas for shareholder application input payload matching the 9-step wizard schema.
+3. Generate a SHA-256 hash of the Aadhaar number (`aadhaarHash`) to enforce global uniqueness database constraints.
+4. Encrypt sensitive fields (`aadhaarEncrypted`, `panEncrypted`, `bankAccountNumberEnc`) before database storage.
+5. Create masked representations (`aadhaarMasked`, `panMasked`, `bankAccountNumberMask`) for safe display in lists.
+6. Generate official, unique client-side formatted application IDs on the server (e.g. `APC-YYYY-XXXXXX`).
+7. Create authenticated routes for staff and coordinators to fetch list (`GET /api/v1/applications`) and details (`GET /api/v1/applications/:id`).
 
 ### Pre-conditions
-- Phase 7A: Backend Foundation compiled and verified.
-- Env file containing `JWT_SECRET` and `JWT_REFRESH_SECRET` initialized.
+- Phase 7B: Authentication completed, verified, and compiled successfully with zero build and lint errors. [MET]
+- Local PostgreSQL instance initialized and running.
 
 ### Files Expected to Change
-- `backend/src/utils/auth.ts` [NEW]
-- `backend/src/routes/auth.ts` [NEW]
-- `backend/src/controllers/auth.ts` [NEW]
-- `backend/src/middleware/auth.ts` [NEW]
+- `backend/src/utils/crypto.ts` [NEW]
+- `backend/src/routes/applications.ts` [NEW]
+- `backend/src/controllers/applications.ts` [NEW]
 - `backend/src/app.ts` [MODIFY]
 
 ### Definition of Done
-- [ ] Authentication endpoints fully functional and tested.
-- [ ] Refresh token rotation successfully logs out session upon reuse attempt.
+- [ ] Zod schema successfully validates all incoming application payloads.
+- [ ] Column-level AES-256-GCM encryption functions correctly (verifiable in DB records).
+- [ ] Duplicate Aadhaar submissions return a clean 409 Conflict.
+- [ ] Gated applications query routes compile and verify roles.
 - [ ] `npm run lint` passes.
 - [ ] `npm run build` passes.
-- [ ] `AI/STATUS.md` updated.
-- [ ] `AI/changelog.md` updated.

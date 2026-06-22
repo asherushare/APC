@@ -4,6 +4,30 @@ All notable changes to the Adivasi Producer Company (APC) project are documented
 
 ---
 
+## 2026-06-22 — Phase 7B: Authentication
+
+### What Changed
+- Created password utility (`backend/src/utils/auth.ts`) utilizing `argon2` for Argon2id hashing/verification with transparent `bcrypt` fallback.
+- Added automatic password upgrade strategy: progressive migration of legacy Bcrypt user password hashes to Argon2id upon successful login.
+- Developed JWT signing and verification helpers for 15-minute Access Tokens and 7-day Refresh Tokens, with SHA-256 hashing for database token storage.
+- Integrated `cookie-parser` in `backend/src/app.ts` to manage secure HTTP-only cookies.
+- Built authentication endpoints (`backend/src/controllers/auth.ts` and `backend/src/routes/auth.ts`) for `/login`, `/refresh`, `/logout`, and `/me`.
+- Implemented Refresh Token Rotation (RTR) with token reuse theft mitigation (instantly revoking all active sessions for a user if an old refresh token is reused).
+- Applied double rate-limiting on the login endpoint (IP-based rate limiter and Email-based rate limiter sequentially) to block brute-force attacks.
+- Configured audit logging for critical authentication events: `LOGIN_SUCCESS`, `LOGIN_FAILED`, `LOGOUT`, `TOKEN_REFRESH`, and `TOKEN_REUSE_DETECTED`.
+- Created authentication state verification middleware (`backend/src/middleware/auth.ts`) containing `authMiddleware` and `requireRole`.
+- Programmed a comprehensive integration test suite (`backend/src/scripts/test-auth.ts`) using native `fetch` to validate login, token rotation, reuse mitigation, logout, and rate limiting.
+- Resolved integration test compiler and linter errors: imported missing `hashRefreshToken` from `../utils/auth`, utilized `newAccessToken` to test access token rotation against the gated `/me` route, added `fetch` global definition and disabled `no-console` for test script overrides in `.eslintrc.json` and `eslint.config.js`.
+
+### Why
+- To establish secure, industry-standard admin/staff session management and route protection for the coordinator dashboards.
+
+### Decisions Made
+- Chose to use `cookie-parser` for secure HTTP-only cookie extraction rather than rolling a custom header parser.
+- Structured IP and Email rate limiters as separate sequential middleware instances to achieve comprehensive brute-force protection.
+
+---
+
 ## 2026-06-22 — Phase 7A: Backend Foundation
 
 ### What Changed

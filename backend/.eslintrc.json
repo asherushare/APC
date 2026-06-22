@@ -16,5 +16,19 @@
     "no-console": "warn",
     "semi": ["error", "always"],
     "quotes": ["error", "single"]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/scripts/**/*.ts"],
+      "env": {
+        "node": true
+      },
+      "globals": {
+        "fetch": "readonly"
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
 }

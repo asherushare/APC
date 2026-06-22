@@ -23,6 +23,7 @@ module.exports = [
         require: 'readonly',
         module: 'readonly',
         exports: 'readonly',
+        fetch: 'readonly',
       },
     },
     plugins: {
@@ -36,6 +37,12 @@ module.exports = [
       'no-console': 'warn',
       'semi': ['error', 'always'],
       'quotes': ['error', 'single'],
+    },
+  },
+  {
+    files: ['src/scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];
