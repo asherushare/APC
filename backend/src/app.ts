@@ -8,6 +8,7 @@ import { requestTraceMiddleware } from './middleware/requestTrace';
 import { errorHandlerMiddleware } from './middleware/errorHandler';
 import systemRoutes from './routes/system';
 import authRoutes from './routes/auth';
+import applicationsRoutes from './routes/applications';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
 import { env } from './config/env';
@@ -117,6 +118,7 @@ app.use(limiter);
 app.use('/', systemRoutes); // Root level endpoints (/health, /version)
 app.use('/api/v1', systemRoutes); // Mount on v1 prefix too
 app.use('/api/v1/auth', authRoutes); // Auth routes
+app.use('/api/v1/applications', applicationsRoutes); // Applications routes
 
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

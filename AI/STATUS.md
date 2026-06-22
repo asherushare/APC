@@ -30,6 +30,9 @@
 | `[backend] /api/v1/auth/refresh` | ✅ Working | Token refresh rotation (RTR) and reuse revocation theft protection |
 | `[backend] /api/v1/auth/logout` | ✅ Working | Revoke active refresh token and clear HTTP-only cookie |
 | `[backend] /api/v1/auth/me` | ✅ Working | Fetch authenticated user details gated by JWT authMiddleware |
+| `[backend] /api/v1/applications` | ✅ Working | Submit shareholder application (public POST) |
+| `[backend] /api/v1/applications` | ✅ Working | List applications (GET, gated, block-scoped for coordinators) |
+| `[backend] /api/v1/applications/:id` | ✅ Working | Retrieve single application details (GET, gated, decrypted) |
 
 ### Features
 
@@ -55,6 +58,8 @@
 | Brute-Force Rate Limiting | ✅ Complete | Double protection applying sequential IP-based and Email-based rate limiters |
 | Progressive Hashing Upgrade | ✅ Complete | Automatic rehashing of legacy Bcrypt user password hashes to Argon2id upon login |
 | Auth Audit Logging | ✅ Complete | Records login successes, failures, logouts, refreshes, and reuse detections in database |
+| Applications Persistence API | ✅ Complete | Inserts application and related activities with AES-256-GCM column encryption and Aadhaar checks |
+| Block-Scoped Access Control | ✅ Complete | Restricts coordinators to assigned block applications; staff blocked, admin unlimited |
 
 ---
 
@@ -92,6 +97,16 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 7C — Applications API** (completed 2026-06-22)
+
+- Standalone public applications submission endpoint (`POST /api/v1/applications`)
+- Payload verification using Zod matching the 9-step wizard schema
+- Secure AES-256-GCM column-level encryption for Aadhaar, PAN, and Bank Accounts
+- Unique application sequence ID generation (`APC-YYYY-XXXXXX`) with collision retries
+- Unique constraint checks on SHA-256 hashed Aadhaar numbers to block duplicates
+- Audit logging of application submissions (`APPLICATION_SUBMITTED`)
+- Gated administrative endpoints list and details scoped strictly by coordinator Block
 
 **Phase 7B — Authentication** (completed 2026-06-22)
 

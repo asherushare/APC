@@ -2,6 +2,25 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-22 — Phase 7C: Applications API
+
+### What Changed
+- Created cryptographic utility (`backend/src/utils/crypto.ts`) supporting AES-256-GCM encryption/decryption, SHA-256 Aadhaar hashing, and text masking.
+- Created Zod validation schema (`backend/src/schemas/application.ts`) matching the 9-step shareholder wizard details.
+- Built applications controller (`backend/src/controllers/applications.ts`) and router (`backend/src/routes/applications.ts`) for submitting, listing, and showing application details.
+- Registered applications routes in `backend/src/app.ts` under `/api/v1/applications`.
+- Implemented strict block-level access controls scoping coordinators to view applications matching their assigned geographical block only, while admins have global access.
+- Implemented transactional sequence generator with retry loop for generating `applicationId` to protect against collision concurrency conflicts.
+- Deferred all document uploads, storage keys, S3 operations, and document database persistence to Phase 7D.
+- Programmed a comprehensive integration test suite (`backend/src/scripts/test-applications.ts`) validating submission checks, duplicates, and coordinator scoping.
+
+### Why
+- To establish secure, encrypted database persistence for tribal shareholder membership applications and enforce administrative scoping protocols.
+
+### Decisions Made
+- Scoped coordinators to block levels, blocked staff from viewing data in Phase 7C, and gave admins unrestricted global access.
+- Decided to defer document records entirely to Phase 7D (Documents API) to isolate database submission concerns.
+
 ---
 
 ## 2026-06-22 — Phase 7B: Authentication

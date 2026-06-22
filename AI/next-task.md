@@ -1,32 +1,30 @@
-## Current Task: Phase 7C — Applications API
+## Current Task: Phase 7D — Documents API
 
-**Objective**: Implement public shareholder application persistence endpoints (`POST /api/v1/applications`) with column-level AES-256-GCM encryption for sensitive data (Aadhaar, PAN, Bank Account Number) and uniqueness checks.
+**Objective**: Implement document upload persistence, S3 storage integration, and virus scanning status checks.
 
 **Status**: Planning
 
 ### Requirements
-1. Implement a symmetric encryption utility (`backend/src/utils/crypto.ts`) using AES-256-GCM and the 256-bit `ENCRYPTION_KEY` from environment variables.
-2. Build Zod validation schemas for shareholder application input payload matching the 9-step wizard schema.
-3. Generate a SHA-256 hash of the Aadhaar number (`aadhaarHash`) to enforce global uniqueness database constraints.
-4. Encrypt sensitive fields (`aadhaarEncrypted`, `panEncrypted`, `bankAccountNumberEnc`) before database storage.
-5. Create masked representations (`aadhaarMasked`, `panMasked`, `bankAccountNumberMask`) for safe display in lists.
-6. Generate official, unique client-side formatted application IDs on the server (e.g. `APC-YYYY-XXXXXX`).
-7. Create authenticated routes for staff and coordinators to fetch list (`GET /api/v1/applications`) and details (`GET /api/v1/applications/:id`).
+1. Configure AWS S3 Client using local S3 environment variables.
+2. Build files/multipart form parser middleware (e.g. using `multer` or custom stream receiver).
+3. Implement document upload endpoint (`POST /api/v1/applications/:id/documents`) persisting S3 metadata (checksum, size, mimeType, key) in the `Document` schema.
+4. Establish security rules: only the corresponding applicant or authorized admin/coordinator can upload.
+5. Create mock virus scanning processor triggers updating the scan status to `CLEAN`.
 
 ### Pre-conditions
-- Phase 7B: Authentication completed, verified, and compiled successfully with zero build and lint errors. [MET]
+- Phase 7C: Applications API completed, verified, and compiled successfully with zero build and lint errors. [MET]
 - Local PostgreSQL instance initialized and running.
 
 ### Files Expected to Change
-- `backend/src/utils/crypto.ts` [NEW]
-- `backend/src/routes/applications.ts` [NEW]
-- `backend/src/controllers/applications.ts` [NEW]
+- `backend/src/utils/s3.ts` [NEW]
+- `backend/src/routes/documents.ts` [NEW]
+- `backend/src/controllers/documents.ts` [NEW]
 - `backend/src/app.ts` [MODIFY]
 
 ### Definition of Done
-- [ ] Zod schema successfully validates all incoming application payloads.
-- [ ] Column-level AES-256-GCM encryption functions correctly (verifiable in DB records).
-- [ ] Duplicate Aadhaar submissions return a clean 409 Conflict.
-- [ ] Gated applications query routes compile and verify roles.
+- [ ] Document file uploads are successfully piped and saved in S3.
+- [ ] Database `Document` records are created and linked to `ShareholderApplication`.
+- [ ] Scan status transitions are logged.
 - [ ] `npm run lint` passes.
 - [ ] `npm run build` passes.
+
