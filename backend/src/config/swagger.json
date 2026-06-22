@@ -1,0 +1,119 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Adivasi Producer Company (APC) API",
+    "description": "API Documentation for the Adivasi Producer Company (APC) Shareholder Application and Service Booking portal.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "APC Engineering Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "v1 Base Path"
+    },
+    {
+      "url": "/",
+      "description": "Root Path"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check system and service health status",
+        "description": "Returns status metrics for the API server, database connection, and S3 object storage connectivity.",
+        "responses": {
+          "200": {
+            "description": "System is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more services are unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "summary": "Retrieve application version and build details",
+        "description": "Returns semver version, build generation timestamp, git commit identifier, and operational node environment.",
+        "responses": {
+          "200": {
+            "description": "Version metadata details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["UP", "DOWN"]
+          },
+          "database": {
+            "type": "string",
+            "enum": ["CONNECTED", "DISCONNECTED"]
+          },
+          "storage": {
+            "type": "string",
+            "enum": ["CONNECTED", "DISCONNECTED"]
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Server runtime uptime in seconds"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          }
+        }
+      },
+      "VersionResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "buildDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gitCommit": {
+            "type": "string",
+            "example": "31b67fd"
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          }
+        }
+      }
+    }
+  }
+}
