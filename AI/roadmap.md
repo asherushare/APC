@@ -38,7 +38,12 @@ This technical roadmap tracks the phases of software development that support AP
 | **6D** | UX Refinement | ✅ Complete | Navigation renaming, page flows, quick summary cards, collapsible information hub |
 | **6D Ext**| Shareholder Wizard | ✅ Complete | 9-step shareholder wizard, grouped document upload, pre-submission review, client-side jsPDF receipt, success dashboard |
 | **6.5A** | AI Workspace | ✅ Complete | Creating the permanent `AI/` directory as the engineering memory of the project |
-| **7** | Backend API | 📅 Planned | Node.js + Prisma + PostgreSQL; application persistence; file storage; server-generated IDs |
+| **7A** | Backend Foundation | ✅ Complete | Express server setup, request tracing, Zod environment checks, health/version heartbeats, Swagger UI |
+| **7B** | Authentication | 📅 Planned | JWT + Refresh Token Rotation cookies, Argon2id password security |
+| **7C** | Applications API | 📅 Planned | Public shareholder form persistence with column-level GCM encryption |
+| **7D** | Document Upload | 📅 Planned | Pre-signed S3 upload URLs, confirm verification checksums, async virus scan lifecycle |
+| **7E** | Admin APIs | 📅 Planned | Scoped geographical coordinators dashboard lists, paginated filters, AuditLog hooks |
+| **7F** | Hardening & Testing | 📅 Planned | Security headers, Postgres backup script execution, Docker environments, integration tests |
 | **8** | Admin Dashboard | 📅 Planned | Application review UI, status tracking, coordinator management, document viewer |
 | **9** | Deployment & DevOps | 📅 Planned | CI/CD pipeline, production hosting, managed database, environment configuration |
 | **10** | Mobile / Field App | 📅 Planned | React Native app for block coordinators; offline-capable; field verification workflow |

@@ -1,7 +1,7 @@
 # Project Status
 
-> **Last Updated**: 2026-06-21
-> **Last Verified Build**: 2026-06-21 — `npm run lint` ✅ | `npm run build` ✅ (22/22 pages)
+> **Last Updated**: 2026-06-22
+> **Last Verified Build**: 2026-06-22 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
 
 ---
 
@@ -23,6 +23,9 @@
 | `/notices` | ✅ Working | Notices and updates listing |
 | `/roadmap` | ✅ Working | Company roadmap (7 phases) |
 | `/api/digital/search` | ✅ Working | Dynamic search API route — Levenshtein scoring |
+| `[backend] /health` | ✅ Working | API health endpoint (verifies database & storage connection) |
+| `[backend] /version` | ✅ Working | API version metrics (version, build, environment) |
+| `[backend] /api-docs` | ✅ Working | Swagger OpenAPI 3.0 API documentation UI |
 
 ### Features
 
@@ -41,6 +44,9 @@
 | Navbar | ✅ Complete | Desktop + mobile menu; "Become a Shareholder" CTA |
 | Quick Summary Cards | ✅ Complete | 5 info cards on `/join` |
 | Collapsible Info Hub | ✅ Complete | Benefits, Eligibility, Process, Documents, FAQ — collapsed by default |
+| Request Tracing | ✅ Complete | Unique Request ID generated per query and stored in context and headers |
+| Structured Logging | ✅ Complete | Winston logger setup to pipe console logs and trace Request IDs |
+| API Docs Integration | ✅ Complete | Swagger UI compiled statically via OpenAPI config |
 
 ---
 
@@ -79,6 +85,15 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 
 ## Last Completed Phase
 
+**Phase 7A — Backend Foundation** (completed 2026-06-22)
+
+- Standalone Express + TypeScript API setup in `backend/`
+- Validated environments loader using Zod
+- Winston logger & request tracing middleware with UUID Request IDs
+- Base Prisma schema and seeding models for PostgreSQL
+- Public heartbeat `/health` and metadata `/version` routes
+- Swagger UI OpenAPI integration at `/api-docs`
+
 **Phase 6D Extension — Shareholder Application Wizard** (completed 2026-06-21)
 
 - 9-step application wizard with full validation
@@ -94,9 +109,13 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ## Last Build Verification
 
 ```
+Frontend:
 npm run lint   → ✅ Zero errors, zero warnings (2026-06-21)
 npm run build  → ✅ 22/22 pages generated, zero errors (2026-06-21)
-               → Compiled in 35.7s | TypeScript in 30.1s | Static pages in 5.1s
+
+Backend:
+npm run lint   → ✅ Zero errors, zero warnings (2026-06-22)
+npm run build  → ✅ Compiled successfully with zero errors (2026-06-22)
 ```
 
 ---

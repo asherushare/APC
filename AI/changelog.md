@@ -4,6 +4,27 @@ All notable changes to the Adivasi Producer Company (APC) project are documented
 
 ---
 
+## 2026-06-22 — Phase 7A: Backend Foundation
+
+### What Changed
+- Created a standalone `backend/` project directory at the root containing package configurations.
+- Integrated `zod` environment variable validation (`backend/src/config/env.ts`) and configured local `.env` values.
+- Built a Winston structured logging utility (`backend/src/utils/logger.ts`) and integrated Morgan logging.
+- Set up a unique Request ID (UUIDv4) tracing middleware (`backend/src/middleware/requestTrace.ts`) and custom centralized global error handlers (`backend/src/middleware/errorHandler.ts`).
+- Created the Prisma ORM schema (`backend/prisma/schema.prisma`) defining `User`, `RefreshToken`, `ShareholderApplication`, `Document`, `ProducerActivity`, and `AuditLog` tables.
+- Programmed a database seed script (`backend/prisma/seed.ts`) to hash and seed default Admin accounts.
+- Implemented `/health` and `/version` heartbeat/metadata routes.
+- Configured a static OpenAPI 3.0 configuration (`backend/src/config/swagger.json`) and exposed Swagger UI at `/api-docs`.
+
+### Why
+- To establish the solid security, tracing, documentation, and database framework for the Express API server before building domain routes.
+
+### Decisions Made
+- Deferred monorepo workspaces and structured the backend in an isolated root folder to reduce compilation complexity.
+- Implemented local ESLint flat configuration (`backend/eslint.config.js`) to prevent conflict with root Next.js configuration rules.
+
+---
+
 ## 2026-06-21 — Phase 6.5A: AI Engineering Workspace Foundation
 
 ### What Changed

@@ -1,60 +1,84 @@
 # AI Behavior Instructions
 
-This document defines explicit behavioral rules and operational protocols for any AI assistant (including Antigravity, Cursor, Claude Code, GitHub Copilot, etc.) working on the APC project. Following these guidelines is critical to maintaining codebase health and visual consistency.
+This document defines explicit behavioral rules, operational workflows, and the Definition of Done for any AI assistant (including Antigravity, Gemini, Claude, Cursor, GitHub Copilot, etc.) working on the Adivasi Producer Company (APC) project. Following these guidelines is critical to maintaining codebase health, type safety, and system integrity.
 
 ---
 
 ## 1. Session Start Protocol
 When starting a new session, you must read the following files in this order **before** proposing or writing any code:
-1. [`AI/README.md`](./README.md) — For project orientation.
-2. [`AI/STATUS.md`](./STATUS.md) — To understand what is working, what is pending, and the latest build statuses.
-3. [`AI/next-task.md`](./next-task.md) — To find your active objective and checklist.
-4. [`AI/DECISIONS.md`](./DECISIONS.md) — To review past architectural decisions (ADRs) and constraints.
+1. [`AI/README.md`](./README.md) — Project orientation and workspace index.
+2. [`AI/STATUS.md`](./STATUS.md) — Live project state, active pathways, and compiler history.
+3. [`AI/next-task.md`](./next-task.md) — Active target requirements and task checkpoints.
+4. [`AI/DECISIONS.md`](./DECISIONS.md) — ADRs (Architecture Decision Records) defining system constraints.
 
 ---
 
-## 2. Before You Begin Working
+## 2. Pre-Development Scopes
 
-- **Before writing or editing any UI component**: Read [`AI/design-system.md`](./design-system.md) and [`AI/coding-standards.md`](./coding-standards.md).
-- **Before adding a route, service, or API endpoint**: Read [`AI/architecture.md`](./architecture.md).
-- **Before asking about or coding business-specific terms (e.g. fields in forms)**: Read [`AI/GLOSSARY.md`](./GLOSSARY.md).
+- **Before writing/editing any UI component**: Read [`AI/design-system.md`](./design-system.md) and [`AI/coding-standards.md`](./coding-standards.md).
+- **Before adding a route, database table, or API endpoint**: Read [`AI/architecture.md`](./architecture.md).
+- **Before coding business logic fields or forms**: Read [`AI/GLOSSARY.md`](./GLOSSARY.md).
 
 ---
 
-## 3. Core Operational Rules
+## 3. Core Operational Workflow (Standard Rule)
 
-### The Proposal Rule
-Any change that affects **more than 3 files**, introduces a **new route**, adds a **new library**, or alters the **system architecture** must be formally proposed as an implementation plan and approved by the user before any production code changes are made.
+Every task, phase, or bug fix must follow the sequential lifecycle below. Never skip a step:
 
-### The Verification Rule
-Every completed code change must be verified using the following CLI checks. Both must exit successfully with zero warnings/errors before you report completion:
-```bash
-npm run lint    # Must yield zero errors and zero warnings
-npm run build   # Must compile cleanly and generate static pages
+```
+    Plan  ──>  User Approval  ──>  Implementation  ──>  Verification  ──>  AI Workspace Update  ──>  Final Report
 ```
 
-### The Documentation Rule
-After completing a task or fixing a bug, you must immediately update:
-- [`AI/STATUS.md`](./STATUS.md) — Update the build verification date, working/pending features, and tech debt.
-- [`AI/changelog.md`](./changelog.md) — Append a new entry detailing what changed, why, and any local decisions.
-- Update [`AI/next-task.md`](./next-task.md) to reflect the new state.
+### Rule A: The Planning Gate
+- **No Early Modifications**: Production code must **NEVER** be modified before an implementation plan has been written, reviewed, and explicitly approved by the user.
+- **Proposal Threshold**: Any change that modifies/creates **more than 3 files**, introduces a **new route/API**, adds a **new library**, or alters the **system architecture** must be formally proposed as an `implementation_plan.md` artifact.
+- **Credential Integrity**: If the implementation requires API keys, secrets, database credentials, cloud storage accounts, or third-party registrations:
+  - **STOP** and ask the user to create the account or supply the credentials.
+  - **NEVER** generate placeholder, mocked, or fake production values in your files.
 
-### The Phase Transition Rule
-When an entire engineering phase (from [`AI/roadmap.md`](./roadmap.md)) is finalized:
-1. Move the finished task's description from `next-task.md` to `changelog.md`.
-2. Update `STATUS.md` with the new completed systems.
-3. Update `roadmap.md` to mark the phase status as `✅ Complete`.
-4. Write the next upcoming phase task specification into `next-task.md`.
+### Rule B: Verification & Build Gate
+Every code change must compile cleanly:
+```bash
+# Verify both return zero errors and warnings
+npm run lint
+npm run build
+```
+
+### Rule C: Synchronized Documentation Gate
+Documentation must always remain fully synchronized with the actual implementation:
+- Update [`AI/STATUS.md`](./STATUS.md) after modifying features, API routes, or adding technical debt.
+- Append log details to [`AI/changelog.md`](./changelog.md) for all modifications.
 
 ---
 
-## 4. Absolute Coding Boundaries (Hard Rules)
+## 4. Definition of Done (DoD)
 
-These rules are enforced via static analysis and strict manual review. Never violate them:
+A task, bug fix, or phase is **NOT** complete until all applicable checks below are finalized and checked off:
 
-1. **No `any` Types**: Never use TypeScript's `any` type. If a type is unknown, type it as `unknown` and perform runtime narrowing, or define a structured type/interface in `src/types/`.
-2. **No Component Nesting**: Never declare a React component function inside another component's render scope. This triggers Hook violations and forces state resets on every render.
-3. **No Inline Static Data**: Never hardcode arrays (e.g. lists of features, FAQ items, nav links) inside components. Always export them as typed structures from `src/data/`.
-4. **No Inline Styling**: Always style components using CSS variables or Tailwind utility classes. Do not use the React `style={{}}` prop unless calculating a truly dynamic value (e.g., progress bar width).
-5. **No Hardcoded Brand/Contact Info**: Never inline phone numbers, email addresses, WhatsApp numbers, or brand text in markup. Reference them from `src/data/company.ts` or `src/constants/`.
-6. **No Speculative Coding**: Do not implement extra features, API endpoints, or state trackers because they "might be useful later." Implement only what is explicitly defined in the approved plan.
+- [ ] **Implementation**: Source code matches all requirements in the approved plan.
+- [ ] **TypeScript Compilation**: No typescript compilation errors exist across the workspace.
+- [ ] **Build Pipeline**: `npm run build` compiles frontend and backend targets successfully.
+- [ ] **Static Code Quality**: `npm run lint` yields zero warnings and zero errors.
+- [ ] **Database Integrity**: Prisma schema validates cleanly (`npx prisma validate`) and SQL migrations execute without issues.
+- [ ] **Automated Testing**: All integration and unit tests run and pass (when test suites are available).
+- [ ] **Workspace Sync**: [`AI/STATUS.md`](./STATUS.md) is updated (last updated dates, active routes, features, verified builds).
+- [ ] **Changelog Sync**: [`AI/changelog.md`](./changelog.md) has been updated with a new entry detailing changes, rationale, and local decisions.
+- [ ] **Roadmap Sync**: [`AI/roadmap.md`](./roadmap.md) is updated if a major engineering milestone has been completed.
+- [ ] **Next Task Setup**: [`AI/next-task.md`](./next-task.md) is updated to describe the next logical feature or phase in line.
+- [ ] **Architecture Sync**: [`AI/architecture.md`](./architecture.md) or [`AI/DECISIONS.md`](./DECISIONS.md) are updated if code organization or ADR decisions are changed.
+- [ ] **Walkthrough Created**: A detailed `walkthrough.md` is generated in the brain directory summarizing changes.
+- [ ] **Implementation Report**: A `final_implementation_report.md` is generated listing every file created/modified.
+- [ ] **Verification Summary**: A summary of all validations executed (and logs/terminal outputs) is presented to the user.
+
+---
+
+## 5. Absolute Coding Boundaries (Hard Rules)
+
+These rules are enforced strictly. Never violate them:
+
+1. **No `any` Types**: Never use TypeScript's `any` type. If a type is unknown, use `unknown` and perform explicit narrowing, or define a structured interface in `src/types/` (frontend) or shared config (backend).
+2. **No Nested Component Declarations**: Never declare a React component function inside another component's render scope. It breaks Hook execution rules and resets state.
+3. **No Inline Static Data**: Never hardcode arrays (e.g. lists of options, FAQs) inside components. Always export them from `src/data/` or config helpers.
+4. **No Inline Styling**: Always style components using CSS variables or Tailwind utility classes. Do not use the `style={{}}` prop unless calculating a truly dynamic style (e.g. progress bar width).
+5. **No Hardcoded Credentials or Brand Info**: Never inline phone numbers, email addresses, database passwords, or auth keys in markup or functions. Reference them from config loaders or `.env` objects.
+6. **No Speculative Coding**: Do not implement extra features or API endpoints because they "might be useful later." Implement only what is explicitly defined in the approved plan.

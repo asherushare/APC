@@ -9,6 +9,7 @@ Analyze the current state of the repository:
 - Locate the relevant components, routes, data models, or service helpers.
 - Run search queries using `grep_search` to find existing usages of functions or patterns you plan to touch.
 - Check `AI/STATUS.md` and `AI/DECISIONS.md` to avoid repeating research or violating architectural boundaries.
+- **Strict Rule**: You may only inspect files and run diagnostic commands. You must **NEVER** write or modify any application source code files during this planning phase.
 
 ---
 
@@ -20,11 +21,14 @@ Map the user request requirements to the codebase:
 
 ---
 
-## Step 3: Identify the Decision Surface
-Identify all design decisions, trade-offs, and choices:
+## Step 3: Identify the Decision Surface & Credentials
+Identify all design decisions, trade-offs, and integrations:
 - Does the change require a new library/dependency?
 - Are there security, privacy, or performance concerns?
 - Does the feature require changing existing types or constants?
+- **Credentials & API Keys**: If the implementation requires credentials, secrets, database passwords, or third-party accounts:
+  - **STOP** and ask the user to configure the credentials or create the accounts.
+  - **NEVER** generate placeholder or fake credentials into the plan or source files.
 - Document these choices clearly in the plan so the user can review them.
 
 ---
@@ -46,7 +50,7 @@ Structure your implementation plan in the `implementation_plan.md` artifact (or 
 [Brief summary of the target features and how it fits into the roadmap]
 
 ## User Review Required
-[Document any key design decisions, risks, or stack changes that the user must review]
+[Document any key design decisions, risks, credentials requirements, or stack changes that the user must review]
 
 ## Open Questions
 [List specific questions for the user to resolve design or logic ambiguities]

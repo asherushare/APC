@@ -1,35 +1,31 @@
-## Current Task: Phase 7 — Backend API
+## Current Task: Phase 7B — Authentication
 
-**Objective**: Implement a Node.js backend using Prisma ORM and PostgreSQL to persist shareholder applications, handle server-side file uploads, and generate unique Application IDs.
+**Objective**: Implement secure staff and admin authentication using Argon2id password hashing, JSON Web Tokens (JWT), Refresh Token Rotation (RTR), and secure cookies.
 **Status**: Planning
 
 ### Requirements
-1. Migrate the repository to a monorepo structure (ADR-009).
-2. Setup PostgreSQL database and Prisma ORM configuration.
-3. Create backend REST API endpoints for:
-   - Submitting a shareholder application (saving data to PostgreSQL).
-   - Uploading supporting documents (to cloud storage, e.g., AWS S3 or Supabase Storage).
-   - Fetching application status.
-   - Generating official receipt PDFs on the server.
-4. Replace frontend `submitShareholderApplication()` (in `src/lib/membership.ts`) and file handling to point to the new backend API routes.
-5. Replace client-side Application ID generator with server-generated database IDs.
+1. Implement password security utility (`backend/src/utils/auth.ts`) utilizing Argon2id for hashing and verification, with a fallback to bcrypt (12 rounds) if Argon2 is not supported.
+2. Implement JWT signing and validation utilities (15-minute Access Tokens, 7-day Refresh Tokens).
+3. Create `RefreshToken` queries in services to persist token hashes (SHA-256) and handle revocation.
+4. Implement `POST /api/v1/auth/login` returning HTTP-only, secure, SameSite=Strict cookies.
+5. Implement `POST /api/v1/auth/refresh` executing Refresh Token Rotation (marking old token revoked, issuing new token pair).
+6. Implement `POST /api/v1/auth/logout` revoking the current session's refresh token.
+7. Create `authMiddleware` to gate and authenticate v1 routes.
 
 ### Pre-conditions
-- Completion and verification of Phase 6.5A (AI Workspace Foundation).
-- PostgreSQL instance configured and accessible.
+- Phase 7A: Backend Foundation compiled and verified.
+- Env file containing `JWT_SECRET` and `JWT_REFRESH_SECRET` initialized.
 
 ### Files Expected to Change
-- `src/lib/membership.ts`
-- `src/lib/application-id.ts`
-- `src/components/sections/join/JoinFormSection.tsx`
-- `package.json`
-- Monorepo structural files (`tsconfig.json`, workspaces configuration, etc.)
+- `backend/src/utils/auth.ts` [NEW]
+- `backend/src/routes/auth.ts` [NEW]
+- `backend/src/controllers/auth.ts` [NEW]
+- `backend/src/middleware/auth.ts` [NEW]
+- `backend/src/app.ts` [MODIFY]
 
 ### Definition of Done
-- [ ] Monorepo successfully initialized and building.
-- [ ] Prisma schema defined and database migrations run.
-- [ ] API endpoints fully functional and tested.
-- [ ] Frontend successfully integrated with backend routes (no longer relying on raw WhatsApp deep links for data persistence).
+- [ ] Authentication endpoints fully functional and tested.
+- [ ] Refresh token rotation successfully logs out session upon reuse attempt.
 - [ ] `npm run lint` passes.
 - [ ] `npm run build` passes.
 - [ ] `AI/STATUS.md` updated.
