@@ -97,3 +97,27 @@ export function verifyRefreshToken(token: string): TokenPayload {
 export function hashRefreshToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
+
+export interface UploadTokenPayload {
+  applicationId: string;
+  type: 'upload';
+}
+
+/**
+ * Generates a signed Upload Token for applicant document upload
+ */
+export function generateUploadToken(applicationId: string): string {
+  return jwt.sign({ applicationId, type: 'upload' }, env.JWT_SECRET, { expiresIn: '24h' });
+}
+
+/**
+ * Verifies a signed Upload Token
+ */
+export function verifyUploadToken(token: string): UploadTokenPayload {
+  const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
+  if (!payload || payload.type !== 'upload') {
+    throw new Error('Invalid upload token type');
+  }
+  return payload as unknown as UploadTokenPayload;
+}
+

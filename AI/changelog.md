@@ -2,6 +2,29 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-24 — Phase 7D: Documents API
+
+### What Changed
+- Installed `@aws-sdk/client-s3`, `multer`, and `@types/multer` dependencies in the backend.
+- Created S3 utility module (`backend/src/utils/s3.ts`) implementing AWS S3 client wrappers, path-style routing for local MinIO compatibility, object buffer uploads, and automatic target bucket verification/creation on startup.
+- Developed upload token utility helpers (`backend/src/utils/auth.ts`) generating and verifying cryptographically signed JWT `uploadToken` objects.
+- Updated `submitApplication` controller in `backend/src/controllers/applications.ts` to generate and return `uploadToken` upon successful shareholder application submission.
+- Built document upload controller (`backend/src/controllers/documents.ts`) enforcing secure gating: authenticated coordinators are restricted by geographical Block, admins are unrestricted, and public applicants must present a valid signed `uploadToken` matching the application UUID.
+- Built document upload router (`backend/src/routes/documents.ts`) configuring `multer.memoryStorage` with a 5MB upload limit and PDF, PNG, JPEG, and WebP file format restrictions.
+- Integrated background virus scanner mock logic updating `virusScanStatus` to `CLEAN` after 5 seconds and logging the transition.
+- Registered documents upload routes in `backend/src/app.ts` under `/api/v1/applications`.
+- Implemented bucket check and creation in `backend/src/server.ts` before HTTP listener starts up.
+- Programmed a comprehensive integration test suite (`backend/src/scripts/test-documents.ts`) validating public/admin/coordinator access gates, S3 upload checks, and virus scanner transitions.
+
+### Why
+- To enable applicants and coordinators to safely upload supporting onboarding documents to secure storage while strictly gating uploads to authorized entities.
+
+### Decisions Made
+- Chose to use JWT-based `uploadToken` generated during form submission to uniquely authorize subsequent public uploads without requiring database schema changes or user log-in sessions for applicants.
+- Decided to ignore `backend/**` in root `eslint.config.mjs` since the backend has its own eslint process and compiling typescript to dist javascript shouldn't pollute root eslint checks.
+
+---
+
 ## 2026-06-22 — Phase 7C: Applications API
 
 ### What Changed

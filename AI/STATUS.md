@@ -1,7 +1,7 @@
 # Project Status
 
-> **Last Updated**: 2026-06-22
-> **Last Verified Build**: 2026-06-22 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
+> **Last Updated**: 2026-06-24
+> **Last Verified Build**: 2026-06-24 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
 
 ---
 
@@ -33,6 +33,7 @@
 | `[backend] /api/v1/applications` | ✅ Working | Submit shareholder application (public POST) |
 | `[backend] /api/v1/applications` | ✅ Working | List applications (GET, gated, block-scoped for coordinators) |
 | `[backend] /api/v1/applications/:id` | ✅ Working | Retrieve single application details (GET, gated, decrypted) |
+| `[backend] /api/v1/applications/:id/documents` | ✅ Working | Secure document upload endpoint (multipart POST, S3 storage, JWT & secure uploadToken verification) |
 
 ### Features
 
@@ -60,6 +61,7 @@
 | Auth Audit Logging | ✅ Complete | Records login successes, failures, logouts, refreshes, and reuse detections in database |
 | Applications Persistence API | ✅ Complete | Inserts application and related activities with AES-256-GCM column encryption and Aadhaar checks |
 | Block-Scoped Access Control | ✅ Complete | Restricts coordinators to assigned block applications; staff blocked, admin unlimited |
+| Secure S3 Document Upload | ✅ Complete | Multipart file parsing (multer), S3 object storage (MinIO), SHA-256 checksums, and async mock virus scanning |
 
 ---
 
@@ -97,6 +99,15 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 7D — Documents API** (completed 2026-06-24)
+
+- Configure AWS S3 Client with local MinIO settings and forcePathStyle enabled
+- Automatically check and create S3 bucket (`apc-supporting-documents`) on server startup
+- Implement secure document upload endpoint (`POST /api/v1/applications/:id/documents`)
+- Add secure token authorization model for applicants (signed JWT `uploadToken`) to protect ownership
+- Enforce block-scoped uploads for coordinators and unrestricted access for admins
+- Integrate Winston logger for tracking virus scan status transitions from `PENDING` to `CLEAN`
 
 **Phase 7C — Applications API** (completed 2026-06-22)
 

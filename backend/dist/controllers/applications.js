@@ -7,6 +7,7 @@ const logger_1 = require("../utils/logger");
 const crypto_1 = require("../utils/crypto");
 const errors_1 = require("../utils/errors");
 const application_1 = require("../schemas/application");
+const auth_1 = require("../utils/auth");
 /**
  * Helper to record audit logs.
  */
@@ -149,9 +150,11 @@ const submitApplication = async (req, res, next) => {
         }
         // 6. Log audit event
         await recordAuditLog(null, 'APPLICATION_SUBMITTED', 'ShareholderApplication', savedApp.id, req);
+        const uploadToken = (0, auth_1.generateUploadToken)(savedApp.id);
         res.status(201).json({
             success: true,
             applicationId: savedApp.applicationId,
+            uploadToken,
             submittedAt: savedApp.submittedAt,
         });
     }

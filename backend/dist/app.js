@@ -14,6 +14,7 @@ const errorHandler_1 = require("./middleware/errorHandler");
 const system_1 = __importDefault(require("./routes/system"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const applications_1 = __importDefault(require("./routes/applications"));
+const documents_1 = __importDefault(require("./routes/documents"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const logger_1 = require("./utils/logger");
 const env_1 = require("./config/env");
@@ -107,6 +108,7 @@ app.use('/', system_1.default); // Root level endpoints (/health, /version)
 app.use('/api/v1', system_1.default); // Mount on v1 prefix too
 app.use('/api/v1/auth', auth_1.default); // Auth routes
 app.use('/api/v1/applications', applications_1.default); // Applications routes
+app.use('/api/v1/applications', documents_1.default); // Documents upload routes
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
 // 9. 404 Route Catch Handler

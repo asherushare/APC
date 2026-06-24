@@ -17,6 +17,7 @@ import {
   ForbiddenError,
 } from '../utils/errors';
 import { CreateApplicationSchema } from '../schemas/application';
+import { generateUploadToken } from '../utils/auth';
 
 /**
  * Helper to record audit logs.
@@ -194,9 +195,12 @@ export const submitApplication = async (
       req
     );
 
+    const uploadToken = generateUploadToken(savedApp.id);
+
     res.status(201).json({
       success: true,
       applicationId: savedApp.applicationId,
+      uploadToken,
       submittedAt: savedApp.submittedAt,
     });
   } catch (error) {

@@ -10,6 +10,8 @@ exports.generateRefreshToken = generateRefreshToken;
 exports.verifyAccessToken = verifyAccessToken;
 exports.verifyRefreshToken = verifyRefreshToken;
 exports.hashRefreshToken = hashRefreshToken;
+exports.generateUploadToken = generateUploadToken;
+exports.verifyUploadToken = verifyUploadToken;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -94,4 +96,20 @@ function verifyRefreshToken(token) {
  */
 function hashRefreshToken(token) {
     return crypto_1.default.createHash('sha256').update(token).digest('hex');
+}
+/**
+ * Generates a signed Upload Token for applicant document upload
+ */
+function generateUploadToken(applicationId) {
+    return jsonwebtoken_1.default.sign({ applicationId, type: 'upload' }, env_1.env.JWT_SECRET, { expiresIn: '24h' });
+}
+/**
+ * Verifies a signed Upload Token
+ */
+function verifyUploadToken(token) {
+    const payload = jsonwebtoken_1.default.verify(token, env_1.env.JWT_SECRET);
+    if (!payload || payload.type !== 'upload') {
+        throw new Error('Invalid upload token type');
+    }
+    return payload;
 }
