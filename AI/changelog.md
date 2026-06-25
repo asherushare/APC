@@ -2,6 +2,42 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-25 — Phase 8: Frontend Integration (Milestone 1: Core Infrastructure)
+
+### What Changed
+- Created `src/lib/api-client.ts` implementing a React-independent fetch client with 30-second `AbortController` timeout support, `credentials: 'include'` for secure refresh token cookie transmission, and dynamic `Authorization` header injection.
+- Implemented automatic token refresh rotation intercepts inside the API client, queuing concurrent calls when a `401 Unauthorized` token expiration triggers, updating the session via `POST /auth/refresh`, and retrying the queue.
+- Created `src/context/AuthContext.tsx` and custom `useAuth` hook in `src/hooks/useAuth.ts` managing profile states, loading indicators, and user login/logout queries.
+- Created Next.js edge route protection `src/middleware.ts` gating `/admin/:path*` (excluding `/admin/login`) by verifying the presence of the `refreshToken` cookie.
+- Wrapped the root `src/app/layout.tsx` with the `AuthProvider` component to propagate state across the application tree.
+- Resolved all typescript unused catch parameters and explicit `any` linter issues.
+
+### Why
+- To establish the secure API communication layer, session synchronization, and access control route gating before constructing client dashboard components.
+
+### Decisions Made
+- Chose to keep `api-client.ts` free of React-specific dependencies by providing a token listener registration helper, allowing clean imports outside the React rendering context.
+
+## 2026-06-25 — Phase 7F: Backend Hardening, Production Readiness, and Final Verification
+
+### What Changed
+- Added environment schema verification for `CORS_ORIGIN` (optional comma-separated string) and `GLOBAL_RATE_LIMIT` (coerced number, default 500) inside `backend/src/config/env.ts`.
+- Configured dynamic CORS checking utilizing `env.CORS_ORIGIN` splits and custom callback matching inside `backend/src/app.ts`.
+- Configured express global rate limiting with `env.GLOBAL_RATE_LIMIT` inside `backend/src/app.ts`.
+- Attached a dedicated rate limiter (`submitRateLimiter`) restricting public submissions to `POST /api/v1/applications` to 10 submissions per hour per IP.
+- Hardened the `GET /health` endpoint inside `backend/src/routes/system.ts` by integrating a live `HeadBucketCommand` query to confirm active S3 bucket connectivity.
+- Created `backend/src/scripts/backup-db.ps1` for PostgreSQL database backups using Windows-native ACL control commands for permission isolation and a 7-day retention sweep.
+- Developed a production-optimized multi-stage build configuration in `backend/Dockerfile`.
+- Built `backend/docker-compose.prod.yml` to define production services for PostgreSQL and the API server with automated health checking.
+- Built a unified master test runner script `backend/src/scripts/run-all-tests.ts` executing all integration suites sequentially and supporting headless server initialization, database resets, and execution status summaries.
+- Fixed database token constraint collisions by adding unique JTI identifiers to access and refresh tokens, and introduced `X-Bypass-Rate-Limit` header bypass mechanisms to allow test suites to run sequentially without hitting brute-force login blocks.
+
+### Why
+- To safeguard API endpoints from spam and cross-origin attacks, ensure reliable database backups and production docker builds, and establish a single command suite validation runner.
+
+### Decisions Made
+- Chose a dynamic header-based bypass `X-Bypass-Rate-Limit` rather than disabling limiters globally under `NODE_ENV === 'test'` to preserve the test integrity of the authentication brute-force verification script itself.
+
 ## 2026-06-25 — Phase 7E: Admin APIs
 
 ### What Changed

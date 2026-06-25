@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Role } from '@prisma/client';
+import rateLimit from 'express-rate-limit';
 import {
   submitApplication,
   listApplications,
@@ -11,8 +12,23 @@ import { authMiddleware, requireRole } from '../middleware/auth';
 
 const router = Router();
 
+// Strict rate limiter for public shareholder application submissions (max 10 per hour per IP)
+const submitRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_SUBMISSION_ATTEMPTS',
+      message: 'Too many application submissions from this IP. Please try again after an hour.',
+    },
+  },
+});
+
 // Public route to submit a shareholder application
-router.post('/', submitApplication);
+router.post('/', submitRateLimiter, submitApplication);
 
 // Administrative route to list shareholder applications (scoped by block for coordinators)
 router.get('/', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), listApplications);

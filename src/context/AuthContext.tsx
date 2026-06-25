@@ -1,0 +1,153 @@
+'use client';
+
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  apiRequest,
+  setAccessToken,
+  registerTokenStateListener,
+} from '@/lib/api-client';
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: 'ADMIN' | 'COORDINATOR' | 'STAFF';
+  block: string | null;
+}
+
+interface MeResponse {
+  success: boolean;
+  user: User;
+}
+
+interface LoginResponse {
+  success: boolean;
+  accessToken: string;
+  user: User;
+}
+
+interface AuthContextType {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessTokenState] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // 1. Sync React State with API Client token updates
+  useEffect(() => {
+    registerTokenStateListener(async (token) => {
+      setAccessTokenState(token);
+      if (!token) {
+        // If token cleared (session expired or logged out)
+        setUser(null);
+        setIsLoading(false);
+        if (pathname && pathname.startsWith('/admin') && pathname !== '/admin/login') {
+          router.push('/admin/login');
+        }
+      } else {
+        // If a new token is set but we don't have user info yet
+        if (!user) {
+          try {
+            const data = await apiRequest<MeResponse>('/auth/me');
+            setUser(data.user);
+          } catch {
+            // If fetch user fails, invalidate access token
+            setAccessToken(null);
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+    });
+  }, [user, pathname, router]);
+
+  // 2. Try to restore session on initial load
+  useEffect(() => {
+    (async () => {
+      try {
+        // Querying /auth/me automatically triggers token refresh in api-client if required
+        const data = await apiRequest<MeResponse>('/auth/me');
+        setUser(data.user);
+      } catch {
+        // Not authenticated, clean up
+        setAccessToken(null);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const data = await apiRequest<LoginResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      setAccessToken(data.accessToken);
+      setUser(data.user);
+      router.push('/admin/dashboard');
+    } catch (err) {
+      setAccessToken(null);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await apiRequest('/auth/logout', { method: 'POST' });
+    } catch {
+      // Clean local session regardless of network response
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+      setIsLoading(false);
+      router.push('/admin/login');
+    }
+  };
+
+  const refreshSession = async () => {
+    setIsLoading(true);
+    try {
+      const data = await apiRequest<MeResponse>('/auth/me');
+      setUser(data.user);
+    } catch {
+      setAccessToken(null);
+      throw new Error('Session refresh failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        accessToken,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        refreshSession,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}

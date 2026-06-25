@@ -29,7 +29,10 @@ const testMunigudaCoordinator = {
 async function getAccessToken(email: string, password: string): Promise<string> {
   const loginRes = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Bypass-Rate-Limit': 'true',
+    },
     body: JSON.stringify({ email, password }),
   });
 

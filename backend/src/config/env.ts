@@ -20,6 +20,8 @@ const envSchema = z.object({
   APP_VERSION: z.string().default('1.0.0'),
   BUILD_DATE: z.string().default(() => new Date().toISOString()),
   GIT_COMMIT: z.string().default('unknown'),
+  CORS_ORIGIN: z.string().optional(),
+  GLOBAL_RATE_LIMIT: z.string().transform(Number).default('500'),
 });
 
 const parsed = envSchema.safeParse(process.env);

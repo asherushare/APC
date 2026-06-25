@@ -81,8 +81,28 @@ app.use((_req, res, next) => {
     next();
 });
 // 4. CORS settings
+const getCorsOrigin = () => {
+    if (env_1.env.NODE_ENV !== 'production') {
+        return true;
+    }
+    if (!env_1.env.CORS_ORIGIN) {
+        return false;
+    }
+    const allowedOrigins = env_1.env.CORS_ORIGIN.split(',').map((o) => o.trim());
+    if (allowedOrigins.includes('*')) {
+        return true;
+    }
+    return (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    };
+};
 app.use((0, cors_1.default)({
-    origin: env_1.env.NODE_ENV === 'production' ? false : true, // restrict in prod, open in dev
+    origin: getCorsOrigin(),
     credentials: true,
 }));
 // 5. Cookie & Body Parsing
@@ -92,7 +112,7 @@ app.use(express_1.default.urlencoded({ extended: true }));
 // 6. Rate Limiting Middleware
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per window
+    max: env_1.env.GLOBAL_RATE_LIMIT, // Configurable rate limit (defaults to 500)
     standardHeaders: true,
     legacyHeaders: false,
     message: {

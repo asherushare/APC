@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
+import { HeadBucketCommand } from '@aws-sdk/client-s3';
 import { prisma } from '../config/db';
 import { env } from '../config/env';
+import { s3Client } from '../utils/s3';
 
 const router = Router();
 
@@ -17,8 +19,13 @@ router.get('/health', async (_req: Request, res: Response) => {
     dbStatus = 'DISCONNECTED';
   }
 
-  // S3 storage check (mocked as connected in 7A base setup, connected to S3 client in 7D)
-  const storageStatus = 'CONNECTED';
+  // Real S3 storage check verifying connection and bucket access
+  let storageStatus = 'CONNECTED';
+  try {
+    await s3Client.send(new HeadBucketCommand({ Bucket: env.S3_BUCKET_NAME }));
+  } catch (error) {
+    storageStatus = 'DISCONNECTED';
+  }
 
   const isHealthy = dbStatus === 'CONNECTED' && storageStatus === 'CONNECTED';
   const status = isHealthy ? 'UP' : 'DOWN';

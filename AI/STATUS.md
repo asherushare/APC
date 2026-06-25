@@ -1,7 +1,7 @@
 # Project Status
 
 > **Last Updated**: 2026-06-25
-> **Last Verified Build**: 2026-06-25 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
+> **Last Verified Build**: 2026-06-25 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (24/24 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅ | `npx prisma validate` ✅ | `run-all-tests.ts` ✅ (4/4 integration suites passed)
 
 ---
 
@@ -105,6 +105,22 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 8 — Frontend Integration (Milestone 1: Core Infrastructure)** (completed 2026-06-25)
+
+- Implemented React-independent `api-client.ts` fetch wrapper with dynamic JWT Bearer authorization, AbortController timeouts (30s), and credentials tracking for Secure cookie transport.
+- Created `AuthContext` and hooks context provider syncing frontend sessions with background refresh tokens rotation.
+- Created Next.js edge request routing `middleware.ts` to gate access to all `/admin` dashboard routes.
+- Hooked the layout wrapper to the authentication provider.
+
+**Phase 7F — Backend Hardening, Production Readiness, and Final Verification** (completed 2026-06-25)
+
+- Configured dynamic CORS origin validation using comma-separated list of values in `CORS_ORIGIN`.
+- Implemented configurable global rate limiting (`GLOBAL_RATE_LIMIT`, default 500) and strict public submissions rate limiters (`submitRateLimiter`, max 10 per hour per IP).
+- Hardened the `GET /health` route to perform active bucket checks using S3 `HeadBucketCommand`.
+- Created a secure PostgreSQL backup script `src/scripts/backup-db.ps1` with Windows ACL permissions controls and a 7-day retention sweep.
+- Developed multi-stage production `Dockerfile` and a production-grade container setup in `docker-compose.prod.yml`.
+- Implemented a unified master integration test runner (`run-all-tests.ts`) executing all 4 backend integration scripts in sequence with automated bypass mechanisms.
 
 **Phase 7E — Admin APIs** (completed 2026-06-25)
 

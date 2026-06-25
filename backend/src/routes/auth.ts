@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { login, refresh, logout, me } from '../controllers/auth';
 import { authMiddleware } from '../middleware/auth';
+import { env } from '../config/env';
 
 const router = Router();
 
@@ -11,6 +12,7 @@ const loginIpLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => env.NODE_ENV !== 'production' && req.headers['x-bypass-rate-limit'] === 'true',
   message: {
     success: false,
     error: {
@@ -30,7 +32,7 @@ const loginEmailLimiter = rateLimit({
     const email = req.body?.email || '';
     return email.trim().toLowerCase();
   },
-  skip: (req) => !req.body?.email,
+  skip: (req) => (env.NODE_ENV !== 'production' && req.headers['x-bypass-rate-limit'] === 'true') || !req.body?.email,
   message: {
     success: false,
     error: {

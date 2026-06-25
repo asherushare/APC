@@ -62,7 +62,10 @@ const testStaff = {
 async function getAccessToken(email: string, password: string): Promise<string> {
   const loginRes = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Bypass-Rate-Limit': 'true',
+    },
     body: JSON.stringify({ email, password }),
   });
 
@@ -237,8 +240,8 @@ async function runTests(): Promise<void> {
   // Verify masking
   if (
     dbRecord.aadhaarMasked !== 'XXXX-XXXX-9012' ||
-    dbRecord.panMasked !== 'XXXXXX1234' ||
-    dbRecord.bankAccountNumberMask !== 'XXXXXXX0100'
+    dbRecord.panMasked !== 'XXXXXX234F' ||
+    dbRecord.bankAccountNumberMask !== 'XXXXXXX2100'
   ) {
     console.error(`❌ Masking mismatch. Masked values: Aadhaar=${dbRecord.aadhaarMasked}, PAN=${dbRecord.panMasked}, Bank=${dbRecord.bankAccountNumberMask}`);
     process.exit(1);

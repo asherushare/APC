@@ -24,6 +24,8 @@ const envSchema = zod_1.z.object({
     APP_VERSION: zod_1.z.string().default('1.0.0'),
     BUILD_DATE: zod_1.z.string().default(() => new Date().toISOString()),
     GIT_COMMIT: zod_1.z.string().default('unknown'),
+    CORS_ORIGIN: zod_1.z.string().optional(),
+    GLOBAL_RATE_LIMIT: zod_1.z.string().transform(Number).default('500'),
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {

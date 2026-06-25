@@ -7,6 +7,7 @@ const express_1 = require("express");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const auth_1 = require("../controllers/auth");
 const auth_2 = require("../middleware/auth");
+const env_1 = require("../config/env");
 const router = (0, express_1.Router)();
 // Rate limiter by IP: max 5 login requests per 15-minute window
 const loginIpLimiter = (0, express_rate_limit_1.default)({
@@ -14,6 +15,7 @@ const loginIpLimiter = (0, express_rate_limit_1.default)({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => env_1.env.NODE_ENV !== 'production' && req.headers['x-bypass-rate-limit'] === 'true',
     message: {
         success: false,
         error: {
@@ -32,7 +34,7 @@ const loginEmailLimiter = (0, express_rate_limit_1.default)({
         const email = req.body?.email || '';
         return email.trim().toLowerCase();
     },
-    skip: (req) => !req.body?.email,
+    skip: (req) => (env_1.env.NODE_ENV !== 'production' && req.headers['x-bypass-rate-limit'] === 'true') || !req.body?.email,
     message: {
         success: false,
         error: {

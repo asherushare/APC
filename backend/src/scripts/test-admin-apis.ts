@@ -30,7 +30,10 @@ const testMunigudaCoordinator = {
 async function getAccessToken(email: string, password: string): Promise<string> {
   const loginRes = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Bypass-Rate-Limit': 'true',
+    },
     body: JSON.stringify({ email, password }),
   });
 
@@ -113,7 +116,7 @@ async function runTests(): Promise<void> {
   console.log('📝 Seeding test applications...');
   const appRayagada = await prisma.shareholderApplication.create({
     data: {
-      applicationId: `APC-2026-TSTRYG`,
+      applicationId: 'APC-2026-TSTRYG',
       fullName: 'Rayagada Farmer',
       fatherHusbandName: 'Father Rayagada',
       dateOfBirth: new Date('1990-01-01'),
@@ -147,7 +150,7 @@ async function runTests(): Promise<void> {
 
   const appMuniguda = await prisma.shareholderApplication.create({
     data: {
-      applicationId: `APC-2026-TSTMUN`,
+      applicationId: 'APC-2026-TSTMUN',
       fullName: 'Muniguda Farmer',
       fatherHusbandName: 'Father Muniguda',
       dateOfBirth: new Date('1992-05-05'),
@@ -357,7 +360,7 @@ async function runTests(): Promise<void> {
   if (!hasRayagadaLog || !hasMunigudaLog) {
     throw new Error('Test 3.1 failed: Admin cannot see all expected status update audit logs');
   }
-  console.log(`✅ Passed. Admin retrieved all audit logs successfully.`);
+  console.log('✅ Passed. Admin retrieved all audit logs successfully.');
 
   // Test 3.2: Rayagada Coordinator retrieves audit logs (Should be restricted)
   console.log('👉 Test 3.2: Rayagada Coordinator retrieves block-scoped audit logs (Pass)');
@@ -391,7 +394,7 @@ async function runTests(): Promise<void> {
   }
   const filterBody = (await filterRes.json()) as {
     success: boolean;
-    logs: any[];
+    logs: unknown[];
     pagination: { total: number; page: number; limit: number; totalPages: number };
   };
 

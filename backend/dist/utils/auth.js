@@ -71,13 +71,21 @@ async function verifyPassword(password, hash) {
  * Generates an Access Token (valid for 15 minutes)
  */
 function generateAccessToken(payload) {
-    return jsonwebtoken_1.default.sign(payload, env_1.env.JWT_SECRET, { expiresIn: '15m' });
+    const uniquePayload = {
+        ...payload,
+        jti: crypto_1.default.randomBytes(16).toString('hex'),
+    };
+    return jsonwebtoken_1.default.sign(uniquePayload, env_1.env.JWT_SECRET, { expiresIn: '15m' });
 }
 /**
  * Generates a Refresh Token (valid for 7 days)
  */
 function generateRefreshToken(payload) {
-    return jsonwebtoken_1.default.sign(payload, env_1.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    const uniquePayload = {
+        ...payload,
+        jti: crypto_1.default.randomBytes(16).toString('hex'),
+    };
+    return jsonwebtoken_1.default.sign(uniquePayload, env_1.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 }
 /**
  * Verifies an Access Token

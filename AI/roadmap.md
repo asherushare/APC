@@ -43,7 +43,7 @@ This technical roadmap tracks the phases of software development that support AP
 | **7C** | Applications API | ✅ Complete | Public shareholder form persistence with column-level GCM encryption |
 | **7D** | Document Upload | ✅ Complete | Secure document upload, S3 storage integration, secure uploadToken model, async virus scan lifecycle |
 | **7E** | Admin APIs | ✅ Complete | Scoped geographical coordinators dashboard stats & status updates, paginated logs, AuditLog hooks |
-| **7F** | Hardening & Testing | 📅 Planned | Security headers, Postgres backup script execution, Docker environments, integration tests |
+| **7F** | Hardening & Testing | ✅ Complete | Security hardening, Postgres backup scripts, production Docker compose, unified tests runner |
 | **8** | Admin Dashboard | 📅 Planned | Application review UI, status tracking, coordinator management, document viewer |
 | **9** | Deployment & DevOps | 📅 Planned | CI/CD pipeline, production hosting, managed database, environment configuration |
 | **10** | Mobile / Field App | 📅 Planned | React Native app for block coordinators; offline-capable; field verification workflow |

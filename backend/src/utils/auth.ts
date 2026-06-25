@@ -67,14 +67,22 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * Generates an Access Token (valid for 15 minutes)
  */
 export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '15m' });
+  const uniquePayload = {
+    ...payload,
+    jti: crypto.randomBytes(16).toString('hex'),
+  };
+  return jwt.sign(uniquePayload, env.JWT_SECRET, { expiresIn: '15m' });
 }
 
 /**
  * Generates a Refresh Token (valid for 7 days)
  */
 export function generateRefreshToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  const uniquePayload = {
+    ...payload,
+    jti: crypto.randomBytes(16).toString('hex'),
+  };
+  return jwt.sign(uniquePayload, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 }
 
 /**
