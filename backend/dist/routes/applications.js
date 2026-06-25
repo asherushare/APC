@@ -9,6 +9,10 @@ const router = (0, express_1.Router)();
 router.post('/', applications_1.submitApplication);
 // Administrative route to list shareholder applications (scoped by block for coordinators)
 router.get('/', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.listApplications);
+// Administrative route to retrieve stats (registered before general /:id parameters)
+router.get('/stats', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationStats);
 // Administrative route to fetch application details (scoped by block for coordinators)
 router.get('/:id', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationDetails);
+// Administrative route to update application review status (scoped by block for coordinators)
+router.patch('/:id/status', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.updateApplicationStatus);
 exports.default = router;

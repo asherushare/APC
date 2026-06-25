@@ -200,11 +200,11 @@ async function runTests(): Promise<void> {
   }
 
   // TEST 1: Applicant uploads with correct uploadToken (Pass)
-  const uploadData = await testUpload(
+  const uploadData = (await testUpload(
     { name: 'X-Upload-Token', value: appData.uploadToken },
     201,
     'Applicant uploads document with valid secure X-Upload-Token'
-  );
+  )) as { success: boolean; document: { id: string } };
   const docId = uploadData.document.id;
 
   // TEST 2: Applicant tries to upload with NO token (Fail 401)

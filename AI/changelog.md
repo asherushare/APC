@@ -2,6 +2,27 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-25 — Phase 7E: Admin APIs
+
+### What Changed
+- Added `reviewedAt DateTime?` field to `ShareholderApplication` model in `schema.prisma`.
+- Created Zod validation schemas in `backend/src/schemas/admin.ts` for status updates, audit log queries, and filtered list queries.
+- Updated `listApplications` controller in `backend/src/controllers/applications.ts` to support name, sequence ID, and mobile number search, status filtering, date range queries, and pagination.
+- Implemented `getApplicationStats` controller in `backend/src/controllers/applications.ts` grouping shareholder applications count by status, with coordinator block level scoping.
+- Implemented `updateApplicationStatus` controller in `backend/src/controllers/applications.ts` that enforces a strict status transition map, updates the `reviewedAt` and `coordinatorId` values, and inserts before/after audit log snapshots within a Prisma database transaction.
+- Implemented `listAuditLogs` controller in `backend/src/controllers/audit.ts` supporting pagination, filtering (action, target, user), and coordinator block scoping (coordinators restricted to their own logs or logs referencing applications/documents in their assigned geographical block).
+- Created routes and routers (`backend/src/routes/audit.ts` and `backend/src/routes/applications.ts` updates) and mounted them under `backend/src/app.ts`.
+- Written a comprehensive integration test suite (`backend/src/scripts/test-admin-apis.ts`) validating transition maps, block gates, statistics aggregates, and audit logs scoping.
+
+### Why
+- To establish secure administrative control pipelines allowing admins and block coordinators to audit, monitor, and transition shareholder applications while preserving strict data access boundaries.
+
+### Decisions Made
+- Chose to enforce strict status transitions via a state transition map to prevent invalid application state changes (like moving APPROVED back to DRAFT).
+- Designed coordinator audit log filters using subqueries targeting block-specific application and document UUIDs, securing access boundaries without altering the database schema.
+
+---
+
 ## 2026-06-24 — Phase 7D: Documents API
 
 ### What Changed

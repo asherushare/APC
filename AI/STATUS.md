@@ -1,7 +1,7 @@
 # Project Status
 
-> **Last Updated**: 2026-06-24
-> **Last Verified Build**: 2026-06-24 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
+> **Last Updated**: 2026-06-25
+> **Last Verified Build**: 2026-06-25 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (22/22 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅
 
 ---
 
@@ -34,6 +34,9 @@
 | `[backend] /api/v1/applications` | ✅ Working | List applications (GET, gated, block-scoped for coordinators) |
 | `[backend] /api/v1/applications/:id` | ✅ Working | Retrieve single application details (GET, gated, decrypted) |
 | `[backend] /api/v1/applications/:id/documents` | ✅ Working | Secure document upload endpoint (multipart POST, S3 storage, JWT & secure uploadToken verification) |
+| `[backend] /api/v1/applications/stats` | ✅ Working | Retrieve dashboard status statistics scoped by block for coordinators |
+| `[backend] /api/v1/applications/:id/status` | ✅ Working | Update application review status and feedback notes with strict transition checks and block scoping |
+| `[backend] /api/v1/audit-logs` | ✅ Working | Paginated retrieve system audit logs, block-scoped for coordinators |
 
 ### Features
 
@@ -62,6 +65,9 @@
 | Applications Persistence API | ✅ Complete | Inserts application and related activities with AES-256-GCM column encryption and Aadhaar checks |
 | Block-Scoped Access Control | ✅ Complete | Restricts coordinators to assigned block applications; staff blocked, admin unlimited |
 | Secure S3 Document Upload | ✅ Complete | Multipart file parsing (multer), S3 object storage (MinIO), SHA-256 checksums, and async mock virus scanning |
+| Admin Status Transitions & Scoping | ✅ Complete | Validates transition map, updates reviewedAt, and writes status update AuditLog snapshots in a transaction |
+| Scoped Dashboard Stats | ✅ Complete | Dynamic statistics grouped by status, block-scoped to coordinator's block |
+| Scoped Audit Logs Query | ✅ Complete | Paginated system audit log retrieval, block-scoped to coordinator's block |
 
 ---
 
@@ -99,6 +105,15 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 7E — Admin APIs** (completed 2026-06-25)
+
+- Validate and persist shareholder application status transitions (`PATCH /api/v1/applications/:id/status`) enforcing strict transition rules and setting `reviewedAt`.
+- Implement coordinator block scoping restrictions (coordinators restricted to their assigned geographical block, admins unrestricted).
+- Generate detailed audit log change snapshots (`before` and `after` status/notes) persisted inside a Prisma database transaction.
+- Aggregate status count metrics (`GET /api/v1/applications/stats`) with coordinator block-level scoping.
+- Query paginated and filtered system audit logs (`GET /api/v1/audit-logs`) block-scoped for coordinators.
+- Program a comprehensive integration test suite (`test-admin-apis.ts`) verifying transition paths, status filters, and scoping limits.
 
 **Phase 7D — Documents API** (completed 2026-06-24)
 
@@ -160,8 +175,8 @@ npm run lint   → ✅ Zero errors, zero warnings (2026-06-21)
 npm run build  → ✅ 22/22 pages generated, zero errors (2026-06-21)
 
 Backend:
-npm run lint   → ✅ Zero errors, zero warnings (2026-06-22)
-npm run build  → ✅ Compiled successfully with zero errors (2026-06-22)
+npm run lint   → ✅ Zero errors, zero warnings (2026-06-25)
+npm run build  → ✅ Compiled successfully with zero errors (2026-06-25)
 ```
 
 ---

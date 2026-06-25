@@ -10,6 +10,7 @@ import systemRoutes from './routes/system';
 import authRoutes from './routes/auth';
 import applicationsRoutes from './routes/applications';
 import documentsRouter from './routes/documents';
+import auditRoutes from './routes/audit';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
 import { env } from './config/env';
@@ -121,6 +122,7 @@ app.use('/api/v1', systemRoutes); // Mount on v1 prefix too
 app.use('/api/v1/auth', authRoutes); // Auth routes
 app.use('/api/v1/applications', applicationsRoutes); // Applications routes
 app.use('/api/v1/applications', documentsRouter); // Documents upload routes
+app.use('/api/v1/audit-logs', auditRoutes); // Audit logs routes
 
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

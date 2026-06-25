@@ -17,6 +17,10 @@ import {
   ForbiddenError,
 } from '../utils/errors';
 import { CreateApplicationSchema } from '../schemas/application';
+import {
+  UpdateApplicationStatusSchema,
+  ApplicationsQuerySchema,
+} from '../schemas/admin';
 import { generateUploadToken } from '../utils/auth';
 
 /**
@@ -225,6 +229,12 @@ export const listApplications = async (
       );
     }
 
+    const parsed = ApplicationsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      throw new ValidationError('Validation failed', parsed.error.format());
+    }
+    const { page, limit, status, block, search, startDate, endDate } = parsed.data;
+
     const whereClause: Prisma.ShareholderApplicationWhereInput = {
       deletedAt: null,
     };
@@ -239,12 +249,16 @@ export const listApplications = async (
         res.status(200).json({
           success: true,
           applications: [],
-          pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+          pagination: { total: 0, page, limit, totalPages: 0 },
         });
         return;
       }
       whereClause.block = coordinator.block;
-    } else if (req.user.role !== Role.ADMIN) {
+    } else if (req.user.role === Role.ADMIN) {
+      if (block) {
+        whereClause.block = block;
+      }
+    } else {
       // Reject staff or any other roles not explicitly permitted
       throw new ForbiddenError(
         'You do not have permission to perform this action',
@@ -252,18 +266,32 @@ export const listApplications = async (
       );
     }
 
-    // Query parameters filtering
-    if (typeof req.query.status === 'string' && req.query.status.trim()) {
-      whereClause.status = req.query.status.trim() as ApplicationStatus;
+    // Status filter
+    if (status) {
+      whereClause.status = status;
     }
 
-    if (req.user.role === Role.ADMIN && typeof req.query.block === 'string' && req.query.block.trim()) {
-      whereClause.block = req.query.block.trim();
+    // Search filter
+    if (search) {
+      whereClause.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { applicationId: { contains: search, mode: 'insensitive' } },
+        { mobileNumber: { contains: search } },
+      ];
+    }
+
+    // Date range filters
+    if (startDate || endDate) {
+      whereClause.submittedAt = {};
+      if (startDate) {
+        whereClause.submittedAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+      }
+      if (endDate) {
+        whereClause.submittedAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+      }
     }
 
     // Pagination setup
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit as string) || 10));
     const skip = (page - 1) * limit;
 
     const [total, applications] = await Promise.all([
@@ -382,6 +410,214 @@ export const getApplicationDetails = async (
     res.status(200).json({
       success: true,
       application: cleanApp,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const VALID_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
+  [ApplicationStatus.DRAFT]: [ApplicationStatus.SUBMITTED],
+  [ApplicationStatus.SUBMITTED]: [ApplicationStatus.UNDER_REVIEW, ApplicationStatus.DOCUMENTS_PENDING, ApplicationStatus.REJECTED],
+  [ApplicationStatus.UNDER_REVIEW]: [ApplicationStatus.DOCUMENTS_PENDING, ApplicationStatus.PAYMENT_PENDING, ApplicationStatus.APPROVED, ApplicationStatus.REJECTED],
+  [ApplicationStatus.DOCUMENTS_PENDING]: [ApplicationStatus.UNDER_REVIEW, ApplicationStatus.SUBMITTED, ApplicationStatus.REJECTED],
+  [ApplicationStatus.PAYMENT_PENDING]: [ApplicationStatus.PAYMENT_CONFIRMED, ApplicationStatus.REJECTED, ApplicationStatus.UNDER_REVIEW],
+  [ApplicationStatus.PAYMENT_CONFIRMED]: [ApplicationStatus.APPROVED, ApplicationStatus.REJECTED, ApplicationStatus.UNDER_REVIEW],
+  [ApplicationStatus.APPROVED]: [], // Final status
+  [ApplicationStatus.REJECTED]: [ApplicationStatus.UNDER_REVIEW], // Allow moving back to review
+};
+
+/**
+ * GET /api/v1/applications/stats
+ * Retrieve dashboard status statistics, optionally scoped by coordinator's block.
+ */
+export const getApplicationStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new ForbiddenError(
+        'Authentication required to fetch statistics',
+        'AUTHENTICATION_REQUIRED'
+      );
+    }
+
+    const whereClause: Prisma.ShareholderApplicationWhereInput = {
+      deletedAt: null,
+    };
+
+    if (req.user.role === Role.COORDINATOR) {
+      const coordinator = await prisma.user.findUnique({
+        where: { id: req.user.id },
+      });
+
+      if (!coordinator || !coordinator.block) {
+        const emptyStats: Record<ApplicationStatus, number> = {
+          DRAFT: 0,
+          SUBMITTED: 0,
+          UNDER_REVIEW: 0,
+          DOCUMENTS_PENDING: 0,
+          PAYMENT_PENDING: 0,
+          PAYMENT_CONFIRMED: 0,
+          APPROVED: 0,
+          REJECTED: 0,
+        };
+        res.status(200).json({ success: true, stats: emptyStats });
+        return;
+      }
+      whereClause.block = coordinator.block;
+    } else if (req.user.role !== Role.ADMIN) {
+      throw new ForbiddenError(
+        'You do not have permission to retrieve statistics',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    const stats = await prisma.shareholderApplication.groupBy({
+      by: ['status'],
+      where: whereClause,
+      _count: {
+        status: true,
+      },
+    });
+
+    const counts: Record<ApplicationStatus, number> = {
+      DRAFT: 0,
+      SUBMITTED: 0,
+      UNDER_REVIEW: 0,
+      DOCUMENTS_PENDING: 0,
+      PAYMENT_PENDING: 0,
+      PAYMENT_CONFIRMED: 0,
+      APPROVED: 0,
+      REJECTED: 0,
+    };
+
+    for (const group of stats) {
+      counts[group.status] = group._count.status;
+    }
+
+    res.status(200).json({
+      success: true,
+      stats: counts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/v1/applications/:id/status
+ * Update application status and optional reviewer feedback notes with transition constraints.
+ */
+export const updateApplicationStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new ForbiddenError(
+        'Authentication required to update application status',
+        'AUTHENTICATION_REQUIRED'
+      );
+    }
+
+    const { id } = req.params;
+
+    // Validate body
+    const parsed = UpdateApplicationStatusSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Validation failed', parsed.error.format());
+    }
+    const { status, reviewNotes } = parsed.data;
+
+    // Fetch the target application
+    const application = await prisma.shareholderApplication.findFirst({
+      where: {
+        OR: [{ id }, { applicationId: id }],
+        deletedAt: null,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundError('Application not found', 'APPLICATION_NOT_FOUND');
+    }
+
+    // Role-based block access restriction
+    if (req.user.role === Role.COORDINATOR) {
+      const coordinator = await prisma.user.findUnique({
+        where: { id: req.user.id },
+      });
+
+      if (!coordinator || coordinator.block !== application.block) {
+        throw new ForbiddenError(
+          'You do not have permission to modify applications outside your assigned block',
+          'INSUFFICIENT_PERMISSIONS'
+        );
+      }
+    } else if (req.user.role !== Role.ADMIN) {
+      throw new ForbiddenError(
+        'You do not have permission to perform this action',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    // Transition constraints validation
+    const currentStatus = application.status;
+    const allowed = VALID_TRANSITIONS[currentStatus] || [];
+    if (!allowed.includes(status)) {
+      throw new ValidationError(`Invalid status transition from ${currentStatus} to ${status}`, {
+        status: `Cannot transition application from ${currentStatus} to ${status}`,
+      });
+    }
+
+    const now = new Date();
+
+    const changes = {
+      before: {
+        status: application.status,
+        reviewNotes: application.reviewNotes,
+        reviewedAt: application.reviewedAt ? application.reviewedAt.toISOString() : null,
+      },
+      after: {
+        status,
+        reviewNotes: reviewNotes || null,
+        reviewedAt: now.toISOString(),
+      },
+    };
+
+    // Database transaction to apply updates and insert audit log
+    const updatedApplication = await prisma.$transaction(async (tx) => {
+      const updated = await tx.shareholderApplication.update({
+        where: { id: application.id },
+        data: {
+          status,
+          reviewNotes: reviewNotes || null,
+          reviewedAt: now,
+          coordinatorId: req.user!.id,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: req.user!.id,
+          action: 'STATUS_UPDATED',
+          targetEntity: 'ShareholderApplication',
+          targetId: application.id,
+          ipAddress: req.ip || null,
+          userAgent: req.headers['user-agent'] || null,
+          changes,
+        },
+      });
+
+      return updated;
+    });
+
+    res.status(200).json({
+      success: true,
+      application: updatedApplication,
     });
   } catch (error) {
     next(error);

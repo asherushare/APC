@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-undef */
 const db_1 = require("../config/db");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const PORT = 4000;
@@ -139,7 +140,7 @@ async function runTests() {
     }
     const appData = (await appRes.json());
     console.log(`✅ Application submitted! ID: ${appData.applicationId}`);
-    console.log(`🔑 uploadToken generated successfully.`);
+    console.log('🔑 uploadToken generated successfully.');
     // Find DB UUID
     const dbApp = await db_1.prisma.shareholderApplication.findUnique({
         where: { applicationId: appData.applicationId },
@@ -174,7 +175,7 @@ async function runTests() {
         return uploadRes.status === 201 ? await uploadRes.json() : null;
     }
     // TEST 1: Applicant uploads with correct uploadToken (Pass)
-    const uploadData = await testUpload({ name: 'X-Upload-Token', value: appData.uploadToken }, 201, 'Applicant uploads document with valid secure X-Upload-Token');
+    const uploadData = (await testUpload({ name: 'X-Upload-Token', value: appData.uploadToken }, 201, 'Applicant uploads document with valid secure X-Upload-Token'));
     const docId = uploadData.document.id;
     // TEST 2: Applicant tries to upload with NO token (Fail 401)
     await testUpload(null, 401, 'Applicant tries to upload without token (should fail with 401)');
@@ -189,7 +190,7 @@ async function runTests() {
     // TEST 7: Invalid file type upload filter validation (Fail 422)
     await testUpload({ name: 'X-Upload-Token', value: appData.uploadToken }, 422, 'Upload invalid file format (.html) (should fail with 422)', false);
     // TEST 8: Virus Scanning Background Update Verification
-    console.log(`⏳ Waiting 6 seconds for background virus scan to complete...`);
+    console.log('⏳ Waiting 6 seconds for background virus scan to complete...');
     await new Promise((resolve) => setTimeout(resolve, 6000));
     console.log('🔍 Checking virusScanStatus database transition...');
     const verifiedDoc = await db_1.prisma.document.findUnique({
