@@ -1,20 +1,19 @@
-## Current Task: Phase 8 — Milestone 2: Public applicant flow
+## Current Task: Phase 8 — Milestone 4: Coordinator / Admin Dashboard
 
-**Objective**: Connect the shareholder application wizard `/join` to the backend APIs, processing form details submissions and file uploads to S3.
+**Objective**: Build the core components of the administrative panel to list shareholder applications, view aggregate statistics cards, and query system logs.
 
 **Status**: Planned
 
 ### Requirements
-1. Refactor the `handleSubmit` in `JoinFormSection.tsx` to POST the registration details metadata to `/api/v1/applications`.
-2. Grab the returned database UUID and JWT `uploadToken`.
-3. Sequentially upload files (Aadhaar Card, PAN Card, Passport Photo, Producer Proof, Bank Passbook) to `/api/v1/applications/:id/documents` using the `X-Upload-Token` header.
-4. Implement retry buttons, error panels, and progress loaders for document uploads.
-5. Compile the jsPDF receipt with official database values.
+1. Build the applications list page with search, status filters, block filters, and pagination support.
+2. Render aggregate metrics cards showing counts of applications in different statuses (SUBMITTED, UNDER_REVIEW, etc.), scoped by block for coordinators.
+3. Build the paginated audit logs viewer.
+4. Integrate API queries pointing to `/applications`, `/applications/stats`, and `/audit-logs`.
 
 ### Pre-conditions
-- Milestone 1: Core Infrastructure completed, verified, and routing middleware active. [MET]
+- Milestone 3 (Authentication & Session Management) completed and fully verified. [MET]
 
 ### Files Expected to Change / Create
-- `src/components/sections/join/JoinFormSection.tsx` [MODIFY]
-- `src/lib/membership.ts` [MODIFY]
+- `src/app/admin/dashboard/page.tsx` [MODIFY]
+- `src/components/sections/admin/ApplicationsList.tsx` [NEW]
 - `AI/STATUS.md` [MODIFY]

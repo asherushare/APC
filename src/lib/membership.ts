@@ -1,6 +1,5 @@
 import { ShareholderApplication } from '@/types/membership';
 import { getWhatsAppLink } from './whatsapp';
-import { generateApplicationId } from './application-id';
 import { jsPDF } from 'jspdf';
 
 /**
@@ -213,19 +212,19 @@ export function generateSummaryPdf(data: ShareholderApplication, appId: string, 
 }
 
 /**
- * Compiles shareholder application into a clean, structured payload and returns WhatsApp deep link.
- * Decoupled from UI to support database integration.
+ * Compiles shareholder application into a clean, structured payload and returns WhatsApp deep link and PDF.
  */
-export async function submitShareholderApplication(
-  data: ShareholderApplication
-): Promise<{ success: boolean; whatsappLink: string; applicationId: string; submittedAt: string; summaryPdfBlob: Blob }> {
-  const appId = generateApplicationId();
-  const submittedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+export function compileSubmissionAssets(
+  data: ShareholderApplication,
+  appId: string,
+  submittedDate: string
+): { whatsappLink: string; summaryPdfBlob: Blob } {
+  const formattedDate = new Date(submittedDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
   // Clean structured text representing the official application form
   let message = `*NEW SHAREHOLDER MEMBERSHIP APPLICATION*
 *Ref:* ${appId}
-*Submitted:* ${submittedDate}
+*Submitted:* ${formattedDate}
 ---------------------------------------
 *1. PERSONAL DETAILS*
 - *Full Name:* ${data.fullName}
@@ -289,14 +288,33 @@ _Sent via APC Shareholder Portal_`;
   // Create deep link pointing to the official APC phone number
   const whatsappLink = getWhatsAppLink(message);
 
-  // Generate the PDF receipt immediately
-  const summaryPdfBlob = generateSummaryPdf(data, appId, submittedDate);
+  // Generate the PDF receipt
+  const summaryPdfBlob = generateSummaryPdf(data, appId, formattedDate);
+
+  return {
+    whatsappLink,
+    summaryPdfBlob
+  };
+}
+
+/**
+ * Fallback backward compatibility submit wrapper.
+ */
+export async function submitShareholderApplication(
+  data: ShareholderApplication
+): Promise<{ success: boolean; whatsappLink: string; applicationId: string; submittedAt: string; summaryPdfBlob: Blob }> {
+  const year = new Date().getFullYear();
+  const randomPart = Math.floor(100000 + Math.random() * 900000);
+  const appId = `APC-${year}-${randomPart}`;
+  const submittedDate = new Date().toISOString();
+
+  const assets = compileSubmissionAssets(data, appId, submittedDate);
 
   return {
     success: true,
-    whatsappLink,
+    whatsappLink: assets.whatsappLink,
     applicationId: appId,
     submittedAt: submittedDate,
-    summaryPdfBlob
+    summaryPdfBlob: assets.summaryPdfBlob
   };
 }

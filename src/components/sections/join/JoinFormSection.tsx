@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Container } from '@/components/common/Container';
-import { submitShareholderApplication } from '@/lib/membership';
+import { compileSubmissionAssets } from '@/lib/membership';
 import { ShareholderApplication } from '@/types/membership';
 import { cn } from '@/lib/utils';
+import { apiRequest, uploadWithProgress, ApiError } from '@/lib/api-client';
 
 // Producer eligibility categories from official form
 const PRODUCER_CATEGORIES = [
@@ -202,8 +203,36 @@ export function JoinFormSection() {
   const [submittedTime, setSubmittedTime] = useState<string>('');
   const [summaryPdfBlob, setSummaryPdfBlob] = useState<Blob | null>(null);
 
+  // File upload queue states for Milestone 2
+  const [submissionStep, setSubmissionStep] = useState<'form' | 'submitting_metadata' | 'uploading_files' | 'success'>('form');
+  const [uploadQueue, setUploadQueue] = useState<Array<{
+    field: string;
+    label: string;
+    file: File;
+    documentType: 'AADHAAR' | 'PAN' | 'PHOTOGRAPH' | 'PRODUCER_PROOF' | 'BANK_PASSBOOK';
+    status: 'pending' | 'uploading' | 'success' | 'failed';
+    progress: number;
+    error?: string;
+  }>>([]);
+  const [uploadToken, setUploadToken] = useState<string>('');
+  const [dbAppId, setDbAppId] = useState<string>(''); // Database application UUID
+  const [uploadError, setUploadError] = useState<string>('');
+
   // Compute calculated contribution at render-time
   const calculatedContribution = formData.numberOfShares * 10000;
+
+  // Prevent accidental navigation during active submission or file upload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (submissionStep === 'submitting_metadata' || submissionStep === 'uploading_files') {
+        e.preventDefault();
+        e.returnValue = 'An application submission is in progress. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [submissionStep]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -412,13 +441,58 @@ export function JoinFormSection() {
     }, 50);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateStep(9)) return;
+  const startUploadWorkflow = async (
+    targetId: string,
+    token: string,
+    initialQueue: typeof uploadQueue,
+    applicationIdVal: string,
+    submittedTimeVal: string
+  ) => {
+    const currentQueueState = [...initialQueue];
 
-    setIsSubmitting(true);
-    try {
-      // Map file payloads to the serializable document metadata format
+    for (let i = 0; i < currentQueueState.length; i++) {
+      const item = currentQueueState[i];
+      if (item.status === 'success') continue;
+
+      // Update state to uploading
+      setUploadQueue(prev =>
+        prev.map((q, idx) => (idx === i ? { ...q, status: 'uploading' as const, progress: 0, error: undefined } : q))
+      );
+
+      try {
+        const fd = new FormData();
+        fd.append('file', item.file);
+        fd.append('documentType', item.documentType);
+
+        // Make XMLHttp upload call with progress using immutable database UUID
+        await uploadWithProgress<{ success: boolean }>(
+          `/applications/${targetId}/documents`,
+          fd,
+          token,
+          (percent) => {
+            setUploadQueue(prev =>
+              prev.map((q, idx) => (idx === i ? { ...q, progress: percent } : q))
+            );
+          }
+        );
+
+        setUploadQueue(prev =>
+          prev.map((q, idx) => (idx === i ? { ...q, status: 'success' as const, progress: 100 } : q))
+        );
+        currentQueueState[i] = { ...item, status: 'success' as const, progress: 100 };
+      } catch (err) {
+        const errMsg = err instanceof ApiError ? err.message : (err instanceof Error ? err.message : 'Upload failed');
+        setUploadQueue(prev =>
+          prev.map((q, idx) => (idx === i ? { ...q, status: 'failed' as const, error: errMsg } : q))
+        );
+        currentQueueState[i] = { ...item, status: 'failed' as const, error: errMsg };
+      }
+    }
+
+    // Check if everything is successful
+    const allSuccessful = currentQueueState.every(q => q.status === 'success');
+    if (allSuccessful) {
+      // Compile final application metadata for PDF generation
       const uploadedDocsMetadata: ShareholderApplication['uploadedDocuments'] = {};
       const timestamp = new Date().toISOString();
 
@@ -468,25 +542,164 @@ export function JoinFormSection() {
         };
       }
 
-      // Re-assemble data including files metadata and contribution parameters
       const finalData: ShareholderApplication = {
         ...formData,
         calculatedContribution,
         uploadedDocuments: uploadedDocsMetadata
       };
-      
-      const response = await submitShareholderApplication(finalData);
-      
+
+      // Only generate assets if not already done, to avoid regeneration during retry completion
+      if (!summaryPdfBlob) {
+        const assets = compileSubmissionAssets(finalData, applicationIdVal, submittedTimeVal);
+        setSubmittedWaLink(assets.whatsappLink);
+        setSummaryPdfBlob(assets.summaryPdfBlob);
+      }
+
+      setIsSuccess(true);
+      setSubmissionStep('success');
+    } else {
+      setUploadError('Some files failed to upload. Please review the errors and retry failed uploads.');
+    }
+  };
+
+  const handleRetryUploads = async () => {
+    setUploadError('');
+    const currentQueue = [...uploadQueue];
+    const updatedQueue = currentQueue.map(item =>
+      item.status === 'failed' ? { ...item, status: 'pending' as const, error: undefined } : item
+    );
+    setUploadQueue(updatedQueue);
+
+    await startUploadWorkflow(dbAppId, uploadToken, updatedQueue, submittedAppId, submittedTime);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateStep(9)) return;
+    if (isSubmitting || submissionStep !== 'form') return;
+
+    setIsSubmitting(true);
+    setSubmissionStep('submitting_metadata');
+    setUploadError('');
+
+    try {
+      const payload = {
+        fullName: formData.fullName,
+        fatherHusbandName: formData.fatherHusbandName,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
+        aadhaarNumber: formData.aadhaarNumber.replace(/\s+/g, ''),
+        panNumber: formData.panNumber ? formData.panNumber.trim().toUpperCase() : null,
+        mobileNumber: formData.mobileNumber.replace(/\D/g, ''),
+        email: formData.email ? formData.email.trim() : null,
+        occupation: formData.occupation,
+        village: formData.village,
+        gramPanchayat: formData.gramPanchayat,
+        block: formData.block,
+        district: formData.district,
+        state: formData.state,
+        pinCode: formData.pinCode.replace(/\D/g, ''),
+        producerActivities: formData.producerActivities,
+        numberOfShares: Number(formData.numberOfShares),
+        calculatedContribution,
+        nomineeName: formData.nomineeName,
+        nomineeRelationship: formData.nomineeRelationship,
+        nomineeDateOfBirth: formData.nomineeDateOfBirth,
+        nomineeAddress: formData.nomineeAddress,
+        nomineeMobileNumber: formData.nomineeMobileNumber.replace(/\D/g, ''),
+        bankAccountHolderName: formData.bankAccountHolderName,
+        bankName: formData.bankName,
+        bankAccountNumber: formData.bankAccountNumber.trim(),
+        bankIfscCode: formData.bankIfscCode.trim().toUpperCase(),
+        confirmCorrectInfo: formData.confirmCorrectInfo,
+        agreeToRules: formData.agreeToRules,
+        understandApprovalRequired: formData.understandApprovalRequired
+      };
+
+      const response = await apiRequest<{
+        success: boolean;
+        id: string;
+        applicationId: string;
+        uploadToken: string;
+        submittedAt: string;
+      }>('/applications', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
       if (response.success) {
-        setSubmittedWaLink(response.whatsappLink);
+        const targetId = response.id;
+        const appToken = response.uploadToken;
+
+        setDbAppId(targetId);
+        setUploadToken(appToken);
         setSubmittedAppId(response.applicationId);
-        setSubmittedTime(response.submittedAt);
-        setSummaryPdfBlob(response.summaryPdfBlob);
-        setIsSuccess(true);
+        setSubmittedTime(response.submittedAt); // raw ISO timestamp string
+
+        // Build file upload queue
+        const queue: typeof uploadQueue = [];
+        if (files.aadhaarCard) {
+          queue.push({
+            field: 'aadhaarCard',
+            label: 'Aadhaar Card',
+            file: files.aadhaarCard,
+            documentType: 'AADHAAR',
+            status: 'pending',
+            progress: 0
+          });
+        }
+        if (files.panCard) {
+          queue.push({
+            field: 'panCard',
+            label: 'PAN Card (Optional)',
+            file: files.panCard,
+            documentType: 'PAN',
+            status: 'pending',
+            progress: 0
+          });
+        }
+        if (files.passportPhoto) {
+          queue.push({
+            field: 'passportPhoto',
+            label: 'Passport Photograph',
+            file: files.passportPhoto,
+            documentType: 'PHOTOGRAPH',
+            status: 'pending',
+            progress: 0
+          });
+        }
+        if (files.producerActivityProof) {
+          queue.push({
+            field: 'producerActivityProof',
+            label: 'Proof of Producer Activity',
+            file: files.producerActivityProof,
+            documentType: 'PRODUCER_PROOF',
+            status: 'pending',
+            progress: 0
+          });
+        }
+        if (files.bankPassbook) {
+          queue.push({
+            field: 'bankPassbook',
+            label: 'Bank Passbook Front Page',
+            file: files.bankPassbook,
+            documentType: 'BANK_PASSBOOK',
+            status: 'pending',
+            progress: 0
+          });
+        }
+
+        setUploadQueue(queue);
+        setSubmissionStep('uploading_files');
+
+        // Start upload loop
+        await startUploadWorkflow(targetId, appToken, queue, response.applicationId, response.submittedAt);
       }
     } catch (err) {
       console.error('Application submission error:', err);
-      setErrors({ formSubmit: 'Submission failed. Please check WhatsApp app settings or retry.' });
+      const errMsg = err instanceof ApiError ? err.message : (err instanceof Error ? err.message : 'Submission failed');
+      setErrors({ formSubmit: `Submission failed: ${errMsg}. Please try again.` });
+      setSubmissionStep('form');
     } finally {
       setIsSubmitting(false);
     }
@@ -521,7 +734,7 @@ export function JoinFormSection() {
       <Container>
         <div className="max-w-2xl mx-auto bg-white border border-outline-variant/30 rounded-3xl shadow-xl overflow-hidden">
           
-          {isSuccess ? (
+          {submissionStep === 'success' ? (
             /* Premium Success Onboarding Receipt Dashboard */
             <div className="p-8 md:p-12 text-center space-y-6 animate-fade-in animate-mesh">
               <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center mx-auto shadow-inner">
@@ -548,7 +761,9 @@ export function JoinFormSection() {
                   </div>
                   <div className="text-right space-y-1">
                     <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">Submitted At</span>
-                    <p className="text-body-xs font-semibold text-on-surface-variant">{submittedTime}</p>
+                    <p className="text-body-xs font-semibold text-on-surface-variant">
+                      {submittedTime ? new Date(submittedTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : ''}
+                    </p>
                   </div>
                 </div>
 
@@ -665,6 +880,149 @@ export function JoinFormSection() {
                   </Link>
                 </div>
               </div>
+            </div>
+          ) : submissionStep === 'submitting_metadata' ? (
+            /* Metadata Submission Progress overlay */
+            <div className="p-12 text-center space-y-6 animate-fade-in select-none">
+              <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+              <div className="space-y-2">
+                <h3 className="text-headline-md font-extrabold text-primary animate-pulse">
+                  Submitting Application Details
+                </h3>
+                <p className="text-body-md text-on-surface-variant max-w-md mx-auto">
+                  Please wait while we secure your application details and establish your shareholder profile in the database...
+                </p>
+              </div>
+            </div>
+          ) : submissionStep === 'uploading_files' ? (
+            /* Document Upload Queue Tracker */
+            <div className="p-8 md:p-12 space-y-6 animate-fade-in select-none">
+              <div className="border-b border-outline-variant/20 pb-4 text-center">
+                <h3 className="text-headline-md font-extrabold text-primary">
+                  Uploading Supporting Documents
+                </h3>
+                <p className="text-body-sm text-on-surface-variant mt-1.5 max-w-md mx-auto">
+                  Do not close this window or navigate away. Uploading documents to secure S3 storage.
+                </p>
+              </div>
+
+              {/* Status Banner */}
+              {uploadError ? (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3 text-left animate-shake">
+                  <span className="text-lg shrink-0">⚠️</span>
+                  <div className="space-y-1">
+                    <h5 className="font-extrabold text-red-800 text-label-sm">Upload Issue Detected</h5>
+                    <p className="text-[11px] text-red-700 font-medium leading-relaxed">
+                      {uploadError}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex gap-3 text-left">
+                  <span className="text-lg shrink-0">📤</span>
+                  <div className="space-y-1">
+                    <h5 className="font-extrabold text-primary text-label-sm">Sequential Safe Uploads</h5>
+                    <p className="text-[10px] text-on-surface-variant font-medium leading-relaxed">
+                      Documents are being uploaded sequentially to ensure reliability even on lower bandwidth mobile networks.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Queue List */}
+              <div className="space-y-4 text-left">
+                {uploadQueue.map((item) => {
+                  const isUploading = item.status === 'uploading';
+                  const isSuccessStatus = item.status === 'success';
+                  const isFailed = item.status === 'failed';
+                  const isPending = item.status === 'pending';
+
+                  return (
+                    <div 
+                      key={item.field} 
+                      className={cn(
+                        "border rounded-2xl p-4 transition-all duration-300",
+                        isUploading ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20" :
+                        isSuccessStatus ? "border-emerald-200 bg-emerald-50/30" :
+                        isFailed ? "border-red-200 bg-red-50/20" :
+                        "border-outline-variant/30 bg-surface-container-lowest"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-4 mb-2">
+                        <div className="space-y-0.5 truncate">
+                          <span className="text-[10px] font-bold text-primary/80 uppercase tracking-wider block">
+                            {item.label}
+                          </span>
+                          <span className="text-body-sm font-extrabold text-on-surface truncate max-w-[180px] sm:max-w-[350px] block">
+                            {item.file.name}
+                          </span>
+                          {isFailed && item.error && (
+                            <span className="text-[11px] text-red-500 font-semibold block mt-0.5">
+                              ⚠ {item.error}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="shrink-0">
+                          {isSuccessStatus && (
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
+                              Completed
+                            </span>
+                          )}
+                          {isUploading && (
+                            <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full animate-pulse">
+                              Uploading
+                            </span>
+                          )}
+                          {isFailed && (
+                            <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
+                              Failed
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="bg-outline-variant/30 text-on-surface-variant/70 border border-outline-variant/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full">
+                              Queued
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Progress Bar (Visible if uploading, success, or failed) */}
+                      {!isPending && (
+                        <div className="w-full bg-outline-variant/20 h-2 rounded-full mt-2.5 overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all duration-300",
+                              isSuccessStatus ? "bg-emerald-500" :
+                              isFailed ? "bg-red-500" : "bg-primary"
+                            )}
+                            style={{ width: `${item.progress}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Action Buttons */}
+              {uploadQueue.some(q => q.status === 'failed') && (
+                <div className="pt-4 flex gap-4">
+                  <button
+                    type="button"
+                    onClick={handleRetryUploads}
+                    disabled={uploadQueue.some(q => q.status === 'uploading')}
+                    className="w-full bg-primary hover:bg-dark-green text-white font-extrabold py-3.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-label-md uppercase tracking-wider select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploadQueue.some(q => q.status === 'uploading') ? (
+                      <span>Retrying Uploads...</span>
+                    ) : (
+                      <span>🔄 Retry Failed Uploads</span>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>

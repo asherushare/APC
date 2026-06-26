@@ -1,7 +1,7 @@
 # Project Status
 
-> **Last Updated**: 2026-06-25
-> **Last Verified Build**: 2026-06-25 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (24/24 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅ | `npx prisma validate` ✅ | `run-all-tests.ts` ✅ (4/4 integration suites passed)
+> **Last Updated**: 2026-06-26
+> **Last Verified Build**: 2026-06-26 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (24/24 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅ | `npx prisma validate` ✅ | `run-all-tests.ts` ✅ (4/4 integration suites passed)
 
 ---
 
@@ -105,6 +105,23 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 8 — Frontend Integration (Milestone 3: Authentication & Session Management)** (completed 2026-06-26)
+
+- Developed administrative login page (`/admin/login`) center-aligning the card layout and styling validation checks.
+- Integrated the login form submission with backend `POST /api/v1/auth/login` to securely store JWT tokens and profile states in `AuthContext`.
+- Implemented dashboard session guards (`/admin/dashboard`) displaying coordinator credentials (name, email, role, block) and securing logout flows.
+- Validated automatic session recovery and refresh rotation controls (RTR) on initial reload.
+- Guarded routes by redirecting authenticated users away from the login page and unauthenticated users away from the dashboard edge.
+
+**Phase 8 — Frontend Integration (Milestone 2: Public Applicant Flow)** (completed 2026-06-25)
+
+- Connected shareholder registration `/join` form submission to live `POST /api/v1/applications` endpoint.
+- Developed sequential document upload queue to S3 via `/applications/:id/documents` utilizing unique `uploadToken` authorization headers and the database application UUID.
+- Integrated upload queue status lists with progress loaders and error trackers.
+- Engineered partial-failure retry support ("Retry Failed Uploads") so network dropouts do not force full form resubmissions.
+- Prevented double application triggers by blocking submission buttons and intercepting page navigation alerts during active uploads.
+- Gated summary receipt PDF compilation and success timeline renders to fire only after every document finishes uploading.
 
 **Phase 8 — Frontend Integration (Milestone 1: Core Infrastructure)** (completed 2026-06-25)
 

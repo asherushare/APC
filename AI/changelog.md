@@ -2,6 +2,39 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-26 — Phase 8: Frontend Integration (Milestone 3: Authentication & Session Management)
+
+### What Changed
+- Created `LoginForm` in `src/components/sections/admin/LoginForm.tsx` with email validation, password length checks, button loading spinners, and error alerts.
+- Created `/admin/login` page route in `src/app/admin/login/page.tsx` loading the login form and redirecting authenticated sessions to the dashboard.
+- Created protected dashboard placeholder `/admin/dashboard` in `src/app/admin/dashboard/page.tsx` displaying logged-in credentials (name, email, role, block) and providing a logout button.
+- Integrated the login card submit actions with `AuthContext` to query backend `POST /api/v1/auth/login`.
+- Leveraged Edge middleware redirects and React hooks to secure dashboard paths and restore sessions automatically on refresh.
+
+### Why
+- To establish the authentication gateway for administrators and block coordinators to securely access data lists and log audits.
+
+### Decisions Made
+- Chose to double-protect route navigation using both Edge middleware (cookie checking) and client-side page checks (Context checking) to avoid layout flickering during initial load.
+
+## 2026-06-25 — Phase 8: Frontend Integration (Milestone 2: Public Applicant Flow)
+
+### What Changed
+- Refactored shareholder registration submission flow inside `src/components/sections/join/JoinFormSection.tsx` to POST metadata to `/api/v1/applications`.
+- Implemented sequential document uploads to `/applications/:id/documents` using the database application UUID (`id`) and signed `uploadToken` authorization headers.
+- Built an upload queue interface displaying individual file statuses (`pending`, `uploading`, `success`, `failed`) and animated progress percentage loaders.
+- Added support for partial upload failure handling, showing errors and offering a "Retry Failed Uploads" button that resumes only failed queue items.
+- Locked wizard navigation controls, step selection edits, and submit triggers during active submissions, and registered a `beforeunload` window intercept to prevent accidental tab closing.
+- Configured final jsPDF summary receipt compilation and success dashboard presentation to run only when all required documents have successfully reached storage.
+- Removed unused `generateApplicationId` import in `src/lib/membership.ts` to satisfy compiler linter warnings.
+
+### Why
+- To establish transactional persistence for new shareholder applications and securely store verified credentials without exposing endpoints to brute force or unauthenticated file drops.
+
+### Decisions Made
+- Chose to upload files sequentially to ensure network stability on rural block-coordinator mobile connections.
+- Restricted the use of sequential `applicationId` to UI and physical receipts, utilizing only the immutable database UUID `id` for API resource queries.
+
 ## 2026-06-25 — Phase 8: Frontend Integration (Milestone 1: Core Infrastructure)
 
 ### What Changed

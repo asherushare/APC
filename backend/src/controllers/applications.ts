@@ -204,6 +204,7 @@ export const submitApplication = async (
     res.status(201).json({
       success: true,
       applicationId: savedApp.applicationId,
+      id: savedApp.id,
       uploadToken,
       submittedAt: savedApp.submittedAt,
     });
