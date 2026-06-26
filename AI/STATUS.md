@@ -68,6 +68,8 @@
 | Admin Status Transitions & Scoping | ✅ Complete | Validates transition map, updates reviewedAt, and writes status update AuditLog snapshots in a transaction |
 | Scoped Dashboard Stats | ✅ Complete | Dynamic statistics grouped by status, block-scoped to coordinator's block |
 | Scoped Audit Logs Query | ✅ Complete | Paginated system audit log retrieval, block-scoped to coordinator's block |
+| Admin Dashboard (Coordinator) | ✅ Complete | Applications list with search/filter/pagination, status overview cards, lazy-loaded audit logs, block-scoped for coordinators |
+| Admin Dashboard (Admin) | ✅ Complete | Full cross-block visibility with block selector dropdown, status filtering, and audit log access |
 
 ---
 
@@ -105,6 +107,15 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 ---
 
 ## Last Completed Phase
+
+**Phase 8 — Frontend Integration (Milestone 4: Coordinator / Admin Dashboard)** (completed 2026-06-26)
+
+- Built four modular dashboard UI components: `DashboardStats`, `DashboardFilters`, `ApplicationsTable`, and `AuditLogsTable` in `src/components/sections/admin/`.
+- Orchestrated the main dashboard page (`/admin/dashboard`) as a state-management-only composition layer with tab navigation.
+- Integrated search by Applicant Name, Application ID, and Mobile Number with 300ms debounce. Excluded Aadhaar from search.
+- Implemented block-scoped filtering: ADMIN users see an editable block dropdown; COORDINATOR users see their block locked as a static badge.
+- Lazy-loaded audit logs: `/audit-logs` endpoint is fetched only when the Audit Logs tab is visited for the first time, with cached state on subsequent visits.
+- Resolved ESLint errors: replaced `any` types with `unknown`, escaped JSX entities, deferred synchronous `setState` calls inside `useEffect` hooks, and filtered empty query parameters.
 
 **Phase 8 — Frontend Integration (Milestone 3: Authentication & Session Management)** (completed 2026-06-26)
 
@@ -204,8 +215,8 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 
 ```
 Frontend:
-npm run lint   → ✅ Zero errors, zero warnings (2026-06-21)
-npm run build  → ✅ 22/22 pages generated, zero errors (2026-06-21)
+npm run lint   → ✅ Zero errors, zero warnings (2026-06-26)
+npm run build  → ✅ 24/24 pages generated, zero errors (2026-06-26)
 
 Backend:
 npm run lint   → ✅ Zero errors, zero warnings (2026-06-25)

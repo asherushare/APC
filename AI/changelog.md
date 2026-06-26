@@ -2,6 +2,25 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-06-26 — Phase 8: Frontend Integration (Milestone 4: Coordinator / Admin Dashboard)
+
+### What Changed
+- Created `DashboardStats.tsx` in `src/components/sections/admin/` — renders 7 application status count cards (SUBMITTED through REJECTED) with color-coded badges and loading skeleton states.
+- Created `DashboardFilters.tsx` in `src/components/sections/admin/` — search input (Name, Application ID, Mobile Number), status dropdown, and block dropdown (ADMIN only; locked for COORDINATOR).
+- Created `ApplicationsTable.tsx` in `src/components/sections/admin/` — responsive data table with status badges, pagination controls, and "View Details" action buttons.
+- Created `AuditLogsTable.tsx` in `src/components/sections/admin/` — system activity log table with status change diffs, actor identification, and pagination.
+- Rewrote `src/app/admin/dashboard/page.tsx` as a state-management orchestrator composing the four subcomponents with tab navigation (Applications, Status Overview, Audit Logs).
+- Implemented lazy-loading: `/audit-logs` API is fetched only when the Audit Logs tab is visited for the first time.
+- Filtered empty query parameters from `URLSearchParams` to avoid backend validation issues with empty strings.
+
+### Why
+- To provide coordinators and administrators with a functional data management interface for reviewing shareholder applications, monitoring aggregate status metrics, and auditing system activity.
+
+### Decisions Made
+- Chose to defer `setState` calls inside `useEffect` hooks using `setTimeout(fn, 0)` to satisfy React's `react-hooks/set-state-in-effect` lint rule while preserving the data-fetching lifecycle.
+- Used `unknown` instead of `any` for the audit log `changes` field to satisfy `@typescript-eslint/no-explicit-any`, with safe type narrowing via `as Record<string, unknown>`.
+- Excluded Aadhaar from the dashboard search field to match the approved implementation plan.
+
 ## 2026-06-26 — Phase 8: Frontend Integration (Milestone 3: Authentication & Session Management)
 
 ### What Changed
