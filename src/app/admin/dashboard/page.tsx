@@ -315,8 +315,7 @@ export default function AdminDashboardPage() {
                 pagination={pagination}
                 onPageChange={(p) => setFilters(prev => ({ ...prev, page: p }))}
                 onViewDetails={(id) => {
-                  console.log('View details clicked for ID:', id);
-                  // Routed in Phase 8 Milestone 5
+                  router.push(`/admin/applications/${id}`);
                 }}
               />
             </>

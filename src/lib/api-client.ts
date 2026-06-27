@@ -183,6 +183,61 @@ async function handleUnauthorized(endpoint: string, options: ApiRequestOptions):
 }
 
 /**
+ * Fetches a binary/authenticated resource (e.g. a streamed document) and returns
+ * it as a Blob. Used by the admin document viewer, where the download endpoint
+ * proxies the file through the server and requires a Bearer access token (the
+ * token is held in memory, so a plain window.open(url) would be unauthorized).
+ *
+ * On 401, performs the same token-refresh retry path as apiRequest.
+ */
+export async function fetchBlob(endpoint: string, options: ApiRequestOptions = {}): Promise<Blob> {
+  const attempt = async (token: string | null): Promise<Blob> => {
+    const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
+    const headers = new Headers(options.headers || {});
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    const response = await fetchWithTimeout(url, { ...options, headers, credentials: 'include' });
+    if (!response.ok) {
+      let errorBody: Record<string, unknown> = {};
+      try {
+        errorBody = await response.json() as Record<string, unknown>;
+      } catch {
+        // Non-JSON error (e.g. raw text); ignore
+      }
+      const errObj = errorBody.error as Record<string, unknown> | undefined;
+      const message = (errObj?.message || errorBody.message || response.statusText || 'Download failed') as string;
+      const code = (errObj?.code || errorBody.code || 'UNKNOWN_ERROR') as string;
+      throw new ApiError(message, response.status, code, errObj?.details || null);
+    }
+    return await response.blob();
+  };
+
+  try {
+    return await attempt(currentAccessToken);
+  } catch (err) {
+    if (err instanceof ApiError && err.statusCode === 401) {
+      // Attempt a single refresh + retry, mirroring apiRequest's recovery path.
+      try {
+        const refreshResponse = await fetchWithTimeout(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+        if (!refreshResponse.ok) throw new Error('Session expired');
+        const data = await refreshResponse.json() as { accessToken: string };
+        setAccessToken(data.accessToken);
+        return await attempt(data.accessToken);
+      } catch {
+        setAccessToken(null);
+        throw new ApiError('Session expired', 401, 'INVALID_ACCESS_TOKEN');
+      }
+    }
+    throw err;
+  }
+}
+
+/**
  * Uploads a file via multipart form-data using XMLHttpRequest to support progress events.
  */
 export function uploadWithProgress<T = unknown>(

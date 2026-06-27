@@ -366,6 +366,20 @@ export const getApplicationDetails = async (
       },
       include: {
         producerActivities: true,
+        documents: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            documentType: true,
+            filename: true,
+            mimeType: true,
+            fileSize: true,
+            uploadStatus: true,
+            virusScanStatus: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
