@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadDocument } from '../controllers/documents';
+import { Role } from '@prisma/client';
+import { uploadDocument, downloadApplicationDocument } from '../controllers/documents';
+import { authMiddleware, requireRole } from '../middleware/auth';
 import { ValidationError } from '../utils/errors';
 
 const router = Router();
@@ -35,5 +37,15 @@ const upload = multer({
 // POST /api/v1/applications/:id/documents
 // Accepts a single file named 'file' and body parameters (documentType)
 router.post('/:id/documents', upload.single('file'), uploadDocument);
+
+// GET /api/v1/applications/:id/documents/:documentId/download
+// Streams a document to an authenticated ADMIN or (block-scoped) COORDINATOR.
+// Backend-mediated streaming — no presigned URLs (matches the upload architecture).
+router.get(
+  '/:id/documents/:documentId/download',
+  authMiddleware,
+  requireRole([Role.ADMIN, Role.COORDINATOR]),
+  downloadApplicationDocument
+);
 
 export default router;

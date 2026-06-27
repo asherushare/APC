@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const multer_1 = __importDefault(require("multer"));
+const client_1 = require("@prisma/client");
 const documents_1 = require("../controllers/documents");
+const auth_1 = require("../middleware/auth");
 const errors_1 = require("../utils/errors");
 const router = (0, express_1.Router)();
 const storage = multer_1.default.memoryStorage();
@@ -34,4 +36,8 @@ const upload = (0, multer_1.default)({
 // POST /api/v1/applications/:id/documents
 // Accepts a single file named 'file' and body parameters (documentType)
 router.post('/:id/documents', upload.single('file'), documents_1.uploadDocument);
+// GET /api/v1/applications/:id/documents/:documentId/download
+// Streams a document to an authenticated ADMIN or (block-scoped) COORDINATOR.
+// Backend-mediated streaming — no presigned URLs (matches the upload architecture).
+router.get('/:id/documents/:documentId/download', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), documents_1.downloadApplicationDocument);
 exports.default = router;

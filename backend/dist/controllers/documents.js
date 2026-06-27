@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadDocument = void 0;
+exports.downloadApplicationDocument = exports.uploadDocument = void 0;
 const client_1 = require("@prisma/client");
 const crypto_1 = __importDefault(require("crypto"));
 const path_1 = __importDefault(require("path"));
@@ -170,3 +170,76 @@ const uploadDocument = async (req, res, next) => {
     }
 };
 exports.uploadDocument = uploadDocument;
+/**
+ * GET /api/v1/applications/:id/documents/:documentId/download
+ * Streams an uploaded document from S3/MinIO to an authenticated ADMIN or
+ * (block-scoped) COORDINATOR. Backend-mediated streaming (no presigned URLs),
+ * matching the architecture used for uploads.
+ *
+ * Query:
+ *   - disposition=attachment  forces a download instead of inline preview.
+ */
+const downloadApplicationDocument = async (req, res, next) => {
+    try {
+        if (!req.user) {
+            throw new errors_1.ForbiddenError('Authentication required to download application documents', 'AUTHENTICATION_REQUIRED');
+        }
+        const { id, documentId } = req.params;
+        // 1. Locate the application (accept DB id or human-readable applicationId)
+        const application = await db_1.prisma.shareholderApplication.findFirst({
+            where: {
+                OR: [{ id }, { applicationId: id }],
+                deletedAt: null,
+            },
+        });
+        if (!application) {
+            throw new errors_1.NotFoundError('Application not found', 'APPLICATION_NOT_FOUND');
+        }
+        // 2. Role-based block access restriction (same rule as getApplicationDetails)
+        if (req.user.role === client_1.Role.COORDINATOR) {
+            const coordinator = await db_1.prisma.user.findUnique({
+                where: { id: req.user.id },
+            });
+            if (!coordinator || coordinator.block !== application.block) {
+                throw new errors_1.ForbiddenError('You do not have permission to view documents for applications outside your assigned block', 'INSUFFICIENT_PERMISSIONS');
+            }
+        }
+        else if (req.user.role !== client_1.Role.ADMIN) {
+            throw new errors_1.ForbiddenError('You do not have permission to perform this action', 'INSUFFICIENT_PERMISSIONS');
+        }
+        // 3. Locate the document and confirm it belongs to this application
+        const document = await db_1.prisma.document.findFirst({
+            where: {
+                id: documentId,
+                applicationId: application.id,
+                deletedAt: null,
+            },
+        });
+        if (!document) {
+            throw new errors_1.NotFoundError('Document not found', 'DOCUMENT_NOT_FOUND');
+        }
+        const forceAttachment = req.query.disposition === 'attachment';
+        try {
+            const mimeType = await (0, s3_1.streamObjectFromS3)(document.storageKey, res, document.mimeType, document.filename, document.fileSize);
+            // Override disposition to attachment when explicitly requested
+            if (forceAttachment) {
+                res.setHeader('Content-Disposition', `attachment; filename="${document.filename.replace(/"/g, '')}"`);
+            }
+            await recordAuditLog(req.user.id, 'DOCUMENT_DOWNLOADED', 'Document', document.id, req, {
+                applicationId: application.id,
+                documentType: document.documentType,
+                filename: document.filename,
+                mimeType,
+            });
+        }
+        catch (streamErr) {
+            const msg = streamErr instanceof Error ? streamErr.message : String(streamErr);
+            logger_1.logger.error(`Failed to stream document ${document.id} from S3: ${msg}`);
+            throw streamErr;
+        }
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.downloadApplicationDocument = downloadApplicationDocument;
