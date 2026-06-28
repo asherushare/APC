@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { Readable } from 'stream';
+import WebSocket from 'ws';
 import { env } from '../config/env';
 import { logger } from './logger';
 
 export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     persistSession: false,
+  },
+  realtime: {
+    transport: WebSocket as any,
   },
 });
 
