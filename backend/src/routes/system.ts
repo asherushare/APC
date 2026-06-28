@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { HeadBucketCommand } from '@aws-sdk/client-s3';
 import { prisma } from '../config/db';
 import { env } from '../config/env';
-import { s3Client } from '../utils/s3';
+import { supabase } from '../utils/s3';
 
 const router = Router();
 
@@ -19,10 +18,13 @@ router.get('/health', async (_req: Request, res: Response) => {
     dbStatus = 'DISCONNECTED';
   }
 
-  // Real S3 storage check verifying connection and bucket access
+  // Real Supabase storage check verifying connection and bucket access
   let storageStatus = 'CONNECTED';
   try {
-    await s3Client.send(new HeadBucketCommand({ Bucket: env.S3_BUCKET_NAME }));
+    const { data, error } = await supabase.storage.getBucket(env.SUPABASE_BUCKET);
+    if (error || !data) {
+      storageStatus = 'DISCONNECTED';
+    }
   } catch (error) {
     storageStatus = 'DISCONNECTED';
   }

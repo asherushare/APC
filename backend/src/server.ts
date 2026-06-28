@@ -6,7 +6,7 @@ import { verifyAndCreateBucket } from './utils/s3';
 
 async function startServer() {
   try {
-    // 1. Verify MinIO connectivity and ensure bucket exists
+    // 1. Verify Supabase Storage connectivity and ensure bucket exists
     await verifyAndCreateBucket();
 
     // 2. Start HTTP server

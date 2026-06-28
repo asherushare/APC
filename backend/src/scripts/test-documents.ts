@@ -176,7 +176,7 @@ async function runTests(): Promise<void> {
   ): Promise<unknown> {
     console.log(`👉 Test: ${description}`);
     const formData = new FormData();
-    const fileContent = 'Dummy document payload contents for S3 verification';
+    const fileContent = 'Dummy document payload contents for Supabase Storage verification';
     const blob = new Blob([fileContent], { type: useValidFile ? 'image/png' : 'text/html' });
     formData.append('file', blob, useValidFile ? 'aadhaar_front.png' : 'malicious.html');
     formData.append('documentType', 'AADHAAR');
