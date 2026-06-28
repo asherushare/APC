@@ -112,7 +112,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -173,7 +173,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
         path: '/',
       });
 
@@ -221,7 +221,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -231,6 +231,13 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       accessToken: newAccessToken,
     });
   } catch (error) {
+    // If refresh token fails validation, clear cookie so browser client stops looping/redirecting
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+      path: '/',
+    });
     next(error);
   }
 };
@@ -263,7 +270,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
       path: '/',
     });
 

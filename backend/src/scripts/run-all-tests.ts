@@ -9,7 +9,7 @@ const BASE_URL = `http://localhost:${PORT}`;
 async function isServerRunning(): Promise<boolean> {
   return new Promise((resolve) => {
     const req = http.get(`${BASE_URL}/health`, (res) => {
-      resolve(res.statusCode === 200);
+      resolve(res.statusCode === 200 || res.statusCode === 503);
     });
     req.on('error', () => {
       resolve(false);

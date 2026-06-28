@@ -7,7 +7,14 @@ import { verifyAndCreateBucket } from './utils/s3';
 async function startServer() {
   try {
     // 1. Verify Supabase Storage connectivity and ensure bucket exists
-    await verifyAndCreateBucket();
+    try {
+      await verifyAndCreateBucket();
+    } catch (err: unknown) {
+      if (env.NODE_ENV === 'production') {
+        throw err;
+      }
+      logger.warn(`⚠️ Supabase Storage verification failed: ${(err as Error).message}. Continuing startup in non-production mode.`);
+    }
 
     // 2. Start HTTP server
     const server = app.listen(env.PORT, () => {
