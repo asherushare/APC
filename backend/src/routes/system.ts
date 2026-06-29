@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../config/db';
 import { env } from '../config/env';
 import { supabase } from '../utils/s3';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -14,7 +15,12 @@ router.get('/health', async (_req: Request, res: Response) => {
   try {
     // Basic connectivity check select
     await prisma.$queryRaw`SELECT 1`;
-  } catch (error) {
+  } catch (error: any) {
+    logger.error('Prisma connection error in health check:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
     dbStatus = 'DISCONNECTED';
   }
 

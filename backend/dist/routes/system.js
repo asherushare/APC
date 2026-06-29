@@ -4,6 +4,7 @@ const express_1 = require("express");
 const db_1 = require("../config/db");
 const env_1 = require("../config/env");
 const s3_1 = require("../utils/s3");
+const logger_1 = require("../utils/logger");
 const router = (0, express_1.Router)();
 /**
  * GET /health
@@ -16,6 +17,11 @@ router.get('/health', async (_req, res) => {
         await db_1.prisma.$queryRaw `SELECT 1`;
     }
     catch (error) {
+        logger_1.logger.error('Prisma connection error in health check:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack,
+        });
         dbStatus = 'DISCONNECTED';
     }
     // Real Supabase storage check verifying connection and bucket access
