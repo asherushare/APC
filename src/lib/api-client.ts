@@ -2,7 +2,10 @@
 // Independent fetch wrapper for APC backend communication
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://apc-backend-wsyo.onrender.com/api/v1' 
+    : 'http://localhost:4000/api/v1');
 
 let currentAccessToken: string | null = null;
 let onTokenStateChange: ((token: string | null) => void) | null = null;
