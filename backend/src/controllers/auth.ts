@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import crypto from 'crypto';
 import { prisma } from '../config/db';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { emailService } from '../utils/email';
 import {
   verifyPassword,
   hashPassword,
@@ -11,7 +13,13 @@ import {
   hashRefreshToken,
   verifyRefreshToken,
 } from '../utils/auth';
-import { UnauthorizedError, NotFoundError, BadRequestError } from '../utils/errors';
+import {
+  UnauthorizedError,
+  NotFoundError,
+  BadRequestError,
+  ForbiddenError,
+  TooManyRequestsError,
+} from '../utils/errors';
 
 /**
  * Helper to record audit logs.
@@ -46,7 +54,7 @@ async function recordAuditLog(
  */
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     if (!email || !password) {
       throw new BadRequestError('Email and password are required', 'EMAIL_PASSWORD_REQUIRED');
@@ -62,11 +70,46 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       throw new UnauthorizedError('Invalid email or password', 'INVALID_CREDENTIALS');
     }
 
+    // Check account lockout
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { reason: 'Account locked out' });
+      throw new ForbiddenError(
+        'Account is temporarily locked due to repeated failed login attempts. Please try again later.',
+        'ACCOUNT_LOCKED'
+      );
+    }
+
     const isPasswordValid = await verifyPassword(password, user.passwordHash);
 
     if (!isPasswordValid) {
-      await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req);
+      const attempts = user.loginAttempts + 1;
+      const lockoutUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+      
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: attempts,
+          lockoutUntil,
+        },
+      });
+
+      if (lockoutUntil) {
+        await recordAuditLog(user.id, 'ACCOUNT_LOCKED', 'User', user.id, req, { attempts });
+      }
+      await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { attempts });
+
       throw new UnauthorizedError('Invalid email or password', 'INVALID_CREDENTIALS');
+    }
+
+    // Reset login attempts on success
+    if (user.loginAttempts > 0 || user.lockoutUntil) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: 0,
+          lockoutUntil: null,
+        },
+      });
     }
 
     // Progressive Migration: Upgrade legacy Bcrypt hashes to Argon2id
@@ -95,7 +138,10 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
     // Save refresh token in database (SHA-256 hash)
     const tokenHash = hashRefreshToken(refreshToken);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    // Remember Me support: 14 days vs 1 day
+    const maxAge = rememberMe ? 14 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + maxAge);
 
     await prisma.refreshToken.create({
       data: {
@@ -114,7 +160,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       secure: env.NODE_ENV === 'production',
       sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
       path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge,
     });
 
     res.status(200).json({
@@ -312,6 +358,153 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
     res.status(200).json({
       success: true,
       user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/v1/auth/forgot-password
+ */
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new BadRequestError('Email is required', 'EMAIL_REQUIRED');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+    });
+
+    // User enumeration protection: return success even if user not found
+    if (!user || user.deletedAt) {
+      await recordAuditLog(null, 'PASSWORD_RESET_REQUESTED_UNKNOWN', 'User', 'unknown', req, { email });
+      res.status(200).json({
+        success: true,
+        message: 'If your email is registered with us, a password reset link has been sent.',
+      });
+      return;
+    }
+
+    // Cooldown check: 60-second limit per user email
+    const lastToken = await prisma.passwordResetToken.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (lastToken && (Date.now() - lastToken.createdAt.getTime() < 60 * 1000)) {
+      throw new TooManyRequestsError(
+        'A password reset link was recently requested. Please wait 60 seconds before trying again.',
+        'RESET_COOLDOWN'
+      );
+    }
+
+    // Generate token
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Persist token hash
+    await prisma.passwordResetToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    // Send reset link
+    const resetLink = `${env.FRONTEND_URL}/admin/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
+    await emailService.sendPasswordResetEmail(user.email, resetLink, user.fullName);
+
+    // Audit request
+    await recordAuditLog(user.id, 'PASSWORD_RESET_REQUESTED', 'User', user.id, req);
+
+    res.status(200).json({
+      success: true,
+      message: 'If your email is registered with us, a password reset link has been sent.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/v1/auth/reset-password
+ */
+export const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email, token, password } = req.body;
+
+    if (!email || !token || !password) {
+      throw new BadRequestError('Email, token, and password are required', 'MISSING_FIELDS');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+    });
+
+    if (!user || user.deletedAt) {
+      throw new BadRequestError('Invalid reset request', 'INVALID_RESET_REQUEST');
+    }
+
+    // Validate password strength: min 8 characters, min 1 uppercase, 1 lowercase, 1 number, 1 special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      throw new BadRequestError(
+        'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+        'WEAK_PASSWORD'
+      );
+    }
+
+    // Verify token
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const storedToken = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!storedToken || storedToken.userId !== user.id || storedToken.used || storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedError('Invalid or expired reset token', 'INVALID_RESET_TOKEN');
+    }
+
+    // Hash password with Argon2id
+    const newHash = await hashPassword(password);
+
+    // Update password hash, reset lockout, and mark token used in a transaction
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash: newHash,
+          loginAttempts: 0,
+          lockoutUntil: null,
+        },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: storedToken.id },
+        data: { used: true },
+      }),
+      // Revoke all refresh tokens for session flush
+      prisma.refreshToken.updateMany({
+        where: { userId: user.id },
+        data: { revoked: true },
+      }),
+    ]);
+
+    // Record audit events
+    await recordAuditLog(user.id, 'SESSION_REVOKED', 'User', user.id, req, { reason: 'Password reset' });
+    await recordAuditLog(user.id, 'PASSWORD_RESET_SUCCESS', 'User', user.id, req);
+
+    // Send confirmation email
+    await emailService.sendPasswordResetConfirmationEmail(user.email, user.fullName);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully.',
     });
   } catch (error) {
     next(error);

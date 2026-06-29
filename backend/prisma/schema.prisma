@@ -58,18 +58,21 @@ enum VirusScanStatus {
 }
 
 model User {
-  id           String                  @id @default(uuid())
-  email        String                  @unique
-  passwordHash String
-  fullName     String
-  role         Role                    @default(COORDINATOR)
-  block        String?                 // Assigned geographical block
-  applications ShareholderApplication[] // Applications reviewed
-  refreshTokens RefreshToken[]
-  auditLogs    AuditLog[]
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-  deletedAt    DateTime?               // Soft-delete support
+  id                  String                  @id @default(uuid())
+  email               String                  @unique
+  passwordHash        String
+  fullName            String
+  role                Role                    @default(COORDINATOR)
+  block               String?                 // Assigned geographical block
+  loginAttempts       Int                     @default(0)
+  lockoutUntil        DateTime?
+  applications        ShareholderApplication[] // Applications reviewed
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  deletedAt           DateTime?               // Soft-delete support
 }
 
 model RefreshToken {
@@ -79,6 +82,16 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique // SHA-256 hash of reset token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
 

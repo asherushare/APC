@@ -21,6 +21,12 @@ const envSchema = z.object({
   GIT_COMMIT: z.string().default('unknown'),
   CORS_ORIGIN: z.string().optional(),
   GLOBAL_RATE_LIMIT: z.string().transform(Number).default('500'),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+  FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL').default('http://localhost:3000'),
 });
 
 const parsed = envSchema.safeParse(process.env);

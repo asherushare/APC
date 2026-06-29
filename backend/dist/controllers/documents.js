@@ -35,7 +35,7 @@ async function recordAuditLog(userId, action, targetEntity, targetId, req, chang
 }
 /**
  * POST /api/v1/applications/:id/documents
- * Securely uploads a document file to S3/MinIO and records it in database.
+ * Securely uploads a document file to Supabase Storage and records it in database.
  */
 const uploadDocument = async (req, res, next) => {
     try {
@@ -114,10 +114,10 @@ const uploadDocument = async (req, res, next) => {
         }
         // 5. Calculate SHA-256 Checksum
         const checksum = crypto_1.default.createHash('sha256').update(file.buffer).digest('hex');
-        // 6. Generate S3 storage key
+        // 6. Generate Supabase storage key
         const fileExt = path_1.default.extname(file.originalname);
         const key = `applications/${application.id}/${docType}/${Date.now()}_${crypto_1.default.randomBytes(4).toString('hex')}${fileExt}`;
-        // 7. Upload to S3/MinIO
+        // 7. Upload to Supabase Storage
         await (0, s3_1.uploadToS3)(key, file.buffer, file.mimetype);
         // 8. Save Document in DB
         const savedDoc = await db_1.prisma.document.create({
@@ -172,7 +172,7 @@ const uploadDocument = async (req, res, next) => {
 exports.uploadDocument = uploadDocument;
 /**
  * GET /api/v1/applications/:id/documents/:documentId/download
- * Streams an uploaded document from S3/MinIO to an authenticated ADMIN or
+ * Streams an uploaded document from Supabase Storage to an authenticated ADMIN or
  * (block-scoped) COORDINATOR. Backend-mediated streaming (no presigned URLs),
  * matching the architecture used for uploads.
  *
@@ -234,7 +234,7 @@ const downloadApplicationDocument = async (req, res, next) => {
         }
         catch (streamErr) {
             const msg = streamErr instanceof Error ? streamErr.message : String(streamErr);
-            logger_1.logger.error(`Failed to stream document ${document.id} from S3: ${msg}`);
+            logger_1.logger.error(`Failed to stream document ${document.id} from Supabase Storage: ${msg}`);
             throw streamErr;
         }
     }

@@ -1,5 +1,5 @@
 import { prisma } from '../config/db';
-import { hashRefreshToken } from '../utils/auth';
+import { hashRefreshToken, verifyPassword, hashPassword } from '../utils/auth';
 
 const PORT = 4000;
 const BASE_URL = `http://localhost:${PORT}/api/v1`;
@@ -276,6 +276,247 @@ async function runTests(): Promise<void> {
     console.error('❌ Rate limiting did not trigger within 6 attempts.');
     process.exit(1);
   }
+
+  // 8. Test Account Lockout (Brute Force Defense)
+  console.log('\n--- 8. Testing Account Lockout ---');
+  // Clear any existing attempts
+  await prisma.user.update({
+    where: { email: adminEmail },
+    data: { loginAttempts: 0, lockoutUntil: null },
+  });
+
+  // Send 4 failed attempts
+  for (let i = 1; i <= 4; i++) {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-bypass-rate-limit': 'true',
+      },
+      body: JSON.stringify({ email: adminEmail, password: 'WrongPassword' }),
+    });
+    if (res.status !== 401) {
+      console.error(`Expected 401 on failed attempt, got ${res.status}`);
+      process.exit(1);
+    }
+  }
+
+  // The 5th attempt should lock the account
+  const res5 = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-bypass-rate-limit': 'true',
+    },
+    body: JSON.stringify({ email: adminEmail, password: 'WrongPassword' }),
+  });
+  if (res5.status !== 401) {
+    console.error(`Expected 401 on 5th attempt, got ${res5.status}`);
+    process.exit(1);
+  }
+
+  // Verify locked out status in database
+  const lockedUser = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (lockedUser && lockedUser.loginAttempts === 5 && lockedUser.lockoutUntil) {
+    console.log('✅ User marked as locked out in database.');
+  } else {
+    console.error('❌ User was not locked out in database.');
+    process.exit(1);
+  }
+
+  // The 6th attempt with CORRECT password should fail with 403 Forbidden due to lockout
+  const res6 = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-bypass-rate-limit': 'true',
+    },
+    body: JSON.stringify({ email: adminEmail, password: 'AdminPassword123!' }),
+  });
+  if (res6.status !== 403) {
+    console.error(`Expected 403 on locked attempt, got ${res6.status}`);
+    process.exit(1);
+  }
+  const lockoutData = await res6.json() as { error: { code: string } };
+  if (lockoutData.error.code !== 'ACCOUNT_LOCKED') {
+    console.error(`Expected error code ACCOUNT_LOCKED, got ${lockoutData.error.code}`);
+    process.exit(1);
+  }
+  console.log('✅ Lockout successfully blocks login attempts.');
+
+  // Check audit log for lockout
+  const lockoutAudit = await prisma.auditLog.findFirst({
+    where: { action: 'ACCOUNT_LOCKED', userId: lockedUser.id },
+  });
+  if (lockoutAudit) {
+    console.log('✅ Audit log recorded: ACCOUNT_LOCKED');
+  } else {
+    console.error('❌ Audit log for ACCOUNT_LOCKED is missing.');
+    process.exit(1);
+  }
+
+  // Reset lockout state
+  await prisma.user.update({
+    where: { id: lockedUser.id },
+    data: { loginAttempts: 0, lockoutUntil: null },
+  });
+
+  // 9. Test Forgot Password (Token generation & rate limits)
+  console.log('\n--- 9. Testing Forgot Password Flow ---');
+  await prisma.passwordResetToken.deleteMany({});
+
+  const forgotRes = await fetch(`${BASE_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: adminEmail }),
+  });
+
+  if (forgotRes.status !== 200) {
+    console.error(`Expected 200 on forgot-password, got ${forgotRes.status}`);
+    process.exit(1);
+  }
+  console.log('✅ Forgot password link requested successfully.');
+
+  // Check token record
+  const resetTokenRecord = await prisma.passwordResetToken.findFirst({
+    where: { userId: lockedUser.id },
+  });
+  if (resetTokenRecord) {
+    console.log('✅ Password reset token successfully saved in database.');
+  } else {
+    console.error('❌ Reset token not found in database.');
+    process.exit(1);
+  }
+
+  // Check audit log
+  const forgotAudit = await prisma.auditLog.findFirst({
+    where: { action: 'PASSWORD_RESET_REQUESTED' },
+  });
+  if (forgotAudit) {
+    console.log('✅ Audit log recorded: PASSWORD_RESET_REQUESTED');
+  } else {
+    console.error('❌ Audit log for PASSWORD_RESET_REQUESTED is missing.');
+    process.exit(1);
+  }
+
+  // Check 60s cooldown rate limit
+  const cooldownRes = await fetch(`${BASE_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: adminEmail }),
+  });
+  if (cooldownRes.status !== 429) {
+    console.error(`Expected 429 on cooldown retry, got ${cooldownRes.status}`);
+    process.exit(1);
+  }
+  const cooldownData = await cooldownRes.json() as { error: { code: string } };
+  if (cooldownData.error.code !== 'RESET_COOLDOWN') {
+    console.error(`Expected RESET_COOLDOWN, got ${cooldownData.error.code}`);
+    process.exit(1);
+  }
+  console.log('✅ 60s reset email cooldown verified.');
+
+  // 10. Test Reset Password
+  console.log('\n--- 10. Testing Reset Password Flow ---');
+  const crypto = require('crypto');
+  const testCleartextToken = 'test_reset_token_123_cleartext';
+  const testTokenHash = crypto.createHash('sha256').update(testCleartextToken).digest('hex');
+  
+  await prisma.passwordResetToken.create({
+    data: {
+      tokenHash: testTokenHash,
+      userId: lockedUser.id,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 mins
+    },
+  });
+
+  // Attempt reset with weak password
+  const weakResetRes = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: adminEmail,
+      token: testCleartextToken,
+      password: 'weak',
+    }),
+  });
+  if (weakResetRes.status !== 400) {
+    console.error(`Expected 400 for weak password, got ${weakResetRes.status}`);
+    process.exit(1);
+  }
+  const weakData = await weakResetRes.json() as { error: { code: string } };
+  if (weakData.error.code !== 'WEAK_PASSWORD') {
+    console.error(`Expected WEAK_PASSWORD code, got ${weakData.error.code}`);
+    process.exit(1);
+  }
+  console.log('✅ Weak password strength check verified.');
+
+  // Attempt reset with valid password
+  const newPassword = 'NewSecurePassword123!';
+  const resetRes = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: adminEmail,
+      token: testCleartextToken,
+      password: newPassword,
+    }),
+  });
+
+  if (resetRes.status !== 200) {
+    console.error(`Expected 200 for reset, got ${resetRes.status}`);
+    const bodyText = await resetRes.text();
+    console.error(bodyText);
+    process.exit(1);
+  }
+  console.log('✅ Password reset succeeded with valid password.');
+
+  // Verify database updates
+  const updatedUser2 = await prisma.user.findUnique({ where: { email: adminEmail } });
+  const isMatch = await verifyPassword(newPassword, updatedUser2!.passwordHash);
+  if (isMatch) {
+    console.log('✅ Password hash updated in database.');
+  } else {
+    console.error('❌ Password hash not updated in database.');
+    process.exit(1);
+  }
+
+  const usedToken = await prisma.passwordResetToken.findUnique({ where: { tokenHash: testTokenHash } });
+  if (usedToken && usedToken.used) {
+    console.log('✅ Reset token successfully marked as used.');
+  } else {
+    console.error('❌ Reset token not marked as used.');
+    process.exit(1);
+  }
+
+  // Verify sessions flushed
+  const activeSessions = await prisma.refreshToken.findMany({
+    where: { userId: lockedUser.id, revoked: false },
+  });
+  if (activeSessions.length === 0) {
+    console.log('✅ Active sessions successfully flushed.');
+  } else {
+    console.error(`❌ Session flush failed: ${activeSessions.length} active sessions remain.`);
+    process.exit(1);
+  }
+
+  // Check audit log
+  const resetSuccessAudit = await prisma.auditLog.findFirst({
+    where: { action: 'PASSWORD_RESET_SUCCESS', userId: lockedUser.id },
+  });
+  if (resetSuccessAudit) {
+    console.log('✅ Audit log recorded: PASSWORD_RESET_SUCCESS');
+  } else {
+    console.error('❌ Audit log for PASSWORD_RESET_SUCCESS is missing.');
+    process.exit(1);
+  }
+
+  // Restore the original admin password for subsequent tests
+  const originalHash = await hashPassword('AdminPassword123!');
+  await prisma.user.update({
+    where: { id: lockedUser.id },
+    data: { passwordHash: originalHash },
+  });
 
   console.log('\n🎉 ALL INTEGRATION TESTS PASSED SUCCESSFULLY! 🎉');
 }

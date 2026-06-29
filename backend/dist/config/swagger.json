@@ -22,7 +22,7 @@
         "/health": {
             "get": {
                 "summary": "Check system and service health status",
-                "description": "Returns status metrics for the API server, database connection, and S3 object storage connectivity.",
+                "description": "Returns status metrics for the API server, database connection, and Supabase object storage connectivity.",
                 "responses": {
                     "200": {
                         "description": "System is healthy",

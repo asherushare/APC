@@ -10,8 +10,16 @@ const db_1 = require("./config/db");
 const s3_1 = require("./utils/s3");
 async function startServer() {
     try {
-        // 1. Verify MinIO connectivity and ensure bucket exists
-        await (0, s3_1.verifyAndCreateBucket)();
+        // 1. Verify Supabase Storage connectivity and ensure bucket exists
+        try {
+            await (0, s3_1.verifyAndCreateBucket)();
+        }
+        catch (err) {
+            if (env_1.env.NODE_ENV === 'production') {
+                throw err;
+            }
+            logger_1.logger.warn(`⚠️ Supabase Storage verification failed: ${err.message}. Continuing startup in non-production mode.`);
+        }
         // 2. Start HTTP server
         const server = app_1.default.listen(env_1.env.PORT, () => {
             logger_1.logger.info(`🚀 API Server started in [${env_1.env.NODE_ENV}] mode, listening on port: ${env_1.env.PORT}`);
