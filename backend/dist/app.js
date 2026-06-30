@@ -81,30 +81,17 @@ app.use((_req, res, next) => {
     next();
 });
 // 4. CORS settings
-const getCorsOrigin = () => {
-    if (env_1.env.NODE_ENV !== 'production') {
-        return true;
-    }
-    if (!env_1.env.CORS_ORIGIN) {
-        return false;
-    }
-    const allowedOrigins = env_1.env.CORS_ORIGIN.split(',').map((o) => o.trim());
-    if (allowedOrigins.includes('*')) {
-        return true;
-    }
-    return (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        }
-        else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    };
-};
-app.use((0, cors_1.default)({
-    origin: getCorsOrigin(),
+const corsOptions = {
+    origin: [
+        'https://apc-rose.vercel.app',
+        'http://localhost:3000',
+    ],
     credentials: true,
-}));
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options('*', (0, cors_1.default)(corsOptions));
 // 5. Cookie & Body Parsing
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
