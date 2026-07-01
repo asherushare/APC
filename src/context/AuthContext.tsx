@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 1. Sync React State with API Client token updates
   useEffect(() => {
-    registerTokenStateListener(async (token) => {
+    registerTokenStateListener((token) => {
       setAccessTokenState(token);
       if (!token) {
         // If token cleared (session expired or logged out)
@@ -73,22 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (pathname && pathname.startsWith('/admin') && pathname !== '/admin/login') {
           router.push('/admin/login');
         }
-      } else {
-        // If a new token is set but we don't have user info yet
-        if (!user) {
-          try {
-            const data = await fetchMe();
-            setUser(data.user);
-          } catch {
-            // If fetch user fails, invalidate access token
-            setAccessToken(null);
-          } finally {
-            setIsLoading(false);
-          }
-        }
       }
     });
-  }, [user, pathname, router]);
+  }, [pathname, router]);
 
   // 2. Try to restore session on initial load
   useEffect(() => {
