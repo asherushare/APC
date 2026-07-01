@@ -85,18 +85,32 @@ app.use((_req, res, next) => {
     next();
 });
 // 4. CORS settings
-let allowedOrigins = [
+const allowedOrigins = [
     'https://apc-rose.vercel.app',
     'http://localhost:3000',
 ];
+if (env_1.env.FRONTEND_URL) {
+    // Normalize frontend URL by removing trailing slash if present
+    const normalizedFrontend = env_1.env.FRONTEND_URL.replace(/\/$/, '');
+    if (!allowedOrigins.includes(normalizedFrontend)) {
+        allowedOrigins.push(normalizedFrontend);
+    }
+}
 if (env_1.env.CORS_ORIGIN) {
-    allowedOrigins = env_1.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
+    const customOrigins = env_1.env.CORS_ORIGIN.split(',')
+        .map((o) => o.trim().replace(/\/$/, ''))
+        .filter(Boolean);
+    customOrigins.forEach((origin) => {
+        if (!allowedOrigins.includes(origin)) {
+            allowedOrigins.push(origin);
+        }
+    });
 }
 const corsOptions = {
     origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Upload-Token'],
 };
 app.use((0, cors_1.default)(corsOptions));
 app.options('*', (0, cors_1.default)(corsOptions));
