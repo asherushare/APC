@@ -1,28 +1,9 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const refreshToken = request.cookies.get('refreshToken');
-
-  const publicPaths = ['/admin/login', '/admin/forgot-password', '/admin/reset-password'];
-
-  // Guard all admin routes except public ones
-  if (pathname.startsWith('/admin') && !publicPaths.includes(pathname)) {
-    if (!refreshToken) {
-      const loginUrl = new URL('/admin/login', request.url);
-      // Preserve current URL to redirect back after login if desired
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
-
-  // Redirect to dashboard if logged-in user visits any public screen
-  if (publicPaths.includes(pathname)) {
-    if (refreshToken) {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-    }
-  }
-
+export function middleware() {
+  // Bypassed middleware-level cookie authentication checks since the frontend Vercel deployment 
+  // cannot read the cross-origin HttpOnly 'refreshToken' cookie set on the Render backend domain.
+  // Gating and route protection are fully handled client-side in layout.tsx and individual page views.
   return NextResponse.next();
 }
 
