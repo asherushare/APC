@@ -87,6 +87,10 @@ export function Navbar() {
   };
 
 
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <>
       <nav

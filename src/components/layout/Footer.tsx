@@ -1,9 +1,16 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { companyInfo } from '@/data/company';
 import { navLinks } from '@/data/navigation';
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
   const { address, phone, email } = companyInfo;
   const fullAddress = `${address.street}, ${address.area}, ${address.city}, ${address.state} – ${address.pincode}`;
 
