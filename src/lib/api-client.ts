@@ -1,7 +1,7 @@
 // api-client.ts
 // Independent fetch wrapper for APC backend communication
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 70000; // 70 seconds to accommodate Render free tier cold starts
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 
   (process.env.NODE_ENV === 'production' 
     ? 'https://apc-backend-wsyo.onrender.com/api/v1' 

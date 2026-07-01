@@ -143,7 +143,7 @@ export function LoginForm() {
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Verifying Credentials...</span>
+              <span>Waking up server (please wait)...</span>
             </>
           ) : (
             <span>Sign In to Dashboard</span>
