@@ -30,7 +30,7 @@ const envSchema = zod_1.z.object({
     SMTP_USER: zod_1.z.string().optional(),
     SMTP_PASS: zod_1.z.string().optional(),
     SMTP_FROM: zod_1.z.string().optional(),
-    FRONTEND_URL: zod_1.z.preprocess((val) => (typeof val === 'string' ? val.trim().replace(/^["']|["']$/g, '') : val), zod_1.z.string().url('FRONTEND_URL must be a valid URL')).default('http://localhost:3000'),
+    FRONTEND_URL: zod_1.z.preprocess((val) => (typeof val === 'string' ? val.trim().replace(/^["']|["']$/g, '') : val), zod_1.z.string().min(1, 'FRONTEND_URL is required')).default('https://apc-rose.vercel.app'),
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {

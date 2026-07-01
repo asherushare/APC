@@ -34,8 +34,8 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional(),
   FRONTEND_URL: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim().replace(/^["']|["']$/g, '') : val),
-    z.string().url('FRONTEND_URL must be a valid URL')
-  ).default('http://localhost:3000'),
+    z.string().min(1, 'FRONTEND_URL is required')
+  ).default('https://apc-rose.vercel.app'),
 });
 
 const parsed = envSchema.safeParse(process.env);
