@@ -21,6 +21,10 @@ import {
   TooManyRequestsError,
 } from '../utils/errors';
 
+const isProd = env.NODE_ENV === 'production' || process.env.NODE_ENV === 'production';
+// eslint-disable-next-line no-console
+console.log(`[Auth Module] Initializing. isProd = ${isProd}, process.env.NODE_ENV = ${process.env.NODE_ENV}, env.NODE_ENV = ${env.NODE_ENV}`);
+
 /**
  * Helper to record audit logs.
  */
@@ -157,8 +161,8 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     // Set refresh token in HTTP-only cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
       path: '/',
       maxAge,
     });
@@ -218,8 +222,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
 
       res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'strict',
         path: '/',
       });
 
@@ -266,8 +270,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     // Send new refresh token in cookie
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -280,8 +284,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     // If refresh token fails validation, clear cookie so browser client stops looping/redirecting
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
       path: '/',
     });
     next(error);
@@ -315,8 +319,8 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'strict',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'strict',
       path: '/',
     });
 

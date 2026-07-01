@@ -12,6 +12,9 @@ const env_1 = require("../config/env");
 const email_1 = require("../utils/email");
 const auth_1 = require("../utils/auth");
 const errors_1 = require("../utils/errors");
+const isProd = env_1.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'production';
+// eslint-disable-next-line no-console
+console.log(`[Auth Module] Initializing. isProd = ${isProd}, process.env.NODE_ENV = ${process.env.NODE_ENV}, env.NODE_ENV = ${env_1.env.NODE_ENV}`);
 /**
  * Helper to record audit logs.
  */
@@ -120,8 +123,8 @@ const login = async (req, res, next) => {
         // Set refresh token in HTTP-only cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: env_1.env.NODE_ENV === 'production',
-            sameSite: env_1.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'strict',
             path: '/',
             maxAge,
         });
@@ -175,8 +178,8 @@ const refresh = async (req, res, next) => {
             });
             res.clearCookie('refreshToken', {
                 httpOnly: true,
-                secure: env_1.env.NODE_ENV === 'production',
-                sameSite: env_1.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                secure: isProd,
+                sameSite: isProd ? 'none' : 'strict',
                 path: '/',
             });
             throw new errors_1.UnauthorizedError('Token reuse detected. All active sessions have been terminated.', 'TOKEN_REUSE_DETECTED');
@@ -211,8 +214,8 @@ const refresh = async (req, res, next) => {
         // Send new refresh token in cookie
         res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
-            secure: env_1.env.NODE_ENV === 'production',
-            sameSite: env_1.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'strict',
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
@@ -225,8 +228,8 @@ const refresh = async (req, res, next) => {
         // If refresh token fails validation, clear cookie so browser client stops looping/redirecting
         res.clearCookie('refreshToken', {
             httpOnly: true,
-            secure: env_1.env.NODE_ENV === 'production',
-            sameSite: env_1.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'strict',
             path: '/',
         });
         next(error);
@@ -255,8 +258,8 @@ const logout = async (req, res, next) => {
         }
         res.clearCookie('refreshToken', {
             httpOnly: true,
-            secure: env_1.env.NODE_ENV === 'production',
-            sameSite: env_1.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'strict',
             path: '/',
         });
         res.status(200).json({
