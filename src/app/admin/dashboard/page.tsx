@@ -201,11 +201,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!isAuthenticated || !user) {
@@ -342,3 +338,58 @@ export default function AdminDashboardPage() {
     </main>
   );
 }
+
+function DashboardSkeleton() {
+  return (
+    <main className="min-h-screen bg-surface py-12 px-4 relative overflow-hidden animate-pulse">
+      <Container className="max-w-6xl relative z-10 space-y-6">
+        {/* Header Skeleton */}
+        <div className="h-28 bg-white border border-outline-variant/20 rounded-3xl p-8 flex items-center justify-between">
+          <div className="space-y-3 w-1/3 text-left">
+            <div className="h-3 w-1/4 bg-outline-variant/30 rounded" />
+            <div className="h-6 w-3/4 bg-outline-variant/40 rounded" />
+            <div className="h-3 w-1/2 bg-outline-variant/30 rounded" />
+          </div>
+          <div className="h-10 w-28 bg-outline-variant/30 rounded-xl" />
+        </div>
+
+        {/* Tab Headers Skeleton */}
+        <div className="flex border-b border-outline-variant/20 gap-6">
+          <div className="h-8 w-24 bg-outline-variant/30 rounded-t" />
+          <div className="h-8 w-32 bg-outline-variant/20 rounded-t" />
+          <div className="h-8 w-24 bg-outline-variant/20 rounded-t" />
+        </div>
+
+        {/* Metrics Grid Skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+          {Array.from({ length: 7 }).map((_, idx) => (
+            <div key={idx} className="border border-outline-variant/20 bg-white rounded-2xl p-4 h-28 flex flex-col items-center justify-between">
+              <div className="w-8 h-8 rounded-full bg-outline-variant/20" />
+              <div className="h-3 w-3/4 bg-outline-variant/30 rounded" />
+              <div className="w-8 h-8 rounded-full bg-outline-variant/20" />
+            </div>
+          ))}
+        </div>
+
+        {/* Filter bar Skeleton */}
+        <div className="h-16 bg-white border border-outline-variant/20 rounded-3xl p-4 flex items-center justify-between gap-4">
+          <div className="h-10 bg-outline-variant/20 rounded-xl flex-1" />
+          <div className="h-10 w-32 bg-outline-variant/20 rounded-xl" />
+          <div className="h-10 w-32 bg-outline-variant/20 rounded-xl" />
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-outline-variant/20 rounded-3xl p-6 space-y-4">
+          <div className="h-4 w-1/4 bg-outline-variant/30 rounded" />
+          <div className="space-y-3">
+            <div className="h-10 bg-outline-variant/20 rounded-xl" />
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <div key={idx} className="h-12 bg-outline-variant/10 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </Container>
+    </main>
+  );
+}
+

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -300,7 +301,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Content Wrapper */}
         <div className="flex-1 flex flex-col min-h-screen relative w-full animate-fadeIn">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </div>
       </div>
     </div>
