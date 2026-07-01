@@ -12,7 +12,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/admin/dashboard');
+      router.replace('/admin/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 

@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isAuthPage) return;
     if (!isLoading && !isAuthenticated) {
-      router.push('/admin/login');
+      router.replace('/admin/login');
     }
   }, [isAuthenticated, isLoading, router, isAuthPage]);
 
@@ -45,17 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
 
   // Navigation Links
   const navItems = [
@@ -302,7 +292,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Content Wrapper */}
         <div className="flex-1 flex flex-col min-h-screen relative w-full animate-fadeIn">
           <ErrorBoundary>
-            {children}
+            {isLoading ? (
+              <div className="flex-1 flex items-center justify-center min-h-screen bg-surface">
+                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : (
+              children
+            )}
           </ErrorBoundary>
         </div>
       </div>

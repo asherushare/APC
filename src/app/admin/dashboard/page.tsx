@@ -307,9 +307,9 @@ export default function AdminDashboardPage() {
 
               {/* Data Table */}
               <ApplicationsTable
-                applications={applications}
+                applications={applications || []}
                 isLoading={isAppsLoading}
-                pagination={pagination}
+                pagination={pagination || { total: 0, page: 1, limit: 10, totalPages: 1 }}
                 onPageChange={(p) => setFilters(prev => ({ ...prev, page: p }))}
                 onViewDetails={(id) => {
                   router.push(`/admin/applications/${id}`);
@@ -320,16 +320,16 @@ export default function AdminDashboardPage() {
 
           {activeTab === 'stats' && (
             <DashboardStats
-              stats={stats}
+              stats={stats || null}
               isLoading={isStatsLoading}
             />
           )}
 
           {activeTab === 'audit_logs' && (
             <AuditLogsTable
-              logs={auditLogs}
+              logs={auditLogs || []}
               isLoading={isLogsLoading}
-              pagination={auditPagination}
+              pagination={auditPagination || { total: 0, page: 1, limit: 10, totalPages: 1 }}
               onPageChange={handleAuditPageChange}
             />
           )}
