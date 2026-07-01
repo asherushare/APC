@@ -158,6 +158,8 @@ model ShareholderApplication {
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
   deletedAt              DateTime?         // Soft-delete support
+
+  @@index([block])
 }
 
 model Document {
@@ -178,6 +180,8 @@ model Document {
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
   deletedAt       DateTime?              // Soft-delete support
+
+  @@index([applicationId])
 }
 
 model ProducerActivity {
@@ -198,4 +202,7 @@ model AuditLog {
   ipAddress    String?
   userAgent    String?
   createdAt    DateTime  @default(now())
+
+  @@index([targetId])
+  @@index([createdAt])
 }

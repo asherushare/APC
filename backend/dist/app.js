@@ -21,6 +21,10 @@ const logger_1 = require("./utils/logger");
 const env_1 = require("./config/env");
 const swagger_json_1 = __importDefault(require("./config/swagger.json"));
 const app = (0, express_1.default)();
+// Trust proxy headers in production when running behind reverse proxies (Render, AWS ALB, Nginx, etc.)
+if (env_1.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
 // 1. Request ID Tracing Middleware (must be first)
 app.use(requestTrace_1.requestTraceMiddleware);
 // 2. HTTP Request Logger (Morgan piped to Winston logger)
@@ -81,11 +85,15 @@ app.use((_req, res, next) => {
     next();
 });
 // 4. CORS settings
+let allowedOrigins = [
+    'https://apc-rose.vercel.app',
+    'http://localhost:3000',
+];
+if (env_1.env.CORS_ORIGIN) {
+    allowedOrigins = env_1.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
+}
 const corsOptions = {
-    origin: [
-        'https://apc-rose.vercel.app',
-        'http://localhost:3000',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

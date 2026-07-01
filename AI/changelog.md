@@ -2,6 +2,39 @@
 
 All notable changes to the Adivasi Producer Company (APC) project are documented in this file in reverse-chronological order.
 
+## 2026-07-01 — Hardening & Production-Readiness Updates
+
+### What Changed
+- Secured database deployment by stripping port `5432:5432` from `docker-compose.prod.yml` and isolated internal PostgreSQL networking.
+- Replaced legacy `S3_` environment variables with `SUPABASE_` variable bindings in production Compose configuration.
+- Configured conditional Express `trust proxy` in `app.ts` to properly maps client IPs under Render reverse proxy headers in production.
+- Refactored CORS configuration in `app.ts` to dynamically parse and split comma-separated origins in `env.CORS_ORIGIN`, falls back safely in dev.
+- Secured document uploads by integrating `file-type@12.4.2` to verify binary signatures (magic bytes) against declared MIME types, blocking spoofed files.
+- Documented production antivirus scanning integration requirements next to the mock scanner in `documents.ts`.
+- Guarded `seed.ts` from creating default administrative credentials when executed in production (`NODE_ENV === 'production'`).
+- Added database indexes (`@@index([block])` on `ShareholderApplication`, `@@index([applicationId])` on `Document`, and `@@index([targetId])` / `@@index([createdAt])` on `AuditLog`) to optimize large dashboard listings and log pagination queries.
+- Resolved frontend concurrent `/auth/me` race conditions by implementing request de-duplication wrapper using `useRef` inside `AuthContext.tsx`.
+
+### Why
+- To harden the security, database query latency, and session stability of the platform before production deployment.
+
+## 2026-06-27 — Phase 8: Frontend Integration (Milestone 5: Application Details & Document Viewer)
+
+### What Changed
+- Created individual application detail page `/admin/applications/[id]` fetching decrypted data from `GET /api/v1/applications/:id`.
+- Developed `DocumentViewer` component in `src/components/sections/admin/DocumentViewer.tsx` allowing administrative staff and coordinators to download/preview uploaded documents.
+- Developed `StatusControls` component in `src/components/sections/admin/StatusControls.tsx` offering a dropdown interface for authorized state transitions (`PATCH /api/v1/applications/:id/status`) and review comments.
+- Developed `ApplicationStatusHistory` timeline component in `src/components/sections/admin/ApplicationStatusHistory.tsx` showing vertical audits of status movements and review note comments.
+- Hooked dashboard row action `onViewDetails` to navigate (`router.push`) to the new detailed route `/admin/applications/[id]`.
+- Refactored `ResetPasswordForm.tsx` to compute password requirements checklist state at render time instead of using synchronous `setState` inside `useEffect`, resolving ESLint warnings.
+- Compiles cleanly in both frontend (`next build` for 26/26 routes) and backend (`tsc`) under strict TypeScript settings.
+
+### Why
+- To complete the administrative workflow, permitting coordinators to inspect uploaded proofs, audit application changes, and advance application states within strict geographical block boundaries.
+
+### Decisions Made
+- Chose to download files via Express-mediated binary streaming rather than public presigned S3 URLs to ensure zero public exposure of sensitive files (ADR-014).
+
 ## 2026-06-26 — Phase 8: Frontend Integration (Milestone 4: Coordinator / Admin Dashboard)
 
 ### What Changed

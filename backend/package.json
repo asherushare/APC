@@ -22,16 +22,17 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.3.1",
+    "file-type": "^12.4.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
+    "nodemailer": "^6.9.14",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^10.0.0",
     "winston": "^3.13.0",
     "ws": "^8.21.0",
-    "zod": "^3.23.8",
-    "nodemailer": "^6.9.14"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -42,6 +43,7 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^2.1.0",
     "@types/node": "^20.14.2",
+    "@types/nodemailer": "^6.4.15",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
@@ -50,8 +52,7 @@
     "eslint": "^8.57.0",
     "prisma": "^5.15.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.5",
-    "@types/nodemailer": "^6.4.15"
+    "typescript": "^5.4.5"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

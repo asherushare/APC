@@ -176,7 +176,12 @@ async function runTests(): Promise<void> {
   ): Promise<unknown> {
     console.log(`👉 Test: ${description}`);
     const formData = new FormData();
-    const fileContent = 'Dummy document payload contents for Supabase Storage verification';
+    // 1x1 transparent PNG hex to simulate a valid file signature
+    const pngBuffer = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c63000100000500010d0a2db40000000049454e44ae426082',
+      'hex'
+    );
+    const fileContent = useValidFile ? pngBuffer : 'Dummy malicious HTML content <html><body>test</body></html>';
     const blob = new Blob([fileContent], { type: useValidFile ? 'image/png' : 'text/html' });
     formData.append('file', blob, useValidFile ? 'aadhaar_front.png' : 'malicious.html');
     formData.append('documentType', 'AADHAAR');

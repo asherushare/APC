@@ -151,6 +151,9 @@ src/
 | `/digital` | `app/digital/page.tsx` | `Search`, `FilterPanel`, `SortSelector`, service cards, `TrustSection` |
 | `/digital/services/[slug]` | `app/digital/services/[slug]/page.tsx` | Service detail layout, `Booking` drawer, related services |
 | `/book` | `app/book/page.tsx` | `BookingHero`, `BookingForm` |
+| `/admin/login` | `app/admin/login/page.tsx` | `LoginForm` |
+| `/admin/dashboard` | `app/admin/dashboard/page.tsx` | `DashboardStats`, `DashboardFilters`, `ApplicationsTable`, `AuditLogsTable` |
+| `/admin/applications/[id]` | `app/admin/applications/[id]/page.tsx` | `ApplicationDetails`, `DocumentViewer`, `StatusControls`, `ApplicationStatusHistory` |
 
 ---
 
@@ -233,22 +236,23 @@ When the backend is added (Phase 7), new API routes will follow the same pattern
 
 ---
 
-## Future Monorepo Structure (Phase 7+)
+## Repository Structure (Phase 7+)
 
-When the backend is introduced, the repository will be restructured as:
+Rather than a formal monorepo, the project uses a nested Express backend directory inside the Next.js `apc-website` folder:
 
 ```
 apc-project/
-├── apps/
-│   ├── web/          Current Next.js frontend (everything currently in apc-website/)
-│   └── api/          New Node.js + Express + Prisma backend service
-├── packages/
-│   ├── ui/           Shared component primitives (future)
-│   └── types/        Shared TypeScript interfaces (future)
-└── AI/               Engineering workspace — stays at repository root
+├── AI/                 ← Repository root AI Workshop documentation
+├── apc-website/        ← Next.js frontend project root
+│   ├── src/            ← Next.js frontend source code (components, hooks, pages)
+│   ├── backend/        ← Express backend project root
+│   │   ├── src/        ← Express backend source code (controllers, routes, schemas)
+│   │   └── prisma/     ← Database schema definition and seed scripts
+│   ├── public/         ← Static files and documents
+│   └── package.json
 ```
 
-The `AI/` directory documents the **full system**, not just the frontend. When the backend exists, `architecture.md` will gain a Backend Layer section.
+The frontend client communicates with the backend via the `src/lib/api-client.ts` fetch wrapper, which points to `http://localhost:4000/api/v1` in development and the production Render API URL.
 
 ---
 

@@ -28,4 +28,4 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 EXPOSE 4000
-CMD ["node", "dist/server.js"]
+CMD npx prisma migrate deploy && npx prisma db seed && npm run start

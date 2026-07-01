@@ -11,6 +11,7 @@ const db_1 = require("../config/db");
 const logger_1 = require("../utils/logger");
 const s3_1 = require("../utils/s3");
 const auth_1 = require("../utils/auth");
+const fileTypeCheck_1 = require("../utils/fileTypeCheck");
 const errors_1 = require("../utils/errors");
 /**
  * Helper to record audit logs.
@@ -45,6 +46,12 @@ const uploadDocument = async (req, res, next) => {
         // 1. Validate file exists
         if (!file) {
             throw new errors_1.ValidationError('No file uploaded', { file: 'File is required' });
+        }
+        // 1.1. Verify file content signature (magic bytes check)
+        if (!(0, fileTypeCheck_1.validateFileSignature)(file.buffer, file.mimetype)) {
+            throw new errors_1.ValidationError('Invalid file type or content mismatch', {
+                file: `The uploaded file contents do not match the declared type (${file.mimetype}). Please upload a valid PDF, JPEG, PNG, or WebP document.`,
+            });
         }
         // 2. Validate document type enum
         const docType = documentType;
@@ -137,6 +144,8 @@ const uploadDocument = async (req, res, next) => {
         // 9. Record Audit Log
         await recordAuditLog(uploaderId !== 'applicant' ? uploaderId : null, 'DOCUMENT_UPLOADED', 'Document', savedDoc.id, req, { documentType: docType, filename: file.originalname });
         // 10. Async Mock Virus Scanning Processor
+        // TODO: This is a placeholder scanner. For production environments, integrate a real scan pipeline 
+        // (e.g. ClamAV sidecar container or AWS GuardDuty malware scan trigger hook).
         setTimeout(async () => {
             try {
                 const updatedDoc = await db_1.prisma.document.update({

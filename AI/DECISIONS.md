@@ -215,3 +215,138 @@ TypeScript's value comes from catching type errors at compile time. Using `any` 
 - AI-generated code that uses `any` must be rejected and rewritten
 - Third-party libraries that return `any` must be wrapped in typed adapter functions
 - This is non-negotiable. There are no exceptions.
+
+---
+
+## ADR-011: JWT Access & RTR Cookies Authentication Strategy (Phase 7B)
+
+**Date**: 2026-06-22
+**Status**: Accepted
+
+**Context**:
+Block coordinators and administrators require secure sessions to access the dashboard. Credentials must be guarded against theft and brute force.
+
+**Decision**:
+Use double token authentication:
+- **Access Token**: Short-lived (15 minutes), kept only in-memory in the frontend React application.
+- **Refresh Token**: Long-lived (7 days), stored in an HTTP-only, secure, SameSite=Strict cookie with token rotation (RTR) enabled.
+- **Replay Protection**: The database tracks refresh token hashes; if a refresh token is used twice, it triggers a token-reuse alarm, revoking all active sessions for that user.
+- **Lockouts**: Double login protection applying sequential IP-based and Email-based rate limiters, plus progressive password hashing upgrade from Bcrypt to Argon2id upon login.
+
+**Consequences**:
+- Reduced XSS session hijacking risks (no tokens in LocalStorage).
+- Instant session revocation on replay detection.
+- Strong protection against brute-force login attempts.
+
+---
+
+## ADR-012: Database Column-Level Encryption for PII (Phase 7C)
+
+**Date**: 2026-06-22
+**Status**: Accepted
+
+**Context**:
+Shareholder registration collects highly sensitive Personally Identifiable Information (PII) including Aadhaar numbers, PAN numbers, and Bank Accounts. These must be protected at rest.
+
+**Decision**:
+Implement column-level encryption in the Express backend controller before inserting records into the database:
+- **Encryption**: Encrypt Aadhaar, PAN, and Bank Account numbers using AES-256-GCM using a 256-bit environment key (`ENCRYPTION_KEY`).
+- **Uniqueness Check**: Store a separate SHA-256 hash of the Aadhaar number in a unique column (`aadhaarHash`) to reject duplicate applications without decrypting.
+- **Masking**: Store a masked version of the identifiers (e.g., `XXXX-XXXX-1234`) for lists and default views.
+- **Decryption**: Decrypt fields only inside specific detail routes gated by strict role checks.
+
+**Consequences**:
+- Relational databases remain protected even in the event of an SQL injection or dump.
+- Aadhaar/PAN can still be searched via hashes, but are never exposed in raw text.
+
+---
+
+## ADR-013: Supabase Storage Integration (Phase 7D)
+
+**Date**: 2026-06-24
+**Status**: Accepted (supersedes ADR-006 client-only uploads and ADR-008 MinIO local upload plans)
+
+**Context**:
+Supporting documents (Aadhaar fronts, PAN cards, etc.) must be stored securely. Local storage is fragile, and MinIO complicates cloud deployments.
+
+**Decision**:
+Use **Supabase Storage** (via `@supabase/supabase-js`) for cloud file storage. 
+- **Upload Token Model**: Anonymous public uploads are authorized using a signed JWT `uploadToken` generated during form submission, tying the upload session to a specific application ID without registration.
+- **Virus Scanning**: Spawn a mock background scanning process on upload, transitioning files from PENDING to CLEAN after 5 seconds.
+
+**Consequences**:
+- Files are saved directly in cloud buckets on upload.
+- Security constraints prevent arbitrary file injections by validating the upload token.
+
+---
+
+## ADR-014: Backend-Mediated Secure Document Download Streaming (Phase 7D / Phase 8)
+
+**Date**: 2026-06-27
+**Status**: Accepted
+
+**Context**:
+Administrative staff and block coordinators need to preview or download supporting documents. Directly returning storage links (presigned URLs) exposes resource locations and bypasses access control scoping.
+
+**Decision**:
+Mediate downloads via the backend Express server. The endpoint `GET /api/v1/applications/:id/documents/:documentId/download` verifies authentication and block boundaries, fetches the file buffer from Supabase Storage internally, and streams it directly to the Express response (attaching the file name in `Content-Disposition` header). No public URLs are ever shared.
+
+**Consequences**:
+- Stronger security: files cannot be downloaded without an active, block-scoped session.
+- Document location details are fully hidden from the frontend client.
+
+---
+
+## ADR-015: Block-Level Scoping Access Control (Phase 7C / Phase 7E)
+
+**Date**: 2026-06-25
+**Status**: Accepted
+
+**Context**:
+Coordinators manage applications on a block-by-block basis. A coordinator from Rayagada block should not view or manage applications from Muniguda block.
+
+**Decision**:
+Enforce geographical block boundaries in all query query scopes (GET /applications, GET /applications/:id, GET /applications/:id/documents, PATCH /applications/:id/status, GET /audit-logs, and GET /applications/stats).
+- **ADMIN**: Unrestricted access, global dropdown filter.
+- **COORDINATOR**: Locked to the block string assigned to their user record.
+- **STAFF**: Blocked from accessing administrative dashboards.
+
+**Consequences**:
+- Clear administrative data separation.
+- Coordinators are restricted strictly to their domain.
+
+---
+
+## ADR-016: Server-Side File Signature (Magic Bytes) Validation
+
+**Date**: 2026-07-01
+**Status**: Accepted
+
+**Context**:
+Relying strictly on the client-supplied `file.mimetype` allows malicious users to bypass upload filters by spoofing headers (e.g. uploading an HTML payload as `image/png` to perform Stored XSS).
+
+**Decision**:
+Implement server-side magic byte inspection inside the upload pipeline using the `file-type` library (version `12.4.2` to remain native CommonJS-compatible). Verify that the actual binary magic byte headers of the uploaded buffer match the declared MIME type before saving to storage or database.
+
+**Consequences**:
+- Block spoofed file attachments.
+- Prevent malicious client HTML/script executions inside the administration application portal context.
+
+---
+
+## ADR-017: Frontend Promise De-duplication in React Context
+
+**Date**: 2026-07-01
+**Status**: Accepted
+
+**Context**:
+React components restore session profiles from JWTs on initial load or silent token rotation. If token state listener callbacks and initial effects both run concurrently while the user object is unpopulated, they trigger duplicate simultaneous `/auth/me` fetches.
+
+**Decision**:
+Implement a request de-duplication mechanism using a React `useRef` to store in-flight `/auth/me` fetch promises. Any concurrent session restoration queries reuse the same active promise, de-duplicating multiple threads into a single HTTP query.
+
+**Consequences**:
+- Reduces server database load.
+- Prevents concurrent refresh rotation race conditions that trigger RTR reuse flags.
+
+

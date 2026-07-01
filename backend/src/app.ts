@@ -18,6 +18,11 @@ import swaggerDocument from './config/swagger.json';
 
 const app = express();
 
+// Trust proxy headers in production when running behind reverse proxies (Render, AWS ALB, Nginx, etc.)
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // 1. Request ID Tracing Middleware (must be first)
 app.use(requestTraceMiddleware);
 
@@ -88,11 +93,17 @@ app.use((_req, res, next) => {
 });
 
 // 4. CORS settings
+let allowedOrigins: string[] | string = [
+  'https://apc-rose.vercel.app',
+  'http://localhost:3000',
+];
+
+if (env.CORS_ORIGIN) {
+  allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
+}
+
 const corsOptions = {
-  origin: [
-    'https://apc-rose.vercel.app',
-    'http://localhost:3000',
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

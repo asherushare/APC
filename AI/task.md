@@ -22,11 +22,11 @@
 - **No Prisma schema changes. No new auth model. No public bucket policy.**
 
 **Acceptance gate:**
-- [ ] `npm run lint` clean.
-- [ ] `npm run build` clean.
-- [ ] `npx prisma validate` clean (schema unchanged).
-- [ ] New/updated integration tests pass: 401 unauth, 403 wrong role, 403 cross-block coordinator, 404 mismatched document, 200 happy path returning `{ success, url, expiresIn }`.
-- [ ] Existing integration suites remain green.
+- [x] `npm run lint` clean.
+- [x] `npm run build` clean.
+- [x] `npx prisma validate` clean (schema unchanged).
+- [x] New/updated integration tests pass: 401 unauth, 403 wrong role, 403 cross-block coordinator, 404 mismatched document, 200 happy path returning `{ success, url, expiresIn }`.
+- [x] Existing integration suites remain green.
 
 ---
 
@@ -40,9 +40,9 @@
 **Constraints:** Types derived strictly from backend response shapes; no speculative fields. Aadhaar/PAN/bank typed as decrypted strings (server decrypts).
 
 **Acceptance gate:**
-- [ ] `npm run lint` clean.
-- [ ] `tsc`/`npm run build` type-check passes with the new types.
-- [ ] No runtime behavior changed (types only).
+- [x] `npm run lint` clean.
+- [x] `tsc`/`npm run build` type-check passes with the new types.
+- [x] No runtime behavior changed (types only).
 
 ---
 
@@ -56,9 +56,9 @@
 **Constraints:** Pure functions, zero side effects. No visual/behavioral change to existing tables — this is a dedup refactor enabling reuse.
 
 **Acceptance gate:**
-- [ ] `npm run lint` clean.
-- [ ] `npm run build` clean.
-- [ ] Visual parity on `/admin/dashboard` (Applications + Audit Logs tabs) confirmed in manual check.
+- [x] `npm run lint` clean.
+- [x] `npm run build` clean.
+- [x] Visual parity on `/admin/dashboard` (Applications + Audit Logs tabs) confirmed in manual check.
 
 ---
 
@@ -71,8 +71,8 @@
 **Constraints:** Pure presentational (no fetching); receives `application` + optional `isLoading`/`error` props. Field labels per `GLOSSARY.md`. Uses shared `formatUtils`.
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean.
-- [ ] Renders all sections for a fully-populated record; renders gracefully for sparse records (no crashes on optional fields).
+- [x] `npm run lint` + `npm run build` clean.
+- [x] Renders all sections for a fully-populated record; renders gracefully for sparse records (no crashes on optional fields).
 
 ---
 
@@ -85,8 +85,8 @@
 **Constraints:** No document bytes handled client-side; only the short-lived URL is opened. Keys/PII never logged. Errors surfaced inline (reuse dashboard error-banner idiom).
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean.
-- [ ] Empty state, loading state, error state, and happy-path open-in-new-tab all verified manually.
+- [x] `npm run lint` + `npm run build` clean.
+- [x] Empty state, loading state, error state, and happy-path open-in-new-tab all verified manually.
 
 ---
 
@@ -99,8 +99,8 @@
 **Constraints:** Allowed transitions sourced from the backend validation contract (no client-enforced business rules beyond disabling obviously-invalid options for UX). `reviewNotes` optional unless the backend requires it for a given transition.
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean.
-- [ ] Happy-path status change reflects immediately; invalid transition shows backend error inline; concurrent-submit prevented (button disabled).
+- [x] `npm run lint` + `npm run build` clean.
+- [x] Happy-path status change reflects immediately; invalid transition shows backend error inline; concurrent-submit prevented (button disabled).
 
 ---
 
@@ -113,8 +113,8 @@
 **Constraints:** Read-only. If the existing `AuditLogsTable` can be reused verbatim with a scoped fetch, prefer that over a new component (decide at implementation time; the plan lists it separately for clarity).
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean.
-- [ ] Shows chronological transitions with actor, timestamp, before→after, and notes; empty state when no history.
+- [x] `npm run lint` + `npm run build` clean.
+- [x] Shows chronological transitions with actor, timestamp, before→after, and notes; empty state when no history.
 
 ---
 
@@ -127,8 +127,8 @@
 **Constraints:** Single page-level state (per plan §3). Full-screen spinner while `isAuthLoading`. No global store. Back-link to `/admin/dashboard`.
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean; new route compiles; total page count +1.
-- [ ] All 10 manual-verification scenarios in `implementation_plan.md` §9 pass.
+- [x] `npm run lint` + `npm run build` clean; new route compiles; total page count +1.
+- [x] All 10 manual-verification scenarios in `implementation_plan.md` §9 pass.
 
 ---
 
@@ -141,8 +141,8 @@
 **Constraints:** Single-line behavioral change; remove the placeholder comment. No other dashboard changes.
 
 **Acceptance gate:**
-- [ ] `npm run lint` + `npm run build` clean.
-- [ ] "View Details →" navigates to the correct detail page (manual scenario #9).
+- [x] `npm run lint` + `npm run build` clean.
+- [x] "View Details →" navigates to the correct detail page (manual scenario #9).
 
 ---
 
@@ -157,7 +157,7 @@
 **Constraints:** Documentation updates happen **only after** all code gates pass — never before. No edits to source after this point except fixes surfaced by verification.
 
 **Acceptance gate:**
-- [ ] Backend: lint + build + prisma validate + integration tests green.
-- [ ] Frontend: lint + build green; new route present.
-- [ ] All 10 manual scenarios pass.
-- [ ] Tracking docs updated consistently (changelog ↔ STATUS ↔ roadmap ↔ next-task).
+- [x] Backend: lint + build + prisma validate + integration tests green.
+- [x] Frontend: lint + build green; new route present.
+- [x] All 10 manual scenarios pass.
+- [x] Tracking docs updated consistently (changelog ↔ STATUS ↔ roadmap ↔ next-task).

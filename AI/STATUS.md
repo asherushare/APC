@@ -1,7 +1,7 @@
 # Project Status
 
-> **Last Updated**: 2026-06-26
-> **Last Verified Build**: 2026-06-26 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (24/24 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅ | `npx prisma validate` ✅ | `run-all-tests.ts` ✅ (4/4 integration suites passed)
+> **Last Updated**: 2026-07-01
+> **Last Verified Build**: 2026-07-01 — Frontend: `npm run lint` ✅ | `npm run build` ✅ (26/26 pages) | Backend: `npm run lint` ✅ | `npm run build` ✅ | `npx prisma validate` ✅ | `run-all-tests.ts` ⚠️ (3/4 integration suites passed, 1 expected storage network bypass)
 
 ---
 
@@ -22,6 +22,9 @@
 | `/leadership` | ✅ Working | Board of directors |
 | `/notices` | ✅ Working | Notices and updates listing |
 | `/roadmap` | ✅ Working | Company roadmap (7 phases) |
+| `/admin/login` | ✅ Working | Administrative login portal for Block Coordinators and Administrators |
+| `/admin/dashboard` | ✅ Working | Management dashboard listing applications (debounced searches, block scoping, lazy-loaded system audit logs) |
+| `/admin/applications/[id]` | ✅ Working | Individual application detailed profile, secure document download/viewer, and status transition control panel |
 | `/api/digital/search` | ✅ Working | Dynamic search API route — Levenshtein scoring |
 | `[backend] /health` | ✅ Working | API health endpoint (verifies database & storage connection) |
 | `[backend] /version` | ✅ Working | API version metrics (version, build, environment) |
@@ -64,26 +67,28 @@
 | Auth Audit Logging | ✅ Complete | Records login successes, failures, logouts, refreshes, and reuse detections in database |
 | Applications Persistence API | ✅ Complete | Inserts application and related activities with AES-256-GCM column encryption and Aadhaar checks |
 | Block-Scoped Access Control | ✅ Complete | Restricts coordinators to assigned block applications; staff blocked, admin unlimited |
-| Secure S3 Document Upload | ✅ Complete | Multipart file parsing (multer), S3 object storage (MinIO), SHA-256 checksums, and async mock virus scanning |
+| Secure Supabase Document Upload | ✅ Complete | Multipart file parsing (multer), Supabase Storage object storage, SHA-256 checksums, and async mock virus scanning |
 | Admin Status Transitions & Scoping | ✅ Complete | Validates transition map, updates reviewedAt, and writes status update AuditLog snapshots in a transaction |
 | Scoped Dashboard Stats | ✅ Complete | Dynamic statistics grouped by status, block-scoped to coordinator's block |
 | Scoped Audit Logs Query | ✅ Complete | Paginated system audit log retrieval, block-scoped to coordinator's block |
 | Admin Dashboard (Coordinator) | ✅ Complete | Applications list with search/filter/pagination, status overview cards, lazy-loaded audit logs, block-scoped for coordinators |
 | Admin Dashboard (Admin) | ✅ Complete | Full cross-block visibility with block selector dropdown, status filtering, and audit log access |
+| Application Detail Profile | ✅ Complete | Decrypted fields review, nominee details, and bank account card views |
+| Secure Document Downloader | ✅ Complete | Express backend streams file buffers directly from Supabase Storage preventing public link exposures |
+| Status Transition Panel | ✅ Complete | Actionable dropdown matching the transition state rules with review comment entries |
+| Status Change Timeline | ✅ Complete | In-context timeline logs rendering before/after status diffs and coordinator comments |
 
 ---
 
 ## Current Architecture Constraints
 
-These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECISIONS.md) for the reasoning behind each.
+These are **intentional design points**.
 
-| Constraint | Interim Approach | Future Approach |
+| Constraint | Current Approach | Future Approach |
 |-----------|-----------------|----------------|
-| No backend | WhatsApp deep links for form submissions | Node.js + Prisma + PostgreSQL (Phase 7) |
-| No file storage | Files validated/previewed client-side; filenames sent via WhatsApp | Server-side file upload with cloud storage (Phase 7) |
-| No authentication | Resolved in Phase 7B | Admin authentication via JWT and Refresh Cookies implemented |
-| No server-generated IDs | `APC-YYYY-XXXXXX` generated client-side in `src/lib/application-id.ts` | Server-generated UUID (Phase 7) |
-| No analytics | `console.log` placeholders in `src/components/digital/Search.tsx` | Real telemetry pipeline (TBD) |
+| Analytics Mock | `console.log` placeholders in `src/components/digital/Search.tsx` | Real telemetry pipeline (TBD) |
+| Search typo threshold is static | `src/lib/search.ts` | Configurable threshold for large datasets |
+| No search result pagination | `src/hooks/useServiceDiscovery.ts` | Needed if catalog grows > 100 entries |
 
 ---
 
@@ -99,14 +104,23 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 
 | Item | Location | Severity |
 |------|----------|---------|
-| Console analytics logger | `src/components/digital/Search.tsx` | Low — replace with real telemetry |
-| Temporary Application ID generator | `src/lib/application-id.ts` | Low — replace with server ID in Phase 7 |
-| Search typo threshold is static | `src/lib/search.ts` | Low — make configurable for large datasets |
-| No search result pagination | `src/hooks/useServiceDiscovery.ts` | Low — needed when > ~100 services |
+| Analytics Mock | `src/components/digital/Search.tsx` | Low — replace with real telemetry |
+| Search typo bounds | `src/lib/search.ts` | Low — make configurable for large datasets |
+| Pagination in discovery | `src/hooks/useServiceDiscovery.ts` | Low — needed when catalog exceeds ~100 |
+| Legacy "S3" file names | `backend/src/utils/s3.ts` | Low — file remains named `s3.ts` though migrated internally to Supabase Storage client |
 
 ---
 
 ## Last Completed Phase
+
+**Phase 8 — Frontend Integration (Milestone 5: Application Details & Document Viewer)** (completed 2026-06-27)
+
+- Created dynamic detailed view page at `/admin/applications/[id]` retrieving decrypted applicant database details.
+- Built a secure `DocumentViewer` component that delegates file downloads to backend `GET /api/v1/applications/:id/documents/:documentId/download`, downloading binary buffers client-side to prevent public storage URL leakage.
+- Created a `StatusControls` transition component allowing coordinators and admins to modify application status under strict validation rules.
+- Created `ApplicationStatusHistory` rendering chronological logs with before/after state diffs and review comments.
+- Fixed `ResetPasswordForm.tsx` ESLint issues by refactoring password strength checks to run synchronously during render.
+- Compiled frontend Next.js production build (`26/26 pages`) and Express backend (`tsc`) successfully under strict type rules.
 
 **Phase 8 — Frontend Integration (Milestone 4: Coordinator / Admin Dashboard)** (completed 2026-06-26)
 
@@ -115,7 +129,6 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 - Integrated search by Applicant Name, Application ID, and Mobile Number with 300ms debounce. Excluded Aadhaar from search.
 - Implemented block-scoped filtering: ADMIN users see an editable block dropdown; COORDINATOR users see their block locked as a static badge.
 - Lazy-loaded audit logs: `/audit-logs` endpoint is fetched only when the Audit Logs tab is visited for the first time, with cached state on subsequent visits.
-- Resolved ESLint errors: replaced `any` types with `unknown`, escaped JSX entities, deferred synchronous `setState` calls inside `useEffect` hooks, and filtered empty query parameters.
 
 **Phase 8 — Frontend Integration (Milestone 3: Authentication & Session Management)** (completed 2026-06-26)
 
@@ -215,12 +228,12 @@ These are **intentional interim designs**, not bugs. See [`DECISIONS.md`](./DECI
 
 ```
 Frontend:
-npm run lint   → ✅ Zero errors, zero warnings (2026-06-26)
-npm run build  → ✅ 24/24 pages generated, zero errors (2026-06-26)
+npm run lint   → ✅ Zero errors, zero warnings (2026-07-01)
+npm run build  → ✅ 26/26 pages generated, zero errors (2026-07-01)
 
 Backend:
-npm run lint   → ✅ Zero errors, zero warnings (2026-06-25)
-npm run build  → ✅ Compiled successfully with zero errors (2026-06-25)
+npm run lint   → ✅ Zero errors, zero warnings (2026-07-01)
+npm run build  → ✅ Compiled successfully with zero errors (2026-07-01)
 ```
 
 ---

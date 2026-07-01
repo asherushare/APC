@@ -15,11 +15,12 @@ router.get('/health', async (_req: Request, res: Response) => {
   try {
     // Basic connectivity check select
     await prisma.$queryRaw`SELECT 1`;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as Error & { code?: string };
     logger.error('Prisma connection error in health check:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
     });
     dbStatus = 'DISCONNECTED';
   }

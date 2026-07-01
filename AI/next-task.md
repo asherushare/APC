@@ -1,23 +1,22 @@
-## Current Task: Phase 8 — Milestone 5: Application Details & Document Viewer
+## Current Task: Phase 9 — Deployment & DevOps
 
-**Objective**: Build the individual application detail view page at `/admin/applications/:id` to display full shareholder application data, uploaded documents, and status transition controls.
+**Objective**: Deploy the APC Digital Platform (Frontend Next.js app and Backend Express server) to production infrastructure with a managed database, automated CI/CD pipeline, and domain configurations.
 
-**Status**: Planned
+**Status**: ⏳ Not Started (Local production hardening completed in Phase 7F)
 
 ### Requirements
-1. Fetch and display decrypted application details from `GET /api/v1/applications/:id`.
-2. Render all applicant fields in a structured, read-only detail layout.
-3. Display uploaded documents with download links or inline previews.
-4. Implement application status update controls using `PATCH /api/v1/applications/:id/status`.
-5. Display status transition history from audit logs filtered by target application ID.
-6. Maintain block-scoped access control (coordinators see only their block's applications).
+1. Configure a production managed database (e.g. AWS RDS or Supabase PostgreSQL) and run migration scripts.
+2. Establish production S3 / Supabase Storage buckets with strict policy restrictions.
+3. Set up production hosting:
+   - Frontend (Vercel, Netlify, or AWS Amplify) with CORS headers configured.
+   - Backend (Render, Fly.io, or AWS ECS/App Runner).
+4. Configure production environment variables in host providers (DB URL, JWT secrets, encryption keys).
+5. Build and verify a deployment CI/CD pipeline (GitHub Actions) running lints, tests, and auto-deploys.
+6. Verify production health heartbeat `/health` endpoints and SSL/TLS certificates.
 
 ### Pre-conditions
-- Milestone 4 (Coordinator / Admin Dashboard) completed and fully verified. [MET]
+- Phase 8 (Admin Dashboard & Application Review UI) completed and fully verified. [MET]
 
 ### Files Expected to Change / Create
-- `src/app/admin/applications/[id]/page.tsx` [NEW]
-- `src/components/sections/admin/ApplicationDetails.tsx` [NEW]
-- `src/components/sections/admin/DocumentViewer.tsx` [NEW]
-- `src/components/sections/admin/StatusControls.tsx` [NEW]
+- `.github/workflows/deploy.yml` [NEW]
 - `AI/STATUS.md` [MODIFY]

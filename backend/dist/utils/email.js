@@ -34,7 +34,7 @@ class NodemailerProvider {
 exports.NodemailerProvider = NodemailerProvider;
 class ConsoleProvider {
     async sendEmail(payload) {
-        logger_1.logger.info(`✉️ [Console Mail Mock] Email dispatched:`);
+        logger_1.logger.info('✉️ [Console Mail Mock] Email dispatched:');
         logger_1.logger.info(`   To: ${payload.to}`);
         logger_1.logger.info(`   Subject: ${payload.subject}`);
         logger_1.logger.info(`   Body: ${payload.html}`);

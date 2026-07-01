@@ -1,5 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const crypto_1 = __importDefault(require("crypto"));
 const db_1 = require("../config/db");
 const auth_1 = require("../utils/auth");
 const PORT = 4000;
@@ -378,9 +382,8 @@ async function runTests() {
     console.log('✅ 60s reset email cooldown verified.');
     // 10. Test Reset Password
     console.log('\n--- 10. Testing Reset Password Flow ---');
-    const crypto = require('crypto');
     const testCleartextToken = 'test_reset_token_123_cleartext';
-    const testTokenHash = crypto.createHash('sha256').update(testCleartextToken).digest('hex');
+    const testTokenHash = crypto_1.default.createHash('sha256').update(testCleartextToken).digest('hex');
     await db_1.prisma.passwordResetToken.create({
         data: {
             tokenHash: testTokenHash,

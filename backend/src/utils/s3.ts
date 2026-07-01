@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { WebSocketLikeConstructor } from '@supabase/realtime-js';
 import { Readable } from 'stream';
 import WebSocket from 'ws';
 import { env } from '../config/env';
@@ -9,7 +10,7 @@ export const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE
     persistSession: false,
   },
   realtime: {
-    transport: WebSocket as any,
+    transport: WebSocket as unknown as WebSocketLikeConstructor,
   },
 });
 

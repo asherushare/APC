@@ -6,6 +6,7 @@ import { prisma } from '../config/db';
 import { logger } from '../utils/logger';
 import { uploadToS3, streamObjectFromS3 } from '../utils/s3';
 import { verifyAccessToken, verifyUploadToken } from '../utils/auth';
+import { validateFileSignature } from '../utils/fileTypeCheck';
 import {
   ValidationError,
   UnauthorizedError,
@@ -58,6 +59,13 @@ export const uploadDocument = async (
     // 1. Validate file exists
     if (!file) {
       throw new ValidationError('No file uploaded', { file: 'File is required' });
+    }
+
+    // 1.1. Verify file content signature (magic bytes check)
+    if (!validateFileSignature(file.buffer, file.mimetype)) {
+      throw new ValidationError('Invalid file type or content mismatch', {
+        file: `The uploaded file contents do not match the declared type (${file.mimetype}). Please upload a valid PDF, JPEG, PNG, or WebP document.`,
+      });
     }
 
     // 2. Validate document type enum
@@ -176,6 +184,8 @@ export const uploadDocument = async (
     );
 
     // 10. Async Mock Virus Scanning Processor
+    // TODO: This is a placeholder scanner. For production environments, integrate a real scan pipeline 
+    // (e.g. ClamAV sidecar container or AWS GuardDuty malware scan trigger hook).
     setTimeout(async () => {
       try {
         const updatedDoc = await prisma.document.update({

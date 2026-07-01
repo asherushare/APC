@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   apiRequest,
@@ -46,6 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Reference to deduplicate concurrent in-flight /auth/me promises
+  const activeMePromise = useRef<Promise<MeResponse> | null>(null);
+
+  const fetchMe = async (): Promise<MeResponse> => {
+    if (activeMePromise.current) {
+      return activeMePromise.current;
+    }
+    activeMePromise.current = apiRequest<MeResponse>('/auth/me');
+    try {
+      const result = await activeMePromise.current;
+      return result;
+    } finally {
+      activeMePromise.current = null;
+    }
+  };
+
   // 1. Sync React State with API Client token updates
   useEffect(() => {
     registerTokenStateListener(async (token) => {
@@ -61,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // If a new token is set but we don't have user info yet
         if (!user) {
           try {
-            const data = await apiRequest<MeResponse>('/auth/me');
+            const data = await fetchMe();
             setUser(data.user);
           } catch {
             // If fetch user fails, invalidate access token
@@ -79,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         // Querying /auth/me automatically triggers token refresh in api-client if required
-        const data = await apiRequest<MeResponse>('/auth/me');
+        const data = await fetchMe();
         setUser(data.user);
       } catch {
         // Not authenticated, clean up
@@ -125,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshSession = async () => {
     setIsLoading(true);
     try {
-      const data = await apiRequest<MeResponse>('/auth/me');
+      const data = await fetchMe();
       setUser(data.user);
     } catch {
       setAccessToken(null);

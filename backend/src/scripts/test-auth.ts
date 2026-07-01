@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { prisma } from '../config/db';
 import { hashRefreshToken, verifyPassword, hashPassword } from '../utils/auth';
 
@@ -418,7 +419,6 @@ async function runTests(): Promise<void> {
 
   // 10. Test Reset Password
   console.log('\n--- 10. Testing Reset Password Flow ---');
-  const crypto = require('crypto');
   const testCleartextToken = 'test_reset_token_123_cleartext';
   const testTokenHash = crypto.createHash('sha256').update(testCleartextToken).digest('hex');
   

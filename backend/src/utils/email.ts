@@ -42,7 +42,7 @@ export class NodemailerProvider implements EmailProvider {
 
 export class ConsoleProvider implements EmailProvider {
   async sendEmail(payload: EmailPayload): Promise<void> {
-    logger.info(`✉️ [Console Mail Mock] Email dispatched:`);
+    logger.info('✉️ [Console Mail Mock] Email dispatched:');
     logger.info(`   To: ${payload.to}`);
     logger.info(`   Subject: ${payload.subject}`);
     logger.info(`   Body: ${payload.html}`);
