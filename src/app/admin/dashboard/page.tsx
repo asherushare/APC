@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
+  console.log('[AdminDashboardPage] render state:', { user, isAuthenticated, isAuthLoading });
   const router = useRouter();
 
   // Navigation tabs state
@@ -225,11 +226,11 @@ export default function AdminDashboardPage() {
               APC Administrative Portal
             </span>
             <h3 className="text-headline-md font-black text-on-surface">
-              Welcome back, {user.fullName}
+              Welcome back, {user?.fullName || 'User'}
             </h3>
             <p className="text-body-sm font-medium text-on-surface-variant">
-              Role: <span className="font-extrabold text-primary uppercase">{user.role}</span>
-              {user.block && (
+              Role: <span className="font-extrabold text-primary uppercase">{user?.role || ''}</span>
+              {user?.block && (
                 <span>
                   {' '}• Block: <span className="font-extrabold text-primary uppercase">{user.block}</span>
                 </span>
@@ -303,8 +304,8 @@ export default function AdminDashboardPage() {
             <>
               {/* Search & Filters */}
               <DashboardFilters
-                role={user.role}
-                initialBlock={user.block || ''}
+                role={user?.role || 'COORDINATOR'}
+                initialBlock={user?.block || ''}
                 onFiltersChange={handleFiltersChange}
               />
 

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const pathname = usePathname();
+  console.log('[AdminLayout] render state:', { user, isAuthenticated, isLoading, pathname });
   const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -87,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   // Admin-Only options
-  if (user.role === 'ADMIN') {
+  if (user?.role === 'ADMIN') {
     navItems.push({
       label: 'Coordinators',
       href: '/admin/coordinators',
@@ -131,17 +132,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary text-body-lg uppercase">
-              {user.fullName.substring(0, 2)}
+              {(user?.fullName || 'US').substring(0, 2)}
             </div>
             <div className="text-left min-w-0 flex-1">
               <h5 className="font-extrabold text-on-surface text-body-sm truncate">
-                {user.fullName}
+                {user?.fullName || 'User'}
               </h5>
               <p className="text-[10px] text-on-surface-variant font-semibold uppercase flex items-center gap-1.5 mt-0.5">
                 <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 scale-95 font-bold">
-                  {user.role}
+                  {user?.role || ''}
                 </span>
-                {user.block && <span className="truncate">({user.block})</span>}
+                {user?.block && <span className="truncate">({user.block})</span>}
               </p>
             </div>
           </div>
@@ -253,13 +254,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* User Profile */}
           <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/40 text-left">
             <h5 className="font-extrabold text-on-surface text-body-sm truncate">
-              {user.fullName}
+              {user?.fullName || 'User'}
             </h5>
             <p className="text-[10px] text-on-surface-variant font-semibold uppercase flex items-center gap-1.5 mt-1">
               <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-bold">
-                {user.role}
+                {user?.role || ''}
               </span>
-              {user.block && <span className="truncate">({user.block})</span>}
+              {user?.block && <span className="truncate">({user.block})</span>}
             </p>
           </div>
 
