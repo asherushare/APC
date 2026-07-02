@@ -12,6 +12,7 @@ import applicationsRoutes from './routes/applications';
 import documentsRouter from './routes/documents';
 import auditRoutes from './routes/audit';
 import noticesRoutes from './routes/notices';
+import { getIO } from './utils/socket';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
 import { env } from './config/env';
@@ -132,6 +133,16 @@ app.options('*', cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Attach socket.io server instance to requests
+app.use((req, _res, next) => {
+  try {
+    req.io = getIO();
+  } catch (error) {
+    // Fail silently if socket server is not initialized yet (e.g. in test suites)
+  }
+  next();
+});
 
 // 6. Rate Limiting Middleware
 const limiter = rateLimit({

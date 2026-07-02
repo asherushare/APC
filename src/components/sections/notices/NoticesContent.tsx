@@ -1,51 +1,147 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SectionHeading } from '@/components/common/SectionHeading';
-import { notices } from '@/data/notices';
+import { apiRequest } from '@/lib/api-client';
+import { useSocket } from '@/hooks/useSocket';
 import type { Notice } from '@/types';
 
 type CategoryFilter = 'all' | 'scheme' | 'announcement' | 'story';
+
+interface LiveNotice extends Omit<Notice, 'pdfUrl' | 'imageUrl'> {
+  isActive: boolean;
+  createdAt: string;
+  pdfUrl?: string | null;
+  imageUrl?: string | null;
+}
+
+interface RawNotice {
+  id: string;
+  title: string;
+  category: 'SCHEME' | 'ANNOUNCEMENT' | 'EVENT' | 'STORY';
+  summary: string;
+  content: string;
+  pdfUrl?: string | null;
+  imageUrl?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
 
 export function NoticesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  // Search and Category states
+  // Search, Category, and API Loading States
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+  const [noticesList, setNoticesList] = useState<LiveNotice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   
-  // Selected notice for modal detailed view
-  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+  // Derived state values from searchParams to avoid synchronous setState cascading render warning
+  const categoryParam = searchParams.get('category');
+  const activeCategory = (categoryParam && ['scheme', 'announcement', 'story'].includes(categoryParam)
+    ? categoryParam
+    : 'all') as CategoryFilter;
 
-  // Sync state with query parameters (?id=xxx or ?category=xxx)
+  const noticeId = searchParams.get('id');
+  const selectedNotice = (noticeId && noticesList.length > 0
+    ? noticesList.find((n) => n.id === noticeId) || null
+    : null);
+
+  // 1. Fetch notices from API
+  const fetchNotices = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError('');
+    try {
+      const params: Record<string, string> = {
+        limit: '100', // Retrieve up to 100 updates for the public directory listing
+      };
+      
+      if (activeCategory !== 'all') {
+        params.category = activeCategory.toUpperCase();
+      }
+      
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+
+      const query = new URLSearchParams(params);
+      const data = await apiRequest<{ success: boolean; notices: unknown[] }>(`/notices?${query.toString()}`);
+      
+      if (data.success) {
+        // Map backend schema fields to match public frontend interface (lowercase categories, date mapped to createdAt)
+        const mapped = (data.notices as RawNotice[]).map((n) => ({
+          ...n,
+          date: n.createdAt,
+          category: n.category.toLowerCase() as Notice['category'],
+        }));
+        setNoticesList(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to fetch public notices:', err);
+      setFetchError('Connection error: could not fetch notice board updates.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeCategory, searchQuery]);
+
+  // Sync and trigger API fetches on search/category updates
   useEffect(() => {
-    const noticeId = searchParams.get('id');
-    const categoryParam = searchParams.get('category');
-    
+    // Trigger API fetch with debouncing
     const timer = setTimeout(() => {
-      if (noticeId) {
-        const match = notices.find((n) => n.id === noticeId);
-        if (match) {
-          setSelectedNotice(match);
-        }
-      } else {
-        setSelectedNotice(null);
-      }
-
-      if (categoryParam && ['scheme', 'announcement', 'story'].includes(categoryParam)) {
-        setActiveCategory(categoryParam as CategoryFilter);
-      }
-    }, 0);
+      fetchNotices();
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, [searchParams]);
+  }, [fetchNotices]);
+
+  // 2. Real-time updates subscription using useSocket hook
+  useSocket({
+    'notice:created': (newNotice: unknown) => {
+      const noticePayload = newNotice as RawNotice;
+      const mapped = {
+        ...noticePayload,
+        date: noticePayload.createdAt,
+        category: noticePayload.category.toLowerCase() as Notice['category'],
+      };
+      // Prepend only if the notice is marked active for public view
+      if (mapped.isActive) {
+        setNoticesList((prev) => {
+          if (prev.some((n) => n.id === mapped.id)) return prev;
+          return [mapped, ...prev];
+        });
+      }
+    },
+    'notice:updated': (updatedNotice: unknown) => {
+      const noticePayload = updatedNotice as RawNotice;
+      const mapped = {
+        ...noticePayload,
+        date: noticePayload.createdAt,
+        category: noticePayload.category.toLowerCase() as Notice['category'],
+      };
+      setNoticesList((prev) => {
+        if (!mapped.isActive) {
+          // If deactivated by an administrator, remove it immediately
+          return prev.filter((n) => n.id !== mapped.id);
+        }
+        const exists = prev.some((n) => n.id === mapped.id);
+        if (exists) {
+          return prev.map((n) => (n.id === mapped.id ? mapped : n));
+        } else {
+          return [mapped, ...prev];
+        }
+      });
+    },
+    'notice:deleted': (payload: unknown) => {
+      const { id } = payload as { id: string };
+      setNoticesList((prev) => prev.filter((n) => n.id !== id));
+    },
+  });
 
   // Handle category change
   const handleCategoryChange = (category: CategoryFilter) => {
-    setActiveCategory(category);
-    // Clear specific notice ID from url when changing tabs to prevent confusion
     const params = new URLSearchParams(searchParams.toString());
     params.delete('id');
     if (category === 'all') {
@@ -57,8 +153,7 @@ export function NoticesContent() {
   };
 
   // Open modal / set notice details
-  const openNotice = (notice: Notice) => {
-    setSelectedNotice(notice);
+  const openNotice = (notice: LiveNotice) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('id', notice.id);
     router.push(`/notices?${params.toString()}`, { scroll: false });
@@ -66,24 +161,13 @@ export function NoticesContent() {
 
   // Close modal
   const closeNotice = () => {
-    setSelectedNotice(null);
     const params = new URLSearchParams(searchParams.toString());
     params.delete('id');
     router.push(`/notices?${params.toString()}`, { scroll: false });
   };
 
-  // Filter notices based on search query and category
-  const filteredNotices = notices.filter((notice) => {
-    const matchesCategory = activeCategory === 'all' || notice.category === activeCategory;
-    const matchesSearch =
-      notice.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      notice.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      notice.content.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
   const getCategoryLabel = (category: string) => {
-    switch (category) {
+    switch (category.toLowerCase()) {
       case 'scheme':
         return 'Government Scheme';
       case 'announcement':
@@ -98,7 +182,7 @@ export function NoticesContent() {
   };
 
   const getCategoryClass = (category: string) => {
-    switch (category) {
+    switch (category.toLowerCase()) {
       case 'scheme':
         return 'bg-secondary/10 text-secondary border border-secondary/20';
       case 'story':
@@ -119,7 +203,6 @@ export function NoticesContent() {
         subtitle="Access latest announcements, verify scheme eligibility, and read success stories from our tribal producer community."
         isMainHeading={true}
       />
-
 
       {/* Filter and Search Bar Row */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-surface-container-lowest rounded-xl p-4 shadow-tribal border border-outline-variant/30">
@@ -171,10 +254,41 @@ export function NoticesContent() {
         </div>
       </div>
 
-      {/* Notices Grid */}
-      {filteredNotices.length > 0 ? (
+      {/* API Connectivity Error Banner */}
+      {fetchError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center space-y-3">
+          <p className="text-body-md text-red-700 font-semibold">{fetchError}</p>
+          <button
+            onClick={fetchNotices}
+            className="bg-primary hover:bg-dark-green text-white px-5 py-2 rounded-lg text-label-md font-semibold transition-colors cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
+      {/* Skeleton Loading Loader Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="h-4 w-24 bg-outline-variant/30 rounded-full" />
+                <div className="h-3.5 w-16 bg-outline-variant/20 rounded-full" />
+              </div>
+              <div className="h-6 w-3/4 bg-outline-variant/40 rounded-lg" />
+              <div className="space-y-2">
+                <div className="h-3 w-full bg-outline-variant/20 rounded" />
+                <div className="h-3 w-full bg-outline-variant/20 rounded" />
+                <div className="h-3 w-2/3 bg-outline-variant/20 rounded" />
+              </div>
+              <div className="h-9 w-full bg-outline-variant/30 rounded-lg pt-4" />
+            </div>
+          ))}
+        </div>
+      ) : noticesList.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNotices.map((notice) => (
+          {noticesList.map((notice) => (
             <article
               key={notice.id}
               className="bg-surface-container-lowest border border-outline-variant/35 rounded-2xl p-6 flex flex-col justify-between hover:shadow-tribal-hover hover:-translate-y-1 transition-all duration-300"
@@ -240,9 +354,9 @@ export function NoticesContent() {
 
       {/* Details Modal overlay */}
       {selectedNotice && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
           <div
-            className="bg-surface-container-lowest max-w-2xl w-full max-h-[85vh] rounded-2xl overflow-y-auto border border-outline-variant shadow-2xl relative flex flex-col"
+            className="bg-surface-container-lowest max-w-2xl w-full max-h-[85vh] rounded-2xl overflow-y-auto border border-outline-variant shadow-2xl relative flex flex-col text-left"
             role="dialog"
             aria-modal="true"
           >
@@ -277,12 +391,12 @@ export function NoticesContent() {
               </p>
 
               {selectedNotice.imageUrl && (
-                <div className="relative rounded-xl overflow-hidden aspect-video w-full border border-outline-variant/30 shadow-sm">
+                <div className="relative rounded-xl overflow-hidden aspect-video w-full border border-outline-variant/30 shadow-sm bg-surface-container-low">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedNotice.imageUrl}
                     alt={selectedNotice.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover animate-fade-in"
                   />
                 </div>
               )}

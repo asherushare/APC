@@ -17,6 +17,7 @@ const applications_1 = __importDefault(require("./routes/applications"));
 const documents_1 = __importDefault(require("./routes/documents"));
 const audit_1 = __importDefault(require("./routes/audit"));
 const notices_1 = __importDefault(require("./routes/notices"));
+const socket_1 = require("./utils/socket");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const logger_1 = require("./utils/logger");
 const env_1 = require("./config/env");
@@ -119,6 +120,16 @@ app.options('*', (0, cors_1.default)(corsOptions));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Attach socket.io server instance to requests
+app.use((req, _res, next) => {
+    try {
+        req.io = (0, socket_1.getIO)();
+    }
+    catch (error) {
+        // Fail silently if socket server is not initialized yet (e.g. in test suites)
+    }
+    next();
+});
 // 6. Rate Limiting Middleware
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container } from '@/components/common/Container';
 import { apiRequest, ApiError } from '@/lib/api-client';
+import { useSocket } from '@/hooks/useSocket';
 import { cn } from '@/lib/utils';
 
 interface NoticeRecord {
@@ -95,7 +96,28 @@ export default function AdminNoticesPage() {
     return () => clearTimeout(handler);
   }, [fetchNotices]);
 
-  // 2. Open Modal to Create/Edit Notice
+  // 2. Real-time updates subscription using useSocket hook
+  useSocket({
+    'notice:created': (newNotice: unknown) => {
+      const notice = newNotice as NoticeRecord;
+      setNotices((prev) => {
+        if (prev.some((n) => n.id === notice.id)) return prev;
+        return [notice, ...prev];
+      });
+      setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
+    },
+    'notice:updated': (updatedNotice: unknown) => {
+      const notice = updatedNotice as NoticeRecord;
+      setNotices((prev) => prev.map((n) => (n.id === notice.id ? notice : n)));
+    },
+    'notice:deleted': (payload: unknown) => {
+      const { id } = payload as { id: string };
+      setNotices((prev) => prev.filter((n) => n.id !== id));
+      setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+    },
+  });
+
+  // 3. Open Modal to Create/Edit Notice
   const openModal = (notice: NoticeRecord | null = null) => {
     setEditingNotice(notice);
     setFormErrors({});
@@ -122,6 +144,20 @@ export default function AdminNoticesPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingNotice(null);
+    setFormTitle('');
+    setFormCategory('ANNOUNCEMENT');
+    setFormSummary('');
+    setFormContent('');
+    setFormPdfUrl('');
+    setFormImageUrl('');
+    setFormIsActive(true);
+    setFormErrors({});
+  };
+
+  // URL Validation Helpers
+  const isUrlInvalid = (url: string) => {
+    if (!url) return false;
+    return !url.startsWith('http://') && !url.startsWith('https://');
   };
 
   // Form Validation
@@ -131,18 +167,18 @@ export default function AdminNoticesPage() {
     if (!formSummary.trim()) errors.summary = 'Summary is required';
     if (!formContent.trim()) errors.content = 'Content detailed description is required';
 
-    if (formPdfUrl && !formPdfUrl.startsWith('http://') && !formPdfUrl.startsWith('https://')) {
-      errors.pdfUrl = 'PDF attachment link must be a valid URL';
+    if (isUrlInvalid(formPdfUrl)) {
+      errors.pdfUrl = 'PDF attachment link must be a valid URL starting with http:// or https://';
     }
-    if (formImageUrl && !formImageUrl.startsWith('http://') && !formImageUrl.startsWith('https://')) {
-      errors.imageUrl = 'Cover image link must be a valid URL';
+    if (isUrlInvalid(formImageUrl)) {
+      errors.imageUrl = 'Cover image link must be a valid URL starting with http:// or https://';
     }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // 3. Save Notice (Create or Update)
+  // 4. Save Notice (Create or Update)
   const handleSaveNotice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -192,7 +228,7 @@ export default function AdminNoticesPage() {
     }
   };
 
-  // 4. Soft Delete Notice
+  // 5. Soft Delete Notice
   const handleDeleteNotice = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this notice?')) return;
 
@@ -463,6 +499,7 @@ export default function AdminNoticesPage() {
               </h4>
               <button
                 onClick={closeModal}
+                disabled={isSaving}
                 className="p-1 rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer"
               >
                 ✕
@@ -480,8 +517,9 @@ export default function AdminNoticesPage() {
                   <input
                     id="form-title"
                     type="text"
+                    disabled={isSaving}
                     className={cn(
-                      "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all",
+                      "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
                       formErrors.title ? "border-red-500" : "border-outline-variant focus:border-primary"
                     )}
                     placeholder="e.g. government scheme sub-plan 2026 guidelines"
@@ -498,7 +536,8 @@ export default function AdminNoticesPage() {
                   </label>
                   <select
                     id="form-category"
-                    className="w-full rounded-xl border border-outline-variant bg-white px-4 py-2.5 text-body-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                    disabled={isSaving}
+                    className="w-full rounded-xl border border-outline-variant bg-white px-4 py-2.5 text-body-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60"
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value as 'SCHEME' | 'ANNOUNCEMENT' | 'EVENT' | 'STORY')}
                   >
@@ -514,9 +553,10 @@ export default function AdminNoticesPage() {
                   <input
                     id="form-active"
                     type="checkbox"
+                    disabled={isSaving}
                     checked={formIsActive}
                     onChange={(e) => setFormIsActive(e.target.checked)}
-                    className="w-5 h-5 accent-primary cursor-pointer rounded border-outline-variant"
+                    className="w-5 h-5 accent-primary cursor-pointer rounded border-outline-variant disabled:opacity-60"
                   />
                   <label htmlFor="form-active" className="text-body-sm font-extrabold text-on-surface cursor-pointer">
                     Publish Immediately (Active status)
@@ -532,8 +572,9 @@ export default function AdminNoticesPage() {
                 <textarea
                   id="form-summary"
                   rows={2}
+                  disabled={isSaving}
                   className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all resize-none",
+                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all resize-none disabled:opacity-60",
                     formErrors.summary ? "border-red-500" : "border-outline-variant focus:border-primary"
                   )}
                   placeholder="Summarize the announcement details in 1-2 short sentences..."
@@ -551,8 +592,9 @@ export default function AdminNoticesPage() {
                 <textarea
                   id="form-content"
                   rows={6}
+                  disabled={isSaving}
                   className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all",
+                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
                     formErrors.content ? "border-red-500" : "border-outline-variant focus:border-primary"
                   )}
                   placeholder="Provide the complete announcement description, eligibility requirements, rules, instructions, or story text..."
@@ -564,14 +606,22 @@ export default function AdminNoticesPage() {
 
               {/* PDF Url */}
               <div className="space-y-1.5">
-                <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-pdf">
-                  PDF Attachment Link (Optional URL)
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-pdf">
+                    PDF Attachment Link (Optional URL)
+                  </label>
+                  {isUrlInvalid(formPdfUrl) && (
+                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      ⚠ Invalid URL Format
+                    </span>
+                  )}
+                </div>
                 <input
                   id="form-pdf"
                   type="text"
+                  disabled={isSaving}
                   className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all",
+                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
                     formErrors.pdfUrl ? "border-red-500" : "border-outline-variant focus:border-primary"
                   )}
                   placeholder="e.g. https://storage.adivasiproducer.com/guides/guide.pdf"
@@ -583,14 +633,22 @@ export default function AdminNoticesPage() {
 
               {/* Image Url */}
               <div className="space-y-1.5">
-                <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-image">
-                  Cover Image Attachment Link (Optional URL)
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-image">
+                    Cover Image Attachment Link (Optional URL)
+                  </label>
+                  {isUrlInvalid(formImageUrl) && (
+                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      ⚠ Invalid URL Format
+                    </span>
+                  )}
+                </div>
                 <input
                   id="form-image"
                   type="text"
+                  disabled={isSaving}
                   className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all",
+                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
                     formErrors.imageUrl ? "border-red-500" : "border-outline-variant focus:border-primary"
                   )}
                   placeholder="e.g. https://storage.adivasiproducer.com/images/cover.jpg"
@@ -612,8 +670,8 @@ export default function AdminNoticesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving}
-                  className="bg-primary hover:bg-dark-green text-white font-extrabold py-3 px-6 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider text-label-sm disabled:opacity-50"
+                  disabled={isSaving || isUrlInvalid(formPdfUrl) || isUrlInvalid(formImageUrl)}
+                  className="bg-primary hover:bg-dark-green text-white font-extrabold py-3 px-6 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider text-label-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <>

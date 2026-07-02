@@ -8,6 +8,7 @@ const env_1 = require("./config/env");
 const logger_1 = require("./utils/logger");
 const db_1 = require("./config/db");
 const s3_1 = require("./utils/s3");
+const socket_1 = require("./utils/socket");
 async function startServer() {
     try {
         // 1. Verify Supabase Storage connectivity and ensure bucket exists
@@ -25,6 +26,8 @@ async function startServer() {
             logger_1.logger.info(`🚀 API Server started in [${env_1.env.NODE_ENV}] mode, listening on port: ${env_1.env.PORT}`);
             logger_1.logger.info(`📝 Swagger Documentation available at: http://localhost:${env_1.env.PORT}/api-docs`);
         });
+        // 3. Initialize Socket.io Server
+        (0, socket_1.initSocket)(server);
         // Graceful Shutdown handling
         const gracefulShutdown = async (signal) => {
             logger_1.logger.warn(`Received signal [${signal}]. Shutting down server gracefully...`);

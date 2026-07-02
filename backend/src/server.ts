@@ -3,6 +3,7 @@ import { env } from './config/env';
 import { logger } from './utils/logger';
 import { prisma } from './config/db';
 import { verifyAndCreateBucket } from './utils/s3';
+import { initSocket } from './utils/socket';
 
 async function startServer() {
   try {
@@ -21,6 +22,9 @@ async function startServer() {
       logger.info(`🚀 API Server started in [${env.NODE_ENV}] mode, listening on port: ${env.PORT}`);
       logger.info(`📝 Swagger Documentation available at: http://localhost:${env.PORT}/api-docs`);
     });
+
+    // 3. Initialize Socket.io Server
+    initSocket(server);
 
     // Graceful Shutdown handling
     const gracefulShutdown = async (signal: string): Promise<void> => {

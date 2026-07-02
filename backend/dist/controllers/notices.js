@@ -144,6 +144,8 @@ const createNotice = async (req, res, next) => {
                 authorId: req.user.id,
             },
         });
+        // Emit real-time creation event
+        req.io?.emit('notice:created', notice);
         res.status(201).json({
             success: true,
             notice,
@@ -186,6 +188,8 @@ const updateNotice = async (req, res, next) => {
                 imageUrl: parsed.data.imageUrl !== undefined ? (parsed.data.imageUrl || null) : undefined,
             },
         });
+        // Emit real-time update event
+        req.io?.emit('notice:updated', updated);
         res.status(200).json({
             success: true,
             notice: updated,
@@ -222,6 +226,8 @@ const deleteNotice = async (req, res, next) => {
                 isActive: false,
             },
         });
+        // Emit real-time delete event
+        req.io?.emit('notice:deleted', { id });
         res.status(200).json({
             success: true,
             message: 'Notice announcement soft-deleted successfully',
