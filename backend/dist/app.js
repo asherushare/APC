@@ -16,6 +16,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const applications_1 = __importDefault(require("./routes/applications"));
 const documents_1 = __importDefault(require("./routes/documents"));
 const audit_1 = __importDefault(require("./routes/audit"));
+const notices_1 = __importDefault(require("./routes/notices"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const logger_1 = require("./utils/logger");
 const env_1 = require("./config/env");
@@ -140,6 +141,7 @@ app.use('/api/v1/auth', auth_1.default); // Auth routes
 app.use('/api/v1/applications', applications_1.default); // Applications routes
 app.use('/api/v1/applications', documents_1.default); // Documents upload routes
 app.use('/api/v1/audit-logs', audit_1.default); // Audit logs routes
+app.use('/api/v1/notices', notices_1.default); // Notices board routes
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
 // 9. 404 Route Catch Handler

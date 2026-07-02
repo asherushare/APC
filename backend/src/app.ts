@@ -11,6 +11,7 @@ import authRoutes from './routes/auth';
 import applicationsRoutes from './routes/applications';
 import documentsRouter from './routes/documents';
 import auditRoutes from './routes/audit';
+import noticesRoutes from './routes/notices';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
 import { env } from './config/env';
@@ -155,6 +156,7 @@ app.use('/api/v1/auth', authRoutes); // Auth routes
 app.use('/api/v1/applications', applicationsRoutes); // Applications routes
 app.use('/api/v1/applications', documentsRouter); // Documents upload routes
 app.use('/api/v1/audit-logs', auditRoutes); // Audit logs routes
+app.use('/api/v1/notices', noticesRoutes); // Notices board routes
 
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

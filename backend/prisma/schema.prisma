@@ -71,6 +71,7 @@ model User {
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
+  notices             Notice[]
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   deletedAt           DateTime?               // Soft-delete support
@@ -206,3 +207,30 @@ model AuditLog {
   @@index([targetId])
   @@index([createdAt])
 }
+
+enum NoticeCategory {
+  SCHEME
+  ANNOUNCEMENT
+  EVENT
+  STORY
+}
+
+model Notice {
+  id           String         @id @default(uuid())
+  title        String
+  category     NoticeCategory
+  summary      String
+  content      String
+  pdfUrl       String?
+  imageUrl     String?
+  isActive     Boolean        @default(true)
+  authorId     String?
+  author       User?          @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  @@index([isActive])
+  @@index([category])
+}
+
