@@ -55,6 +55,7 @@ export const metadata: Metadata = {
 
 
 import { AuthProvider } from '@/context/AuthContext';
+import { PublicAuthProvider } from '@/context/PublicAuthContext';
 
 export default function RootLayout({
   children,
@@ -65,10 +66,12 @@ export default function RootLayout({
     <html lang="en" className={plusJakarta.variable}>
       <body className="bg-surface text-on-surface antialiased">
         <AuthProvider>
-          <Navbar />
-          <main className="pt-[72px]">{children}</main>
-          <Footer />
-          <WhatsAppButton />
+          <PublicAuthProvider>
+            <Navbar />
+            <main className="pt-[72px]">{children}</main>
+            <Footer />
+            <WhatsAppButton />
+          </PublicAuthProvider>
         </AuthProvider>
       </body>
     </html>

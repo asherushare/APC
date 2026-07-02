@@ -8,21 +8,43 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ||
     : 'http://localhost:4000/api/v1');
 
 let currentAccessToken: string | null = null;
+let currentPublicAccessToken: string | null = null;
 let onTokenStateChange: ((token: string | null) => void) | null = null;
+let onPublicTokenStateChange: ((token: string | null) => void) | null = null;
 let isRefreshing = false;
 let refreshQueue: Array<{ resolve: (token: string | null) => void; reject: (err: unknown) => void }> = [];
 
-export const setAccessToken = (token: string | null) => {
-  currentAccessToken = token;
-  if (onTokenStateChange) {
-    onTokenStateChange(token);
+export const setAccessToken = (token: string | null, scope: 'admin' | 'public' = 'admin') => {
+  if (scope === 'public') {
+    currentPublicAccessToken = token;
+    if (typeof window !== 'undefined') {
+      if (token) localStorage.setItem('public_token', token);
+      else localStorage.removeItem('public_token');
+    }
+    if (onPublicTokenStateChange) {
+      onPublicTokenStateChange(token);
+    }
+  } else {
+    currentAccessToken = token;
+    if (typeof window !== 'undefined') {
+      if (token) localStorage.setItem('admin_token', token);
+      else localStorage.removeItem('admin_token');
+    }
+    if (onTokenStateChange) {
+      onTokenStateChange(token);
+    }
   }
 };
 
 export const getAccessToken = () => currentAccessToken;
+export const getPublicAccessToken = () => currentPublicAccessToken;
 
 export const registerTokenStateListener = (callback: (token: string | null) => void) => {
   onTokenStateChange = callback;
+};
+
+export const registerPublicTokenStateListener = (callback: (token: string | null) => void) => {
+  onPublicTokenStateChange = callback;
 };
 
 export interface ApiRequestOptions extends RequestInit {
@@ -74,10 +96,13 @@ async function fetchWithTimeout(url: string, options: ApiRequestOptions = {}): P
 export async function apiRequest<T = unknown>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
   const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
 
+  const isPublicRequest = endpoint.includes('/public-auth') || endpoint.includes('/applications/apply') || endpoint.includes('/applications/my-application');
+  const token = isPublicRequest ? currentPublicAccessToken : currentAccessToken;
+
   // Configure headers
   const headers = new Headers(options.headers || {});
-  if (currentAccessToken) {
-    headers.set('Authorization', `Bearer ${currentAccessToken}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
   if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -132,6 +157,10 @@ export async function apiRequest<T = unknown>(endpoint: string, options: ApiRequ
  * Handles 401 Unauthorized responses by issuing automatic refresh token rotation checks.
  */
 async function handleUnauthorized(endpoint: string, options: ApiRequestOptions): Promise<unknown> {
+  const isPublicRequest = endpoint.includes('/public-auth') || endpoint.includes('/applications/apply') || endpoint.includes('/applications/my-application');
+  const refreshUrl = isPublicRequest ? `${API_URL}/public-auth/refresh` : `${API_URL}/auth/refresh`;
+  const scope: 'admin' | 'public' = isPublicRequest ? 'public' : 'admin';
+
   // If we are already attempting refresh, queue this request
   if (isRefreshing) {
     return new Promise((resolve, reject) => {
@@ -152,7 +181,7 @@ async function handleUnauthorized(endpoint: string, options: ApiRequestOptions):
 
   try {
     // Call refresh token rotation endpoint
-    const refreshResponse = await fetchWithTimeout(`${API_URL}/auth/refresh`, {
+    const refreshResponse = await fetchWithTimeout(refreshUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -165,7 +194,7 @@ async function handleUnauthorized(endpoint: string, options: ApiRequestOptions):
     const data = await refreshResponse.json() as { accessToken: string };
     const newAccessToken = data.accessToken;
     
-    setAccessToken(newAccessToken);
+    setAccessToken(newAccessToken, scope);
     isRefreshing = false;
 
     // Process all requests waiting in the queue
@@ -178,7 +207,7 @@ async function handleUnauthorized(endpoint: string, options: ApiRequestOptions):
     return await apiRequest(endpoint, { ...options, headers });
   } catch (err) {
     isRefreshing = false;
-    setAccessToken(null); // Log out locally
+    setAccessToken(null, scope); // Log out locally
     refreshQueue.forEach((q) => q.reject(err));
     refreshQueue = [];
     return null;
