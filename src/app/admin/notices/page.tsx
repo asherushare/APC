@@ -53,6 +53,10 @@ export default function AdminNoticesPage() {
   const [formIsActive, setFormIsActive] = useState(true);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // Local file upload states
+  const [formPdfFile, setFormPdfFile] = useState<File | null>(null);
+  const [formImageFile, setFormImageFile] = useState<File | null>(null);
+
   // 1. Fetch notices from API
   const fetchNotices = useCallback(async (targetPage = 1) => {
     setIsLoading(true);
@@ -129,6 +133,8 @@ export default function AdminNoticesPage() {
       setFormPdfUrl(notice.pdfUrl || '');
       setFormImageUrl(notice.imageUrl || '');
       setFormIsActive(notice.isActive);
+      setFormPdfFile(null);
+      setFormImageFile(null);
     } else {
       setFormTitle('');
       setFormCategory('ANNOUNCEMENT');
@@ -137,6 +143,8 @@ export default function AdminNoticesPage() {
       setFormPdfUrl('');
       setFormImageUrl('');
       setFormIsActive(true);
+      setFormPdfFile(null);
+      setFormImageFile(null);
     }
     setIsModalOpen(true);
   };
@@ -152,6 +160,8 @@ export default function AdminNoticesPage() {
     setFormImageUrl('');
     setFormIsActive(true);
     setFormErrors({});
+    setFormPdfFile(null);
+    setFormImageFile(null);
   };
 
   // URL Validation Helpers
@@ -167,10 +177,10 @@ export default function AdminNoticesPage() {
     if (!formSummary.trim()) errors.summary = 'Summary is required';
     if (!formContent.trim()) errors.content = 'Content detailed description is required';
 
-    if (isUrlInvalid(formPdfUrl)) {
+    if (!formPdfFile && isUrlInvalid(formPdfUrl)) {
       errors.pdfUrl = 'PDF attachment link must be a valid URL starting with http:// or https://';
     }
-    if (isUrlInvalid(formImageUrl)) {
+    if (!formImageFile && isUrlInvalid(formImageUrl)) {
       errors.imageUrl = 'Cover image link must be a valid URL starting with http:// or https://';
     }
 
@@ -187,22 +197,31 @@ export default function AdminNoticesPage() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    const payload = {
-      title: formTitle.trim(),
-      category: formCategory,
-      summary: formSummary.trim(),
-      content: formContent.trim(),
-      pdfUrl: formPdfUrl.trim() || null,
-      imageUrl: formImageUrl.trim() || null,
-      isActive: formIsActive,
-    };
+    const formData = new FormData();
+    formData.append('title', formTitle.trim());
+    formData.append('category', formCategory);
+    formData.append('summary', formSummary.trim());
+    formData.append('content', formContent.trim());
+    formData.append('isActive', String(formIsActive));
+
+    if (formPdfFile) {
+      formData.append('pdf', formPdfFile);
+    } else {
+      formData.append('pdfUrl', formPdfUrl.trim());
+    }
+
+    if (formImageFile) {
+      formData.append('image', formImageFile);
+    } else {
+      formData.append('imageUrl', formImageUrl.trim());
+    }
 
     try {
       let response;
       if (editingNotice) {
         response = await apiRequest<{ success: boolean; notice: NoticeRecord }>(`/notices/${editingNotice.id}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: formData,
         });
         if (response.success) {
           setSuccessMsg('Notice announcement updated successfully.');
@@ -210,7 +229,7 @@ export default function AdminNoticesPage() {
       } else {
         response = await apiRequest<{ success: boolean; notice: NoticeRecord }>('/notices', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: formData,
         });
         if (response.success) {
           setSuccessMsg('New notice announcement created successfully.');
@@ -604,57 +623,137 @@ export default function AdminNoticesPage() {
                 {formErrors.content && <p className="text-[11px] text-red-500 font-semibold mt-0.5">⚠ {formErrors.content}</p>}
               </div>
 
-              {/* PDF Url */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-pdf">
-                    PDF Attachment Link (Optional URL)
+               {/* PDF Attachment */}
+              <div className="space-y-2 text-left">
+                <label className="text-label-sm font-extrabold text-on-surface">
+                  PDF Document Attachment (Optional)
+                </label>
+                <div className="flex flex-col gap-2">
+                  {formPdfUrl && (
+                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant bg-surface-container-low select-none">
+                      <div className="flex items-center gap-2 truncate max-w-[80%]">
+                        <span className="text-sm">📄</span>
+                        <a href={formPdfUrl} target="_blank" rel="noopener noreferrer" className="text-body-xs font-bold text-primary hover:underline truncate">
+                          Current Attachment: {formPdfUrl.split('/').pop()}
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setFormPdfUrl(''); setFormPdfFile(null); }}
+                        className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                  {!formPdfUrl && formPdfFile && (
+                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-primary/20 bg-primary/5 select-none">
+                      <div className="flex items-center gap-2 truncate max-w-[80%]">
+                        <span className="text-sm">📎</span>
+                        <span className="text-body-xs font-extrabold text-primary truncate">
+                          Selected: {formPdfFile.name} ({(formPdfFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormPdfFile(null)}
+                        className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    id="form-pdf-file"
+                    type="file"
+                    accept="application/pdf"
+                    disabled={isSaving}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        setFormPdfFile(file);
+                        setFormPdfUrl('');
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="form-pdf-file"
+                    className="inline-flex items-center justify-center gap-2 border border-outline-variant bg-white hover:bg-surface-container-low text-on-surface font-extrabold py-2.5 px-4 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer text-body-xs w-fit"
+                  >
+                    Select PDF File
                   </label>
-                  {isUrlInvalid(formPdfUrl) && (
-                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      ⚠ Invalid URL Format
-                    </span>
-                  )}
                 </div>
-                <input
-                  id="form-pdf"
-                  type="text"
-                  disabled={isSaving}
-                  className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
-                    formErrors.pdfUrl ? "border-red-500" : "border-outline-variant focus:border-primary"
-                  )}
-                  placeholder="e.g. https://storage.adivasiproducer.com/guides/guide.pdf"
-                  value={formPdfUrl}
-                  onChange={(e) => setFormPdfUrl(e.target.value)}
-                />
                 {formErrors.pdfUrl && <p className="text-[11px] text-red-500 font-semibold mt-0.5">⚠ {formErrors.pdfUrl}</p>}
               </div>
 
-              {/* Image Url */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-label-sm font-extrabold text-on-surface" htmlFor="form-image">
-                    Cover Image Attachment Link (Optional URL)
+              {/* Cover Image Attachment */}
+              <div className="space-y-2 text-left">
+                <label className="text-label-sm font-extrabold text-on-surface">
+                  Cover Image Banner (Optional)
+                </label>
+                <div className="flex flex-col gap-2">
+                  {formImageUrl && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-outline-variant bg-surface-container-low select-none">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={formImageUrl} alt="Current Cover" className="w-10 h-10 object-cover rounded-lg border border-outline-variant" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black text-on-surface-variant/70 uppercase">Current Banner</p>
+                        <a href={formImageUrl} target="_blank" rel="noopener noreferrer" className="text-body-xs font-bold text-primary hover:underline truncate block">
+                          {formImageUrl.split('/').pop()}
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setFormImageUrl(''); setFormImageFile(null); }}
+                        className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                  {!formImageUrl && formImageFile && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5 select-none">
+                      <div className="w-10 h-10 relative rounded-lg border border-outline-variant overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={URL.createObjectURL(formImageFile)} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[9px] font-black text-primary uppercase">New Selection</p>
+                        <span className="text-body-xs font-extrabold text-on-surface truncate block">
+                          {formImageFile.name}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFormImageFile(null)}
+                        className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    id="form-image-file"
+                    type="file"
+                    accept="image/*"
+                    disabled={isSaving}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        setFormImageFile(file);
+                        setFormImageUrl('');
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="form-image-file"
+                    className="inline-flex items-center justify-center gap-2 border border-outline-variant bg-white hover:bg-surface-container-low text-on-surface font-extrabold py-2.5 px-4 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer text-body-xs w-fit"
+                  >
+                    Select Cover Image
                   </label>
-                  {isUrlInvalid(formImageUrl) && (
-                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      ⚠ Invalid URL Format
-                    </span>
-                  )}
                 </div>
-                <input
-                  id="form-image"
-                  type="text"
-                  disabled={isSaving}
-                  className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-2.5 text-body-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:ring-2 focus:ring-primary/15 transition-all disabled:opacity-60",
-                    formErrors.imageUrl ? "border-red-500" : "border-outline-variant focus:border-primary"
-                  )}
-                  placeholder="e.g. https://storage.adivasiproducer.com/images/cover.jpg"
-                  value={formImageUrl}
-                  onChange={(e) => setFormImageUrl(e.target.value)}
-                />
                 {formErrors.imageUrl && <p className="text-[11px] text-red-500 font-semibold mt-0.5">⚠ {formErrors.imageUrl}</p>}
               </div>
 
@@ -670,7 +769,7 @@ export default function AdminNoticesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving || isUrlInvalid(formPdfUrl) || isUrlInvalid(formImageUrl)}
+                  disabled={isSaving}
                   className="bg-primary hover:bg-dark-green text-white font-extrabold py-3 px-6 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wider text-label-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (

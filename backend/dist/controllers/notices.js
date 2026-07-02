@@ -4,6 +4,7 @@ exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.get
 const zod_1 = require("zod");
 const db_1 = require("../config/db");
 const errors_1 = require("../utils/errors");
+const cloudinary_1 = require("../utils/cloudinary");
 // Zod schemas for validation
 exports.CreateNoticeSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, 'Title is required').max(200),
@@ -127,7 +128,21 @@ const createNotice = async (req, res, next) => {
         if (!req.user) {
             throw new errors_1.UnauthorizedError('Authentication required');
         }
-        const parsed = exports.CreateNoticeSchema.safeParse(req.body);
+        const bodyData = { ...req.body };
+        if (typeof bodyData.isActive === 'string') {
+            bodyData.isActive = bodyData.isActive === 'true';
+        }
+        const files = req.files;
+        // Upload files to Cloudinary if they are present in the request
+        if (files?.pdf?.[0]) {
+            const result = await (0, cloudinary_1.uploadToCloudinary)(files.pdf[0].buffer, 'notices/pdfs', 'raw');
+            bodyData.pdfUrl = result.secure_url;
+        }
+        if (files?.image?.[0]) {
+            const result = await (0, cloudinary_1.uploadToCloudinary)(files.image[0].buffer, 'notices/images', 'image');
+            bodyData.imageUrl = result.secure_url;
+        }
+        const parsed = exports.CreateNoticeSchema.safeParse(bodyData);
         if (!parsed.success) {
             throw new errors_1.ValidationError('Validation failed', parsed.error.format());
         }
@@ -175,7 +190,21 @@ const updateNotice = async (req, res, next) => {
         if (!existingNotice) {
             throw new errors_1.NotFoundError('Notice record not found');
         }
-        const parsed = exports.UpdateNoticeSchema.safeParse(req.body);
+        const bodyData = { ...req.body };
+        if (typeof bodyData.isActive === 'string') {
+            bodyData.isActive = bodyData.isActive === 'true';
+        }
+        const files = req.files;
+        // Upload files to Cloudinary if they are present in the request
+        if (files?.pdf?.[0]) {
+            const result = await (0, cloudinary_1.uploadToCloudinary)(files.pdf[0].buffer, 'notices/pdfs', 'raw');
+            bodyData.pdfUrl = result.secure_url;
+        }
+        if (files?.image?.[0]) {
+            const result = await (0, cloudinary_1.uploadToCloudinary)(files.image[0].buffer, 'notices/images', 'image');
+            bodyData.imageUrl = result.secure_url;
+        }
+        const parsed = exports.UpdateNoticeSchema.safeParse(bodyData);
         if (!parsed.success) {
             throw new errors_1.ValidationError('Validation failed', parsed.error.format());
         }

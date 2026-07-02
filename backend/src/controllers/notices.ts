@@ -3,6 +3,7 @@ import { Prisma, NoticeCategory } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../config/db';
 import { NotFoundError, ValidationError, UnauthorizedError } from '../utils/errors';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 // Zod schemas for validation
 export const CreateNoticeSchema = z.object({
@@ -151,7 +152,24 @@ export const createNotice = async (
       throw new UnauthorizedError('Authentication required');
     }
 
-    const parsed = CreateNoticeSchema.safeParse(req.body);
+    const bodyData = { ...req.body };
+    if (typeof bodyData.isActive === 'string') {
+      bodyData.isActive = bodyData.isActive === 'true';
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Upload files to Cloudinary if they are present in the request
+    if (files?.pdf?.[0]) {
+      const result = await uploadToCloudinary(files.pdf[0].buffer, 'notices/pdfs', 'raw');
+      bodyData.pdfUrl = result.secure_url;
+    }
+    if (files?.image?.[0]) {
+      const result = await uploadToCloudinary(files.image[0].buffer, 'notices/images', 'image');
+      bodyData.imageUrl = result.secure_url;
+    }
+
+    const parsed = CreateNoticeSchema.safeParse(bodyData);
     if (!parsed.success) {
       throw new ValidationError('Validation failed', parsed.error.format());
     }
@@ -208,7 +226,24 @@ export const updateNotice = async (
       throw new NotFoundError('Notice record not found');
     }
 
-    const parsed = UpdateNoticeSchema.safeParse(req.body);
+    const bodyData = { ...req.body };
+    if (typeof bodyData.isActive === 'string') {
+      bodyData.isActive = bodyData.isActive === 'true';
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+    // Upload files to Cloudinary if they are present in the request
+    if (files?.pdf?.[0]) {
+      const result = await uploadToCloudinary(files.pdf[0].buffer, 'notices/pdfs', 'raw');
+      bodyData.pdfUrl = result.secure_url;
+    }
+    if (files?.image?.[0]) {
+      const result = await uploadToCloudinary(files.image[0].buffer, 'notices/images', 'image');
+      bodyData.imageUrl = result.secure_url;
+    }
+
+    const parsed = UpdateNoticeSchema.safeParse(bodyData);
     if (!parsed.success) {
       throw new ValidationError('Validation failed', parsed.error.format());
     }
