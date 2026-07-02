@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Container } from '@/components/common/Container';
 import { apiRequest, ApiError } from '@/lib/api-client';
@@ -15,9 +15,15 @@ export default function AdminDashboardPage() {
   const { user, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
   console.log('[AdminDashboardPage] render state:', { user, isAuthenticated, isAuthLoading });
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Navigation tabs state
-  const [activeTab, setActiveTab] = useState<'applications' | 'stats' | 'audit_logs'>('applications');
+  // Derived active tab state from query parameter URL to avoid synchronous setState cascading render warnings
+  const tabQuery = searchParams.get('tab');
+  const activeTab = (tabQuery === 'stats' || tabQuery === 'audit_logs' ? tabQuery : 'applications') as 'applications' | 'stats' | 'audit_logs';
+
+  const handleTabChange = (tabName: 'applications' | 'stats' | 'audit_logs') => {
+    router.push(`/admin/dashboard?tab=${tabName}`);
+  };
 
   // Stats dashboard state
   const [stats, setStats] = useState<Record<string, number> | null>(null);
@@ -63,6 +69,8 @@ export default function AdminDashboardPage() {
       router.push('/admin/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
+
+
 
   // Set default block filter for coordinators on user profile load
   useEffect(() => {
@@ -258,7 +266,7 @@ export default function AdminDashboardPage() {
         {/* Navigation Tabs Header */}
         <div className="flex border-b border-outline-variant/30 select-none">
           <button
-            onClick={() => setActiveTab('applications')}
+            onClick={() => handleTabChange('applications')}
             className={cn(
               "px-6 py-3 font-extrabold text-label-sm uppercase tracking-wider border-b-2 transition-all cursor-pointer",
               activeTab === 'applications'
@@ -270,7 +278,7 @@ export default function AdminDashboardPage() {
           </button>
           
           <button
-            onClick={() => setActiveTab('stats')}
+            onClick={() => handleTabChange('stats')}
             className={cn(
               "px-6 py-3 font-extrabold text-label-sm uppercase tracking-wider border-b-2 transition-all cursor-pointer",
               activeTab === 'stats'
@@ -282,7 +290,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab('audit_logs')}
+            onClick={() => handleTabChange('audit_logs')}
             className={cn(
               "px-6 py-3 font-extrabold text-label-sm uppercase tracking-wider border-b-2 transition-all cursor-pointer",
               activeTab === 'audit_logs'

@@ -7,7 +7,7 @@ import { apiRequest } from '@/lib/api-client';
 import { useSocket } from '@/hooks/useSocket';
 import type { Notice } from '@/types';
 
-type CategoryFilter = 'all' | 'scheme' | 'announcement' | 'story';
+type CategoryFilter = 'all' | 'scheme' | 'announcement' | 'story' | 'event';
 
 interface LiveNotice extends Omit<Notice, 'pdfUrl' | 'imageUrl'> {
   isActive: boolean;
@@ -41,7 +41,7 @@ export function NoticesContent() {
   
   // Derived state values from searchParams to avoid synchronous setState cascading render warning
   const categoryParam = searchParams.get('category');
-  const activeCategory = (categoryParam && ['scheme', 'announcement', 'story'].includes(categoryParam)
+  const activeCategory = (categoryParam && ['scheme', 'announcement', 'story', 'event'].includes(categoryParam)
     ? categoryParam
     : 'all') as CategoryFilter;
 
@@ -208,13 +208,14 @@ export function NoticesContent() {
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-surface-container-lowest rounded-xl p-4 shadow-tribal border border-outline-variant/30">
         {/* Category Filter Tabs */}
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          {(['all', 'scheme', 'announcement', 'story'] as CategoryFilter[]).map((cat) => {
+          {(['all', 'scheme', 'announcement', 'story', 'event'] as CategoryFilter[]).map((cat) => {
             const isActive = activeCategory === cat;
             const labels: Record<CategoryFilter, string> = {
               all: 'All Updates',
               scheme: 'Govt Schemes',
               announcement: 'Announcements',
               story: 'Success Stories',
+              event: 'Events',
             };
             return (
               <button

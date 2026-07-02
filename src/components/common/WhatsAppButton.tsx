@@ -1,19 +1,23 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
 const WHATSAPP_NUMBER = '919348747578';
 
 export function WhatsAppButton() {
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith('/admin');
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (isAdminRoute) return;
     // Delay appearance for smooth entry
     const timer = setTimeout(() => setIsVisible(true), 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAdminRoute]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -55,6 +59,10 @@ export function WhatsAppButton() {
   const getWaLink = (text: string) => {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
   };
+
+  if (isAdminRoute) {
+    return null;
+  }
 
   return (
     <div className={`whatsapp-btn-container fixed bottom-6 right-6 z-[9999] flex flex-col items-end transition-all duration-300 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} ref={menuRef}>
