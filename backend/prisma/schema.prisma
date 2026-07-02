@@ -156,6 +156,8 @@ model ShareholderApplication {
   reviewedAt             DateTime?
 
   documents              Document[]
+  publicUserId           String?
+  publicUser             PublicUser?       @relation(fields: [publicUserId], references: [id])
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
   deletedAt              DateTime?         // Soft-delete support
@@ -172,6 +174,7 @@ model Document {
   fileSize        Int
   mimeType        String
   storageKey      String                 // S3 Object path
+  url             String?                // Permanent direct Cloudinary HTTPS secure URL
   uploadStatus    UploadStatus           @default(UPLOADING)
   checksum        String?                // SHA-256 checksum of payload
   uploadedBy      String                 // UUID or applicant identifier
@@ -233,4 +236,28 @@ model Notice {
   @@index([isActive])
   @@index([category])
 }
+
+model PublicUser {
+  id                  String                  @id @default(uuid())
+  phoneNumber         String                  @unique
+  email               String?                 @unique
+  passwordHash        String
+  fullName            String
+  verified            Boolean                 @default(false)
+  applications        ShareholderApplication[]
+  refreshTokens       PublicRefreshToken[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model PublicRefreshToken {
+  id           String     @id @default(uuid())
+  tokenHash    String     @unique // SHA-256 hash of refresh token
+  publicUserId String
+  publicUser   PublicUser @relation(fields: [publicUserId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  revoked      Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+}
+
 

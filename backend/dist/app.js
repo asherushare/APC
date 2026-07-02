@@ -13,6 +13,7 @@ const requestTrace_1 = require("./middleware/requestTrace");
 const errorHandler_1 = require("./middleware/errorHandler");
 const system_1 = __importDefault(require("./routes/system"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const publicAuth_1 = __importDefault(require("./routes/publicAuth"));
 const applications_1 = __importDefault(require("./routes/applications"));
 const documents_1 = __importDefault(require("./routes/documents"));
 const audit_1 = __importDefault(require("./routes/audit"));
@@ -149,6 +150,7 @@ app.use(limiter);
 app.use('/', system_1.default); // Root level endpoints (/health, /version)
 app.use('/api/v1', system_1.default); // Mount on v1 prefix too
 app.use('/api/v1/auth', auth_1.default); // Auth routes
+app.use('/api/v1/public-auth', publicAuth_1.default); // Public portal auth routes
 app.use('/api/v1/applications', applications_1.default); // Applications routes
 app.use('/api/v1/applications', documents_1.default); // Documents upload routes
 app.use('/api/v1/audit-logs', audit_1.default); // Audit logs routes

@@ -7,8 +7,12 @@ import {
   getApplicationDetails,
   getApplicationStats,
   updateApplicationStatus,
+  applyShareholderApplication,
+  getMyApplication,
 } from '../controllers/applications';
 import { authMiddleware, requireRole } from '../middleware/auth';
+import { publicAuthMiddleware } from '../middleware/publicAuth';
+import { upload } from '../middleware/upload';
 
 const router = Router();
 
@@ -41,5 +45,20 @@ router.get('/:id', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), 
 
 // Administrative route to update application review status (scoped by block for coordinators)
 router.patch('/:id/status', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), updateApplicationStatus);
+
+// Public portal authenticated application submission and retrieval routes
+router.post(
+  '/apply',
+  publicAuthMiddleware,
+  upload.fields([
+    { name: 'aadhaar', maxCount: 1 },
+    { name: 'pan', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'passbook', maxCount: 1 }
+  ]),
+  applyShareholderApplication
+);
+
+router.get('/my-application', publicAuthMiddleware, getMyApplication);
 
 export default router;

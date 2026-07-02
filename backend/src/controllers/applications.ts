@@ -1,7 +1,10 @@
+/* global Express */
 import { Request, Response, NextFunction } from 'express';
-import { Prisma, Role, ApplicationStatus, PaymentStatus, VerificationStatus } from '@prisma/client';
+import { Prisma, Role, ApplicationStatus, PaymentStatus, VerificationStatus, DocumentType } from '@prisma/client';
 import { prisma } from '../config/db';
 import { logger } from '../utils/logger';
+import crypto from 'crypto';
+import { uploadToCloudinary } from '../utils/cloudinary';
 import {
   encrypt,
   decrypt,
@@ -15,6 +18,7 @@ import {
   ConflictError,
   NotFoundError,
   ForbiddenError,
+  UnauthorizedError,
 } from '../utils/errors';
 import { CreateApplicationSchema } from '../schemas/application';
 import {
@@ -633,6 +637,296 @@ export const updateApplicationStatus = async (
     res.status(200).json({
       success: true,
       application: updatedApplication,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/v1/applications/apply
+ * Authenticated public user application submission with file uploads.
+ */
+export const applyShareholderApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.publicUser) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
+    // Parse files
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    if (!files?.aadhaar?.[0] || !files?.photo?.[0] || !files?.passbook?.[0]) {
+      throw new ValidationError('Validation failed: Aadhaar, Photograph, and Bank Passbook documents are required');
+    }
+
+    // Preprocess body fields
+    const bodyData = { ...req.body };
+    if (typeof bodyData.numberOfShares === 'string') {
+      bodyData.numberOfShares = parseInt(bodyData.numberOfShares, 10);
+    }
+    if (typeof bodyData.calculatedContribution === 'string') {
+      bodyData.calculatedContribution = parseFloat(bodyData.calculatedContribution);
+    }
+    if (typeof bodyData.confirmCorrectInfo === 'string') {
+      bodyData.confirmCorrectInfo = bodyData.confirmCorrectInfo === 'true';
+    }
+    if (typeof bodyData.agreeToRules === 'string') {
+      bodyData.agreeToRules = bodyData.agreeToRules === 'true';
+    }
+    if (typeof bodyData.understandApprovalRequired === 'string') {
+      bodyData.understandApprovalRequired = bodyData.understandApprovalRequired === 'true';
+    }
+
+    let producerActivities: string[] = [];
+    if (typeof bodyData.producerActivities === 'string') {
+      try {
+        producerActivities = JSON.parse(bodyData.producerActivities);
+      } catch {
+        producerActivities = bodyData.producerActivities.split(',').map((s: string) => s.trim()).filter(Boolean);
+      }
+    } else if (Array.isArray(bodyData.producerActivities)) {
+      producerActivities = bodyData.producerActivities;
+    }
+    bodyData.producerActivities = producerActivities;
+
+    // Validate body payload using existing validation schema
+    const parsed = CreateApplicationSchema.safeParse(bodyData);
+    if (!parsed.success) {
+      throw new ValidationError('Validation failed', parsed.error.format());
+    }
+    const data = parsed.data;
+
+    // Strict backend verification of contribution amount
+    if (data.calculatedContribution !== data.numberOfShares * 10000) {
+      throw new ValidationError('Calculated contribution mismatch', {
+        calculatedContribution: 'Calculated contribution must equal numberOfShares * 10,000',
+      });
+    }
+
+    // Aadhaar uniqueness check
+    const aadhaarHash = hashAadhaar(data.aadhaarNumber);
+    const existing = await prisma.shareholderApplication.findUnique({
+      where: { aadhaarHash },
+    });
+    if (existing) {
+      throw new ConflictError(
+        'A shareholder application has already been submitted with this Aadhaar number',
+        'DUPLICATE_AADHAAR'
+      );
+    }
+
+    // Check if this public user already has a pending/active application
+    const existingUserApp = await prisma.shareholderApplication.findFirst({
+      where: { publicUserId: req.publicUser.id, deletedAt: null },
+    });
+    if (existingUserApp) {
+      throw new ConflictError(
+        'You have already submitted a shareholder application.',
+        'APPLICATION_ALREADY_EXISTS'
+      );
+    }
+
+    // Crypto operations (Encryption & Masking)
+    const aadhaarEncrypted = encrypt(data.aadhaarNumber);
+    const panEncrypted = data.panNumber ? encrypt(data.panNumber) : null;
+    const bankAccountNumberEnc = encrypt(data.bankAccountNumber);
+
+    const aadhaarMasked = maskAadhaar(data.aadhaarNumber);
+    const panMasked = data.panNumber ? maskPan(data.panNumber) : null;
+    const bankAccountNumberMask = maskBankAccount(data.bankAccountNumber);
+
+    // Stream upload documents to Cloudinary
+    const uploadAndCreateDoc = async (
+      file: Express.Multer.File,
+      docType: DocumentType,
+      folder: string,
+      resourceType: 'auto' | 'image' | 'raw' = 'auto'
+    ) => {
+      const result = await uploadToCloudinary(file.buffer, folder, resourceType);
+      const sha256 = crypto.createHash('sha256').update(file.buffer).digest('hex');
+      return {
+        documentType: docType,
+        filename: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        storageKey: result.public_id,
+        url: result.secure_url,
+        uploadStatus: 'DONE' as const,
+        checksum: sha256,
+        uploadedBy: req.publicUser!.id,
+        virusScanStatus: 'CLEAN' as const,
+      };
+    };
+
+    const docPromises = [
+      uploadAndCreateDoc(files.aadhaar[0], DocumentType.AADHAAR, 'applications/aadhaars', 'raw'),
+      uploadAndCreateDoc(files.photo[0], DocumentType.PHOTOGRAPH, 'applications/photos', 'image'),
+      uploadAndCreateDoc(files.passbook[0], DocumentType.BANK_PASSBOOK, 'applications/passbooks', 'raw'),
+    ];
+
+    if (files.pan?.[0]) {
+      docPromises.push(
+        uploadAndCreateDoc(files.pan[0], DocumentType.PAN, 'applications/pans', 'raw')
+      );
+    }
+
+    const uploadedDocs = await Promise.all(docPromises);
+
+    const currentYear = new Date().getFullYear();
+    let retries = 5;
+    let savedApp = null;
+
+    // Retry loop for unique ID generation conflicts
+    while (retries > 0) {
+      try {
+        const count = await prisma.shareholderApplication.count({
+          where: {
+            applicationId: {
+              startsWith: `APC-${currentYear}-`,
+            },
+          },
+        });
+
+        const nextSeq = count + 1;
+        const formattedSeq = String(nextSeq).padStart(6, '0');
+        const applicationId = `APC-${currentYear}-${formattedSeq}`;
+
+        savedApp = await prisma.$transaction(async (tx) => {
+          // Double check inside transaction if applicationId is already taken (safety fallback)
+          const conflictingApp = await tx.shareholderApplication.findUnique({
+            where: { applicationId },
+          });
+
+          if (conflictingApp) {
+            throw new Prisma.PrismaClientKnownRequestError(
+              'Application ID conflict',
+              { code: 'P2002', clientVersion: '5.22.0', meta: { target: ['applicationId'] } }
+            );
+          }
+
+          return await tx.shareholderApplication.create({
+            data: {
+              applicationId,
+              fullName: data.fullName,
+              fatherHusbandName: data.fatherHusbandName,
+              dateOfBirth: new Date(data.dateOfBirth),
+              gender: data.gender,
+              aadhaarHash,
+              aadhaarEncrypted,
+              aadhaarMasked,
+              panEncrypted,
+              panMasked,
+              mobileNumber: data.mobileNumber,
+              email: data.email || null,
+              occupation: data.occupation,
+              village: data.village,
+              gramPanchayat: data.gramPanchayat,
+              block: data.block,
+              district: data.district,
+              state: data.state,
+              pinCode: data.pinCode,
+              numberOfShares: data.numberOfShares,
+              calculatedContribution: new Prisma.Decimal(data.calculatedContribution),
+              nomineeName: data.nomineeName,
+              nomineeRelationship: data.nomineeRelationship,
+              nomineeDateOfBirth: new Date(data.nomineeDateOfBirth),
+              nomineeAddress: data.nomineeAddress,
+              nomineeMobileNumber: data.nomineeMobileNumber,
+              bankAccountHolderName: data.bankAccountHolderName,
+              bankName: data.bankName,
+              bankAccountNumberEnc,
+              bankAccountNumberMask,
+              bankIfscCode: data.bankIfscCode,
+              status: ApplicationStatus.SUBMITTED,
+              paymentStatus: PaymentStatus.PENDING,
+              verificationStatus: VerificationStatus.PENDING,
+              publicUserId: req.publicUser!.id,
+              producerActivities: {
+                create: data.producerActivities.map((act) => ({
+                  activityName: act,
+                })),
+              },
+              documents: {
+                create: uploadedDocs,
+              },
+            },
+          });
+        });
+        break;
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          const target = err.meta?.target as string[];
+          if (target && target.includes('applicationId')) {
+            retries--;
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+
+    if (!savedApp) {
+      throw new Error('Failed to save application due to internal unique ID generation conflict');
+    }
+
+    await recordAuditLog(null, 'PUBLIC_APPLICATION_SUBMITTED', 'ShareholderApplication', savedApp.id, req, { applicationId: savedApp.applicationId });
+
+    res.status(201).json({
+      success: true,
+      message: 'Your shareholder application has been submitted successfully.',
+      application: {
+        id: savedApp.id,
+        applicationId: savedApp.applicationId,
+        status: savedApp.status,
+        submittedAt: savedApp.submittedAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/v1/applications/my-application
+ * Retrieve application and status for authenticated public profile.
+ */
+export const getMyApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.publicUser) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
+    const application = await prisma.shareholderApplication.findFirst({
+      where: {
+        publicUserId: req.publicUser.id,
+        deletedAt: null,
+      },
+      include: {
+        documents: {
+          select: {
+            id: true,
+            documentType: true,
+            filename: true,
+            url: true,
+            uploadStatus: true,
+            createdAt: true,
+          },
+        },
+        producerActivities: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      application,
     });
   } catch (error) {
     next(error);

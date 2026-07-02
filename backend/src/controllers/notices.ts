@@ -1,3 +1,4 @@
+/* global Express */
 import { Request, Response, NextFunction } from 'express';
 import { Prisma, NoticeCategory } from '@prisma/client';
 import { z } from 'zod';
