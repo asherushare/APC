@@ -599,7 +599,7 @@ export function JoinFormSection() {
 
   if (authLoading) {
     return (
-      <section className="bg-surface py-16 min-h-[50vh] flex items-center justify-center">
+      <section id="application-form" className="bg-surface py-16 min-h-[50vh] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </section>
     );
@@ -607,7 +607,7 @@ export function JoinFormSection() {
 
   if (!isAuthenticated) {
     return (
-      <section className="bg-surface py-16 select-none text-left">
+      <section id="application-form" className="bg-surface py-16 select-none text-left">
         <Container>
           <div className="max-w-2xl mx-auto bg-white border border-outline-variant/30 rounded-3xl p-10 text-center space-y-6 shadow-xl">
             <span className="text-5xl block">🔒</span>
@@ -638,7 +638,7 @@ export function JoinFormSection() {
   }
 
   return (
-    <section id="register" className="py-16 md:py-24 bg-surface border-t border-outline-variant/30 relative">
+    <section id="application-form" className="py-16 md:py-24 bg-surface border-t border-outline-variant/30 relative">
       <Container>
         <div className="max-w-2xl mx-auto bg-white border border-outline-variant/30 rounded-3xl shadow-xl overflow-hidden">
           

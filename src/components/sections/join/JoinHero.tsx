@@ -43,8 +43,15 @@ export function JoinHero({ onLearnMore }: { onLearnMore?: () => void }) {
         {/* Hero CTA Buttons */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
           <a
-            href="#register"
-            className="w-full sm:w-auto bg-tribal-gold text-on-surface hover:brightness-105 shadow-lg px-8 py-3.5 rounded-xl font-extrabold transition-all active:scale-[0.98] cursor-pointer select-none text-body-md uppercase tracking-wider"
+            href="#application-form"
+            onClick={(e) => {
+              e.preventDefault();
+              const el = document.getElementById('application-form');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="w-full sm:w-auto bg-tribal-gold text-on-surface hover:brightness-105 shadow-lg px-8 py-3.5 rounded-xl font-extrabold transition-all active:scale-[0.98] cursor-pointer select-none text-body-md uppercase tracking-wider text-center"
           >
             Apply Now
           </a>

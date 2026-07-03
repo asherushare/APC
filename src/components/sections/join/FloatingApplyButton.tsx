@@ -21,7 +21,14 @@ export function FloatingApplyButton() {
 
   return (
     <a
-      href="#register"
+      href="#application-form"
+      onClick={(e) => {
+        e.preventDefault();
+        const el = document.getElementById('application-form');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }}
       className={cn(
         "fixed bottom-6 left-6 z-[9999] bg-tribal-gold text-on-surface hover:brightness-105 active:scale-95 font-extrabold px-6 py-3.5 rounded-full shadow-2xl transition-all duration-300 transform flex items-center gap-2 select-none cursor-pointer text-label-md uppercase tracking-wider",
         isVisible 
