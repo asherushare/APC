@@ -33,10 +33,10 @@ router.get('/', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.AD
 router.get('/stats', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationStats);
 // Public portal authenticated application submission and retrieval routes
 router.post('/apply', publicAuth_1.publicAuthMiddleware, upload_1.upload.fields([
-    { name: 'aadhaar', maxCount: 1 },
-    { name: 'pan', maxCount: 1 },
-    { name: 'photo', maxCount: 1 },
-    { name: 'passbook', maxCount: 1 }
+    { name: 'aadhaar' },
+    { name: 'pan' },
+    { name: 'photo' },
+    { name: 'passbook' }
 ]), applications_1.applyShareholderApplication);
 router.get('/my-application', publicAuth_1.publicAuthMiddleware, applications_1.getMyApplication);
 // Administrative route to fetch application details (scoped by block for coordinators)

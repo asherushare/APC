@@ -663,38 +663,33 @@ export const applyShareholderApplication = async (
       throw new ValidationError('Validation failed: Aadhaar, Photograph, and Bank Passbook documents are required');
     }
 
-    // Preprocess body fields
-    const bodyData = { ...req.body };
-    if (typeof bodyData.numberOfShares === 'string') {
-      bodyData.numberOfShares = parseInt(bodyData.numberOfShares, 10);
+    // Preprocess body fields directly on req.body for zod parsing
+    if (typeof req.body.numberOfShares === 'string') {
+      req.body.numberOfShares = parseInt(req.body.numberOfShares, 10);
     }
-    if (typeof bodyData.calculatedContribution === 'string') {
-      bodyData.calculatedContribution = parseFloat(bodyData.calculatedContribution);
+    if (typeof req.body.calculatedContribution === 'string') {
+      req.body.calculatedContribution = parseFloat(req.body.calculatedContribution);
     }
-    if (typeof bodyData.confirmCorrectInfo === 'string') {
-      bodyData.confirmCorrectInfo = bodyData.confirmCorrectInfo === 'true';
+    if (typeof req.body.confirmCorrectInfo === 'string') {
+      req.body.confirmCorrectInfo = req.body.confirmCorrectInfo === 'true';
     }
-    if (typeof bodyData.agreeToRules === 'string') {
-      bodyData.agreeToRules = bodyData.agreeToRules === 'true';
+    if (typeof req.body.agreeToRules === 'string') {
+      req.body.agreeToRules = req.body.agreeToRules === 'true';
     }
-    if (typeof bodyData.understandApprovalRequired === 'string') {
-      bodyData.understandApprovalRequired = bodyData.understandApprovalRequired === 'true';
+    if (typeof req.body.understandApprovalRequired === 'string') {
+      req.body.understandApprovalRequired = req.body.understandApprovalRequired === 'true';
     }
 
-    let producerActivities: string[] = [];
-    if (typeof bodyData.producerActivities === 'string') {
+    if (typeof req.body.producerActivities === 'string') {
       try {
-        producerActivities = JSON.parse(bodyData.producerActivities);
+        req.body.producerActivities = JSON.parse(req.body.producerActivities);
       } catch {
-        producerActivities = bodyData.producerActivities.split(',').map((s: string) => s.trim()).filter(Boolean);
+        req.body.producerActivities = req.body.producerActivities.split(',').map((s: string) => s.trim()).filter(Boolean);
       }
-    } else if (Array.isArray(bodyData.producerActivities)) {
-      producerActivities = bodyData.producerActivities;
     }
-    bodyData.producerActivities = producerActivities;
 
     // Validate body payload using existing validation schema
-    const parsed = CreateApplicationSchema.safeParse(bodyData);
+    const parsed = CreateApplicationSchema.safeParse(req.body);
     if (!parsed.success) {
       throw new ValidationError('Validation failed', parsed.error.format());
     }

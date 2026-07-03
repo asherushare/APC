@@ -45,10 +45,10 @@ router.post(
   '/apply',
   publicAuthMiddleware,
   upload.fields([
-    { name: 'aadhaar', maxCount: 1 },
-    { name: 'pan', maxCount: 1 },
-    { name: 'photo', maxCount: 1 },
-    { name: 'passbook', maxCount: 1 }
+    { name: 'aadhaar' },
+    { name: 'pan' },
+    { name: 'photo' },
+    { name: 'passbook' }
   ]),
   applyShareholderApplication
 );
