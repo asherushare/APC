@@ -23,6 +23,7 @@ async function recordAuditLog(
   targetEntity: string,
   targetId: string,
   req: Request,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   changes?: any
 ): Promise<void> {
   try {

@@ -31,10 +31,6 @@ router.post('/', submitRateLimiter, applications_1.submitApplication);
 router.get('/', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.listApplications);
 // Administrative route to retrieve stats (registered before general /:id parameters)
 router.get('/stats', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationStats);
-// Administrative route to fetch application details (scoped by block for coordinators)
-router.get('/:id', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationDetails);
-// Administrative route to update application review status (scoped by block for coordinators)
-router.patch('/:id/status', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.updateApplicationStatus);
 // Public portal authenticated application submission and retrieval routes
 router.post('/apply', publicAuth_1.publicAuthMiddleware, upload_1.upload.fields([
     { name: 'aadhaar', maxCount: 1 },
@@ -43,4 +39,8 @@ router.post('/apply', publicAuth_1.publicAuthMiddleware, upload_1.upload.fields(
     { name: 'passbook', maxCount: 1 }
 ]), applications_1.applyShareholderApplication);
 router.get('/my-application', publicAuth_1.publicAuthMiddleware, applications_1.getMyApplication);
+// Administrative route to fetch application details (scoped by block for coordinators)
+router.get('/:id', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationDetails);
+// Administrative route to update application review status (scoped by block for coordinators)
+router.patch('/:id/status', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.updateApplicationStatus);
 exports.default = router;

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { usePublicAuth } from '@/context/PublicAuthContext';
-import { apiRequest } from '@/lib/api-client';
+import { apiRequest, ApiError } from '@/lib/api-client';
 
 interface DocumentRecord {
   id: string;
@@ -60,9 +60,13 @@ export default function ProducerDashboardPage() {
           setApplication(data.application);
           setAppLoading(false);
         }
-      } catch {
+      } catch (err) {
         if (active) {
-          setErrorMsg('Failed to load application status. Please refresh the page.');
+          if (err instanceof ApiError && (err.statusCode === 404 || err.statusCode === 401)) {
+            setApplication(null);
+          } else {
+            setErrorMsg('Failed to load application status. Please refresh the page.');
+          }
           setAppLoading(false);
         }
       }

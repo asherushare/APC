@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { usePublicAuth } from '@/context/PublicAuthContext';
 
 export function Navbar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -17,6 +18,7 @@ export function Navbar() {
   const [isMobileServicesOpen, setIsMobileServicesOpen] = useState(false);
   const pathname = usePathname();
   const languageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { isAuthenticated, logout } = usePublicAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -367,13 +369,36 @@ export function Navbar() {
               </button>
             </div>
 
-            <Link
-              href="/join"
-              className="bg-primary text-white px-6 py-2.5 rounded-full text-label-md font-medium hover:bg-dark-green transition-colors shadow-md"
-              id="nav-join-cta"
-            >
-              Become a Shareholder
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/portal"
+                  className={cn(
+                    "px-5 py-2.5 rounded-full text-label-md font-extrabold transition-all border border-primary/20",
+                    pathname === '/portal' 
+                      ? "bg-primary text-white shadow-md hover:bg-dark-green" 
+                      : "bg-surface text-primary hover:bg-primary/5"
+                  )}
+                  id="nav-portal-link"
+                >
+                  My Portal
+                </Link>
+                <button
+                  onClick={logout}
+                  className="text-on-surface-variant hover:text-red-600 font-extrabold text-label-sm uppercase tracking-wider transition-colors cursor-pointer px-3 py-2"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/join"
+                className="bg-primary text-white px-6 py-2.5 rounded-full text-label-md font-medium hover:bg-dark-green transition-colors shadow-md"
+                id="nav-join-cta"
+              >
+                Become a Shareholder
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -628,13 +653,34 @@ export function Navbar() {
                 </div>
               </div>
 
-              <Link
-                href="/join"
-                onClick={() => setIsMobileOpen(false)}
-                className="block w-full text-center bg-primary text-white py-3 rounded-lg text-label-md font-medium mt-4"
-              >
-                Become a Shareholder
-              </Link>
+              {isAuthenticated ? (
+                <div className="space-y-3 pt-2">
+                  <Link
+                    href="/portal"
+                    onClick={() => setIsMobileOpen(false)}
+                    className="block w-full text-center bg-primary text-white py-3 rounded-lg text-label-md font-semibold"
+                  >
+                    My Portal
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileOpen(false);
+                      logout();
+                    }}
+                    className="block w-full text-center bg-white border border-outline-variant hover:bg-surface-container-low text-on-surface hover:text-red-600 py-2.5 rounded-lg text-label-md font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/join"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="block w-full text-center bg-primary text-white py-3 rounded-lg text-label-md font-medium mt-4"
+                >
+                  Become a Shareholder
+                </Link>
+              )}
             </div>
           </div>
         )}

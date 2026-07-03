@@ -8,7 +8,9 @@ const errors_1 = require("../utils/errors");
 /**
  * Helper to record audit logs.
  */
-async function recordAuditLog(userId, action, targetEntity, targetId, req, changes) {
+async function recordAuditLog(userId, action, targetEntity, targetId, req, 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+changes) {
     try {
         await db_1.prisma.auditLog.create({
             data: {

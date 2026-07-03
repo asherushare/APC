@@ -207,7 +207,6 @@ export function JoinFormSection() {
 
   // File upload queue states for Milestone 2
   const [submissionStep, setSubmissionStep] = useState<'form' | 'submitting_metadata' | 'uploading_files' | 'success'>('form');
-  const [uploadError, setUploadError] = useState<string>('');
 
   // Compute calculated contribution at render-time
   const calculatedContribution = formData.numberOfShares * 10000;
@@ -445,7 +444,6 @@ export function JoinFormSection() {
 
     setIsSubmitting(true);
     setSubmissionStep('submitting_metadata');
-    setUploadError('');
 
     try {
       const fd = new FormData();

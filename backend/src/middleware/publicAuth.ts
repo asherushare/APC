@@ -28,7 +28,7 @@ export const publicAuthMiddleware = (req: Request, _res: Response, next: NextFun
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = verifyAccessToken(token) as any;
+    const payload = verifyAccessToken(token) as unknown as { role: string; userId: string; phoneNumber: string };
     
     // Segregate public user accounts from administrator privileges
     if (payload.role !== 'PUBLIC_USER') {

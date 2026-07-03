@@ -40,12 +40,6 @@ router.get('/', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), lis
 // Administrative route to retrieve stats (registered before general /:id parameters)
 router.get('/stats', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), getApplicationStats);
 
-// Administrative route to fetch application details (scoped by block for coordinators)
-router.get('/:id', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), getApplicationDetails);
-
-// Administrative route to update application review status (scoped by block for coordinators)
-router.patch('/:id/status', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), updateApplicationStatus);
-
 // Public portal authenticated application submission and retrieval routes
 router.post(
   '/apply',
@@ -60,5 +54,11 @@ router.post(
 );
 
 router.get('/my-application', publicAuthMiddleware, getMyApplication);
+
+// Administrative route to fetch application details (scoped by block for coordinators)
+router.get('/:id', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), getApplicationDetails);
+
+// Administrative route to update application review status (scoped by block for coordinators)
+router.patch('/:id/status', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), updateApplicationStatus);
 
 export default router;
