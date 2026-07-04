@@ -50,6 +50,7 @@ export interface ApplicationDocument {
   filename: string;
   mimeType: string;
   fileSize: number;
+  url?: string;
   uploadStatus: UploadStatus;
   virusScanStatus: VirusScanStatus;
   createdAt: string;

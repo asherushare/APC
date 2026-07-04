@@ -291,20 +291,46 @@ export const downloadApplicationDocument = async (
     const forceAttachment = req.query.disposition === 'attachment';
 
     try {
-      const mimeType = await streamObjectFromS3(
-        document.storageKey,
-        res,
-        document.mimeType,
-        document.filename,
-        document.fileSize
-      );
+      let mimeType = document.mimeType;
 
-      // Override disposition to attachment when explicitly requested
-      if (forceAttachment) {
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${document.filename.replace(/"/g, '')}"`
+      if (document.url) {
+        // Stream from Cloudinary
+        const response = await fetch(document.url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file from Cloudinary: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        mimeType = document.mimeType || response.headers.get('content-type') || 'application/octet-stream';
+
+        res.setHeader('Content-Type', mimeType);
+        if (forceAttachment) {
+          res.setHeader('Content-Disposition', `attachment; filename="${document.filename.replace(/"/g, '')}"`);
+        } else {
+          res.setHeader('Content-Disposition', `inline; filename="${document.filename.replace(/"/g, '')}"`);
+        }
+        res.setHeader('Content-Length', buffer.length.toString());
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.end(buffer);
+      } else {
+        // Stream from Supabase Storage S3 API (Legacy fallback)
+        mimeType = await streamObjectFromS3(
+          document.storageKey,
+          res,
+          document.mimeType,
+          document.filename,
+          document.fileSize
         );
+
+        // Override disposition to attachment when explicitly requested
+        if (forceAttachment) {
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${document.filename.replace(/"/g, '')}"`
+          );
+        }
       }
 
       await recordAuditLog(
@@ -320,10 +346,15 @@ export const downloadApplicationDocument = async (
           mimeType,
         }
       );
-    } catch (streamErr: unknown) {
-      const msg = streamErr instanceof Error ? streamErr.message : String(streamErr);
-      logger.error(`Failed to stream document ${document.id} from Supabase Storage: ${msg}`);
-      throw streamErr;
+    } catch (error) {
+      logger.error(`Failed to stream document ${document.id}: ${error}`);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'DOCUMENT_STREAM_FAILED',
+          message: 'Failed to retrieve file from cloud storage',
+        },
+      });
     }
   } catch (error) {
     next(error);

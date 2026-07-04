@@ -306,6 +306,7 @@ const getApplicationDetails = async (req, res, next) => {
                         filename: true,
                         mimeType: true,
                         fileSize: true,
+                        url: true,
                         uploadStatus: true,
                         virusScanStatus: true,
                         createdAt: true,
