@@ -26,6 +26,7 @@ import {
   ApplicationsQuerySchema,
 } from '../schemas/admin';
 import { generateUploadToken } from '../utils/auth';
+import { emailService } from '../utils/email';
 
 /**
  * Helper to record audit logs.
@@ -665,6 +666,22 @@ export const updateApplicationStatus = async (
 
       return updated;
     });
+
+    // Asynchronously trigger email status change notifications (fire-and-forget)
+    if (updatedApplication.email) {
+      emailService.sendApplicationStatusNotificationEmail(
+        updatedApplication.email,
+        updatedApplication.fullName,
+        updatedApplication.applicationId,
+        status,
+        reviewNotes
+      ).catch((err) => {
+        logger.error(`Failed to send shareholder status notification email: ${err}`);
+      });
+    }
+
+    // Simulate SMS dispatch
+    logger.info(`[SMS Notification Mock] Dispatched SMS alert to phone ${updatedApplication.mobileNumber} regarding application ${updatedApplication.applicationId} status update to ${status}.`);
 
     res.status(200).json({
       success: true,

@@ -14,6 +14,7 @@ const errors_1 = require("../utils/errors");
 const application_1 = require("../schemas/application");
 const admin_1 = require("../schemas/admin");
 const auth_1 = require("../utils/auth");
+const email_1 = require("../utils/email");
 /**
  * Helper to record audit logs.
  */
@@ -540,6 +541,14 @@ const updateApplicationStatus = async (req, res, next) => {
             });
             return updated;
         });
+        // Asynchronously trigger email status change notifications (fire-and-forget)
+        if (updatedApplication.email) {
+            email_1.emailService.sendApplicationStatusNotificationEmail(updatedApplication.email, updatedApplication.fullName, updatedApplication.applicationId, status, reviewNotes).catch((err) => {
+                logger_1.logger.error(`Failed to send shareholder status notification email: ${err}`);
+            });
+        }
+        // Simulate SMS dispatch
+        logger_1.logger.info(`[SMS Notification Mock] Dispatched SMS alert to phone ${updatedApplication.mobileNumber} regarding application ${updatedApplication.applicationId} status update to ${status}.`);
         res.status(200).json({
             success: true,
             application: updatedApplication,
