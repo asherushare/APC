@@ -174,7 +174,7 @@ export const createCoordinator = async (
     }
 
     // Password regex complexity validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-#+^=])[A-Za-z\d@$!%*?&._\-#+^=]{8,}$/;
     if (!passwordRegex.test(password)) {
       throw new BadRequestError(
         'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
