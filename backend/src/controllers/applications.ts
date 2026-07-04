@@ -234,7 +234,38 @@ export const listApplications = async (
       );
     }
 
-    const parsed = ApplicationsQuerySchema.safeParse(req.query);
+    // Mutate query parameters to parse types and clean empty string filters
+    const queryData: Record<string, unknown> = { ...req.query };
+
+    if (queryData.page === undefined || queryData.page === '') {
+      queryData.page = 1;
+    } else if (typeof queryData.page === 'string') {
+      queryData.page = parseInt(queryData.page, 10);
+    }
+
+    if (queryData.limit === undefined || queryData.limit === '') {
+      queryData.limit = 10;
+    } else if (typeof queryData.limit === 'string') {
+      queryData.limit = parseInt(queryData.limit, 10);
+    }
+
+    if (queryData.status === '') {
+      delete queryData.status;
+    }
+    if (queryData.block === '') {
+      delete queryData.block;
+    }
+    if (queryData.search === '') {
+      delete queryData.search;
+    }
+    if (queryData.startDate === '') {
+      delete queryData.startDate;
+    }
+    if (queryData.endDate === '') {
+      delete queryData.endDate;
+    }
+
+    const parsed = ApplicationsQuerySchema.safeParse(queryData);
     if (!parsed.success) {
       throw new ValidationError('Validation failed', parsed.error.format());
     }

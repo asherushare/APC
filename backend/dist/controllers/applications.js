@@ -179,7 +179,36 @@ const listApplications = async (req, res, next) => {
         if (!req.user) {
             throw new errors_1.ForbiddenError('Authentication required to list applications', 'AUTHENTICATION_REQUIRED');
         }
-        const parsed = admin_1.ApplicationsQuerySchema.safeParse(req.query);
+        // Mutate query parameters to parse types and clean empty string filters
+        const queryData = { ...req.query };
+        if (queryData.page === undefined || queryData.page === '') {
+            queryData.page = 1;
+        }
+        else if (typeof queryData.page === 'string') {
+            queryData.page = parseInt(queryData.page, 10);
+        }
+        if (queryData.limit === undefined || queryData.limit === '') {
+            queryData.limit = 10;
+        }
+        else if (typeof queryData.limit === 'string') {
+            queryData.limit = parseInt(queryData.limit, 10);
+        }
+        if (queryData.status === '') {
+            delete queryData.status;
+        }
+        if (queryData.block === '') {
+            delete queryData.block;
+        }
+        if (queryData.search === '') {
+            delete queryData.search;
+        }
+        if (queryData.startDate === '') {
+            delete queryData.startDate;
+        }
+        if (queryData.endDate === '') {
+            delete queryData.endDate;
+        }
+        const parsed = admin_1.ApplicationsQuerySchema.safeParse(queryData);
         if (!parsed.success) {
             throw new errors_1.ValidationError('Validation failed', parsed.error.format());
         }
