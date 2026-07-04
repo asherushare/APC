@@ -244,6 +244,8 @@ model PublicUser {
   passwordHash        String
   fullName            String
   verified            Boolean                 @default(false)
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
   applications        ShareholderApplication[]
   refreshTokens       PublicRefreshToken[]
   createdAt           DateTime                @default(now())

@@ -19,10 +19,14 @@ export default function AdminDashboardPage() {
 
   // Derived active tab state from query parameter URL to avoid synchronous setState cascading render warnings
   const tabQuery = searchParams.get('tab');
-  const activeTab = (tabQuery === 'stats' || tabQuery === 'audit_logs' ? tabQuery : 'applications') as 'applications' | 'stats' | 'audit_logs';
+  const activeTab = (tabQuery === 'applications' || tabQuery === 'audit_logs' ? tabQuery : 'stats') as 'applications' | 'stats' | 'audit_logs';
 
   const handleTabChange = (tabName: 'applications' | 'stats' | 'audit_logs') => {
-    router.push(`/admin/dashboard?tab=${tabName}`);
+    if (tabName === 'applications') {
+      router.push('/admin/applications');
+    } else {
+      router.push(`/admin/dashboard?tab=${tabName}`);
+    }
   };
 
   // Stats dashboard state

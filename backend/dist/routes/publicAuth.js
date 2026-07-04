@@ -41,4 +41,6 @@ router.post('/login', loginLimiter, publicAuth_1.login);
 router.post('/refresh', publicAuth_1.refresh);
 router.post('/logout', publicAuth_1.logout);
 router.get('/me', publicAuth_2.publicAuthMiddleware, publicAuth_1.me);
+router.post('/forgot-password', publicAuth_1.forgotPassword);
+router.post('/reset-password', publicAuth_1.resetPassword);
 exports.default = router;
