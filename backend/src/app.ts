@@ -13,6 +13,7 @@ import applicationsRoutes from './routes/applications';
 import documentsRouter from './routes/documents';
 import auditRoutes from './routes/audit';
 import noticesRoutes from './routes/notices';
+import usersRoutes from './routes/users';
 import { getIO } from './utils/socket';
 import cookieParser from 'cookie-parser';
 import { logger } from './utils/logger';
@@ -170,6 +171,7 @@ app.use('/api/v1/applications', applicationsRoutes); // Applications routes
 app.use('/api/v1/applications', documentsRouter); // Documents upload routes
 app.use('/api/v1/audit-logs', auditRoutes); // Audit logs routes
 app.use('/api/v1/notices', noticesRoutes); // Notices board routes
+app.use('/api/v1/users', usersRoutes); // Users management routes
 
 // 8. Swagger API Docs Endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

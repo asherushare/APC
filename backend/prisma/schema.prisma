@@ -63,6 +63,7 @@ model User {
   email               String                  @unique
   passwordHash        String
   fullName            String
+  phoneNumber         String?
   role                Role                    @default(COORDINATOR)
   block               String?                 // Assigned geographical block
   loginAttempts       Int                     @default(0)
