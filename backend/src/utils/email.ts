@@ -30,7 +30,7 @@ export class NodemailerProvider implements EmailProvider {
 
   async sendEmail(payload: EmailPayload): Promise<void> {
     const mailOptions = {
-      from: env.SMTP_FROM || '"APC Platform" <noreply@adivasiproducer.com>',
+      from: env.FROM_EMAIL || env.SMTP_FROM || '"APC Platform" <noreply@adivasiproducer.com>',
       to: payload.to,
       subject: payload.subject,
       html: payload.html,
@@ -51,16 +51,19 @@ export class ConsoleProvider implements EmailProvider {
 
 let activeProvider: EmailProvider;
 
-if (env.NODE_ENV === 'test' || env.NODE_ENV === 'development' || !env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) {
-  logger.warn('⚠️ SMTP variables missing or non-production environment. Initializing Console Mail Mock.');
-  activeProvider = new ConsoleProvider();
-} else {
+const hasSmtpConfig = !!(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+const isProd = env.NODE_ENV === 'production';
+
+if (hasSmtpConfig || isProd) {
   try {
     activeProvider = new NodemailerProvider();
   } catch (error) {
-    logger.error('❌ Failed to initialize SMTP Nodemailer. Falling back to Console Mail Mock.');
+    logger.error('❌ Failed to initialize SMTP Nodemailer. Falling back to Console Mail Mock.', error);
     activeProvider = new ConsoleProvider();
   }
+} else {
+  logger.warn('⚠️ SMTP variables missing or non-production environment. Initializing Console Mail Mock.');
+  activeProvider = new ConsoleProvider();
 }
 
 export const emailService = {
