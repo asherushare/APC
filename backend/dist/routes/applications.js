@@ -39,6 +39,8 @@ router.post('/apply', publicAuth_1.publicAuthMiddleware, upload_1.upload.fields(
     { name: 'passbook' }
 ]), applications_1.applyShareholderApplication);
 router.get('/my-application', publicAuth_1.publicAuthMiddleware, applications_1.getMyApplication);
+// Export shareholder applications list to CSV (Admin only, registered before dynamic /:id parameter)
+router.get('/export', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN]), applications_1.exportApplicationsCSV);
 // Administrative route to fetch application details (scoped by block for coordinators)
 router.get('/:id', auth_1.authMiddleware, (0, auth_1.requireRole)([client_1.Role.ADMIN, client_1.Role.COORDINATOR]), applications_1.getApplicationDetails);
 // Administrative route to update application review status (scoped by block for coordinators)

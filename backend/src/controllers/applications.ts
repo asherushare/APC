@@ -976,3 +976,139 @@ export const getMyApplication = async (
     next(error);
   }
 };
+
+/**
+ * GET /api/v1/applications/export
+ * Exports shareholder applications list to CSV (Admin only).
+ */
+export const exportApplicationsCSV = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== Role.ADMIN) {
+      throw new ForbiddenError('Only administrators can export application data', 'INSUFFICIENT_PERMISSIONS');
+    }
+
+    const queryData: Record<string, unknown> = { ...req.query };
+    if (queryData.block === '') {
+      delete queryData.block;
+    }
+    if (queryData.status === '') {
+      delete queryData.status;
+    }
+    if (queryData.search === '') {
+      delete queryData.search;
+    }
+
+    const parsed = ApplicationsQuerySchema.safeParse(queryData);
+    if (!parsed.success) {
+      throw new ValidationError('Validation failed', parsed.error.format());
+    }
+
+    const { status, block, search, startDate, endDate } = parsed.data;
+
+    const whereClause: Prisma.ShareholderApplicationWhereInput = {
+      deletedAt: null,
+    };
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    if (block) {
+      whereClause.block = block;
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { village: { contains: search, mode: 'insensitive' } },
+        { applicationId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) {
+        whereClause.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+      }
+      if (endDate) {
+        whereClause.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+      }
+    }
+
+    const applications = await prisma.shareholderApplication.findMany({
+      where: whereClause,
+      select: {
+        applicationId: true,
+        fullName: true,
+        mobileNumber: true,
+        village: true,
+        block: true,
+        status: true,
+        numberOfShares: true,
+        calculatedContribution: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const csvHeaders = [
+      'Application ID',
+      'Submission Date',
+      'Name',
+      'Phone',
+      'Village',
+      'Block',
+      'Status',
+      'Share Count',
+      'Total Paid',
+    ];
+
+    const escapeCSVValue = (val: unknown) => {
+      if (val === null || val === undefined) return '';
+      if (val instanceof Date) {
+        return val.toISOString().split('T')[0];
+      }
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvRows = [
+      csvHeaders.join(','),
+      ...applications.map((app) =>
+        [
+          app.applicationId,
+          app.createdAt,
+          app.fullName,
+          app.mobileNumber,
+          app.village,
+          app.block,
+          app.status,
+          app.numberOfShares,
+          app.calculatedContribution,
+        ]
+          .map(escapeCSVValue)
+          .join(',')
+      ),
+    ];
+
+    const csvContent = csvRows.join('\r\n');
+
+    // Dynamic filename: YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `shareholder_applications_${today}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.status(200).send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};

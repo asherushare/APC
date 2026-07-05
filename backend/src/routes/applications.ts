@@ -9,6 +9,7 @@ import {
   updateApplicationStatus,
   applyShareholderApplication,
   getMyApplication,
+  exportApplicationsCSV,
 } from '../controllers/applications';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { publicAuthMiddleware } from '../middleware/publicAuth';
@@ -54,6 +55,9 @@ router.post(
 );
 
 router.get('/my-application', publicAuthMiddleware, getMyApplication);
+
+// Export shareholder applications list to CSV (Admin only, registered before dynamic /:id parameter)
+router.get('/export', authMiddleware, requireRole([Role.ADMIN]), exportApplicationsCSV);
 
 // Administrative route to fetch application details (scoped by block for coordinators)
 router.get('/:id', authMiddleware, requireRole([Role.ADMIN, Role.COORDINATOR]), getApplicationDetails);

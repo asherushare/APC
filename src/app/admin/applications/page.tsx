@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Container } from '@/components/common/Container';
-import { apiRequest, ApiError } from '@/lib/api-client';
+import { apiRequest, ApiError, getAccessToken } from '@/lib/api-client';
 import { DashboardFilters } from '@/components/sections/admin/DashboardFilters';
 import { ApplicationsTable, ApplicationRecord } from '@/components/sections/admin/ApplicationsTable';
 
@@ -23,6 +23,7 @@ export default function AdminApplicationsPage() {
   });
 
   const [errorMsg, setErrorMsg] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Query filter states
   const [filters, setFilters] = useState({
@@ -97,7 +98,59 @@ export default function AdminApplicationsPage() {
       return () => clearTimeout(timer);
     }
   }, [user, fetchApplications]);
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    setErrorMsg('');
+    try {
+      const query = new URLSearchParams({
+        search: filters.search,
+        status: filters.status,
+        block: filters.block
+      });
 
+      const token = getAccessToken();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 
+        (process.env.NODE_ENV === 'production' 
+          ? 'https://apc-backend-wsyo.onrender.com/api/v1' 
+          : 'http://localhost:4000/api/v1');
+
+      const response = await fetch(`${apiUrl}/applications/export?${query.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to export data: ${response.statusText}`);
+      }
+
+      const csvBlob = await response.blob();
+      
+      const disposition = response.headers.get('content-disposition');
+      let filename = `shareholder_applications_${new Date().toISOString().split('T')[0]}.csv`;
+      if (disposition && disposition.includes('filename=')) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      const downloadUrl = window.URL.createObjectURL(csvBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = downloadUrl;
+      downloadLink.setAttribute('download', filename);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      document.body.removeChild(downloadLink);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to export shareholder database.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const handleFiltersChange = useCallback((updatedFilters: { search: string; status: string; block: string }) => {
     setFilters(prev => ({
       ...prev,
@@ -135,12 +188,31 @@ export default function AdminApplicationsPage() {
             </p>
           </div>
           
-          <button
-            onClick={() => logout()}
-            className="mt-4 md:mt-0 bg-white border border-outline hover:bg-surface-container-low text-on-surface font-extrabold py-3 px-6 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer uppercase tracking-wider text-label-sm select-none"
-          >
-            Sign Out Session
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+            {user?.role === 'ADMIN' && (
+              <button
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="bg-primary hover:bg-dark-green text-white font-extrabold py-3 px-6 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer uppercase tracking-wider text-label-sm select-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Exporting...</span>
+                  </>
+                ) : (
+                  <span>Export CSV</span>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => logout()}
+              className="bg-white border border-outline hover:bg-surface-container-low text-on-surface font-extrabold py-3 px-6 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer uppercase tracking-wider text-label-sm select-none"
+            >
+              Sign Out Session
+            </button>
+          </div>
         </div>
 
         {/* Global Error Banner */}
