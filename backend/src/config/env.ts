@@ -33,6 +33,9 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().optional(),
   FROM_EMAIL: z.string().optional(),
+  SMS_API_KEY: z.string().optional(),
+  SMS_SENDER_ID: z.string().optional(),
+  SMS_PROVIDER_URL: z.string().optional(),
   FRONTEND_URL: z.preprocess(
     (val) => (typeof val === 'string' ? val.trim().replace(/^["']|["']$/g, '') : val),
     z.string().min(1, 'FRONTEND_URL is required')

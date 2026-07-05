@@ -15,6 +15,7 @@ const application_1 = require("../schemas/application");
 const admin_1 = require("../schemas/admin");
 const auth_1 = require("../utils/auth");
 const email_1 = require("../utils/email");
+const sms_1 = require("../utils/sms");
 /**
  * Helper to record audit logs.
  */
@@ -547,8 +548,11 @@ const updateApplicationStatus = async (req, res, next) => {
                 logger_1.logger.error(`Failed to send shareholder status notification email: ${err}`);
             });
         }
-        // Simulate SMS dispatch
-        logger_1.logger.info(`[SMS Notification Mock] Dispatched SMS alert to phone ${updatedApplication.mobileNumber} regarding application ${updatedApplication.applicationId} status update to ${status}.`);
+        // Trigger SMS notification alert asynchronously (fire-and-forget)
+        const smsMessage = `Dear ${updatedApplication.fullName}, your shareholder application (${updatedApplication.applicationId}) status has been updated to ${status}. Review notes: ${reviewNotes || 'None'}.`;
+        sms_1.smsService.sendSMS(updatedApplication.mobileNumber, smsMessage).catch((err) => {
+            logger_1.logger.error(`Failed to send shareholder status notification SMS: ${err}`);
+        });
         res.status(200).json({
             success: true,
             application: updatedApplication,
