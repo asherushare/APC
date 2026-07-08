@@ -7,6 +7,7 @@ export interface ShareholderApplication {
   aadhaarNumber: string; // 12 digits
   panNumber?: string; // Optional (10 chars)
   mobileNumber: string; // 10 digits
+  whatsappNumber?: string; // 10 digits
   email?: string;
   occupation: string; // Primary activity
 
@@ -28,13 +29,13 @@ export interface ShareholderApplication {
   // Step 5: Nominee Details
   nomineeName: string;
   nomineeRelationship: string;
-  nomineeDateOfBirth: string;
   nomineeAddress: string;
   nomineeMobileNumber: string;
 
   // Step 6: Bank Details
   bankAccountHolderName: string;
   bankName: string;
+  bankBranch: string;
   bankAccountNumber: string;
   bankIfscCode: string;
 

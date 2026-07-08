@@ -18,6 +18,12 @@ export const CreateApplicationSchema = z.object({
     .nullable()
     .or(z.literal('')),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits'),
+  whatsappNumber: z
+    .string()
+    .regex(/^\d{10}$/, 'WhatsApp number must be exactly 10 digits')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
   email: z
     .string()
     .trim()
@@ -25,7 +31,23 @@ export const CreateApplicationSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal('')),
-  occupation: z.string().trim().min(1, 'Occupation is required').max(100),
+  occupation: z.enum([
+    'Farmer',
+    'Forest Produce Collector',
+    'Horticulture',
+    'Livestock',
+    'Handicraft',
+    'SHG Member',
+    'Rural Entrepreneur',
+    'Self-Employed',
+    'Student',
+    'Youth',
+    'Employee',
+    'Social Worker',
+    'Others',
+  ], {
+    errorMap: () => ({ message: 'Invalid occupation selected' }),
+  }),
 
   // Step 2: Address
   village: z.string().trim().min(1, 'Village is required').max(100),
@@ -45,13 +67,13 @@ export const CreateApplicationSchema = z.object({
   // Step 5: Nominee Details
   nomineeName: z.string().trim().min(1, 'Nominee name is required').max(100),
   nomineeRelationship: z.string().trim().min(1, 'Nominee relationship is required').max(100),
-  nomineeDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Nominee date of birth must be in YYYY-MM-DD format'),
   nomineeAddress: z.string().trim().min(1, 'Nominee address is required').max(200),
   nomineeMobileNumber: z.string().regex(/^\d{10}$/, 'Nominee mobile number must be exactly 10 digits'),
 
   // Step 6: Bank Details
   bankAccountHolderName: z.string().trim().min(1, 'Bank account holder name is required').max(100),
   bankName: z.string().trim().min(1, 'Bank name is required').max(100),
+  bankBranch: z.string().trim().min(1, 'Bank branch name is required').max(100),
   bankAccountNumber: z.string().regex(/^\d{9,18}$/, 'Bank account number must be between 9 and 18 digits'),
   bankIfscCode: z.string().toUpperCase().trim().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format'),
 

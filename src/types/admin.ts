@@ -75,6 +75,7 @@ export interface ApplicationDetail {
   panNumber: string | null;
   panMasked: string | null;
   mobileNumber: string;
+  whatsappNumber: string | null;
   email: string | null;
   occupation: string;
 
@@ -93,13 +94,13 @@ export interface ApplicationDetail {
   // Nominee
   nomineeName: string;
   nomineeRelationship: string;
-  nomineeDateOfBirth: string;
   nomineeAddress: string;
   nomineeMobileNumber: string;
 
   // Bank details (decrypted where sensitive)
   bankAccountHolderName: string;
   bankName: string;
+  bankBranch: string;
   bankAccountNumber: string;
   bankAccountNumberMask: string;
   bankIfscCode: string;

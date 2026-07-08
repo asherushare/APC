@@ -83,10 +83,11 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
         </div>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
           <Field label="Full Name" value={application.fullName} />
-          <Field label="Father / Husband Name" value={application.fatherHusbandName} />
+          <Field label="Father's / Mother's / Spouse's Name" value={application.fatherHusbandName} />
           <Field label="Date of Birth" value={formatDate(application.dateOfBirth)} />
           <Field label="Gender" value={formatStatus(application.gender)} />
           <Field label="Mobile Number" value={application.mobileNumber} mono />
+          <Field label="WhatsApp Number" value={application.whatsappNumber} mono />
           <Field label="Email" value={application.email} />
           <Field label="Primary Occupation" value={application.occupation} />
           <Field label="Aadhaar Number (decrypted)" value={application.aadhaarNumber} mono sensitive />
@@ -116,7 +117,6 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       <DetailCard title="Nominee Details" icon="👤">
         <Field label="Nominee Name" value={application.nomineeName} />
         <Field label="Relationship" value={application.nomineeRelationship} />
-        <Field label="Date of Birth" value={formatDate(application.nomineeDateOfBirth)} />
         <Field label="Mobile Number" value={application.nomineeMobileNumber} mono />
         <div className="sm:col-span-2">
           <Field label="Address" value={application.nomineeAddress} />
@@ -127,6 +127,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       <DetailCard title="Bank Details" icon="🏦">
         <Field label="Account Holder Name" value={application.bankAccountHolderName} />
         <Field label="Bank Name" value={application.bankName} />
+        <Field label="Bank Branch" value={application.bankBranch} />
         <Field label="Account Number (decrypted)" value={application.bankAccountNumber} mono sensitive />
         <Field label="IFSC Code" value={application.bankIfscCode} mono />
       </DetailCard>

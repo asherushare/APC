@@ -161,6 +161,7 @@ export function JoinFormSection() {
     aadhaarNumber: '',
     panNumber: '',
     mobileNumber: '',
+    whatsappNumber: '',
     email: '',
     occupation: '',
     village: '',
@@ -173,11 +174,11 @@ export function JoinFormSection() {
     numberOfShares: 1,
     nomineeName: '',
     nomineeRelationship: '',
-    nomineeDateOfBirth: '',
     nomineeAddress: '',
     nomineeMobileNumber: '',
     bankAccountHolderName: '',
     bankName: '',
+    bankBranch: '',
     bankAccountNumber: '',
     bankIfscCode: '',
     confirmCorrectInfo: false,
@@ -328,6 +329,13 @@ export function JoinFormSection() {
         newErrors.mobileNumber = 'Enter a valid 10-digit mobile number';
       }
 
+      if (formData.whatsappNumber) {
+        const cleanWa = formData.whatsappNumber.replace(/\D/g, '');
+        if (cleanWa && !/^\d{10}$/.test(cleanWa)) {
+          newErrors.whatsappNumber = 'Enter a valid 10-digit WhatsApp number';
+        }
+      }
+
       if (!formData.occupation.trim()) newErrors.occupation = 'Primary Occupation is required';
     }
 
@@ -362,7 +370,6 @@ export function JoinFormSection() {
     if (currentStep === 5) {
       if (!formData.nomineeName.trim()) newErrors.nomineeName = 'Nominee Full Name is required';
       if (!formData.nomineeRelationship.trim()) newErrors.nomineeRelationship = 'Relationship is required';
-      if (!formData.nomineeDateOfBirth) newErrors.nomineeDateOfBirth = 'Nominee Date of Birth is required';
       if (!formData.nomineeAddress.trim()) newErrors.nomineeAddress = 'Nominee Address is required';
       
       const cleanNomineeMobile = formData.nomineeMobileNumber.replace(/\D/g, '');
@@ -376,6 +383,7 @@ export function JoinFormSection() {
     if (currentStep === 6) {
       if (!formData.bankAccountHolderName.trim()) newErrors.bankAccountHolderName = 'Account Holder Name is required';
       if (!formData.bankName.trim()) newErrors.bankName = 'Bank Name is required';
+      if (!formData.bankBranch.trim()) newErrors.bankBranch = 'Bank Branch is required';
       
       const cleanAcc = formData.bankAccountNumber.trim();
       if (!cleanAcc) {
@@ -454,6 +462,7 @@ export function JoinFormSection() {
       fd.append('aadhaarNumber', formData.aadhaarNumber.replace(/\s+/g, ''));
       if (formData.panNumber) fd.append('panNumber', formData.panNumber.trim().toUpperCase());
       fd.append('mobileNumber', formData.mobileNumber.replace(/\D/g, ''));
+      if (formData.whatsappNumber) fd.append('whatsappNumber', formData.whatsappNumber.replace(/\D/g, ''));
       if (formData.email) fd.append('email', formData.email.trim());
       fd.append('occupation', formData.occupation);
 
@@ -470,12 +479,12 @@ export function JoinFormSection() {
 
       fd.append('nomineeName', formData.nomineeName);
       fd.append('nomineeRelationship', formData.nomineeRelationship);
-      fd.append('nomineeDateOfBirth', formData.nomineeDateOfBirth);
       fd.append('nomineeAddress', formData.nomineeAddress);
       fd.append('nomineeMobileNumber', formData.nomineeMobileNumber.replace(/\D/g, ''));
 
       fd.append('bankAccountHolderName', formData.bankAccountHolderName);
       fd.append('bankName', formData.bankName);
+      fd.append('bankBranch', formData.bankBranch);
       fd.append('bankAccountNumber', formData.bankAccountNumber.trim());
       fd.append('bankIfscCode', formData.bankIfscCode.trim().toUpperCase());
 
@@ -554,8 +563,22 @@ export function JoinFormSection() {
           uploadedDocuments: uploadedDocsMetadata
         };
 
+        let photoBase64 = '';
+        if (files.passportPhoto) {
+          try {
+            photoBase64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(files.passportPhoto!);
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = (error) => reject(error);
+            });
+          } catch (err) {
+            console.error('Failed to read passport photo for PDF:', err);
+          }
+        }
+
         if (!summaryPdfBlob) {
-          const assets = compileSubmissionAssets(finalData, response.application.applicationId, response.application.submittedAt);
+          const assets = compileSubmissionAssets(finalData, response.application.applicationId, response.application.submittedAt, photoBase64);
           setSubmittedWaLink(assets.whatsappLink);
           setSummaryPdfBlob(assets.summaryPdfBlob);
         }
@@ -881,7 +904,7 @@ export function JoinFormSection() {
 
                       <div className="space-y-1.5">
                         <label className="text-label-sm font-extrabold text-on-surface" htmlFor="fatherHusbandName">
-                          Father&apos;s / Husband&apos;s Name *
+                          Father&apos;s / Mother&apos;s / Spouse&apos;s Name *
                         </label>
                         <input
                           id="fatherHusbandName"
@@ -993,6 +1016,25 @@ export function JoinFormSection() {
                       </div>
 
                       <div className="space-y-1.5">
+                        <label className="text-label-sm font-extrabold text-on-surface" htmlFor="whatsappNumber">
+                          WhatsApp Number (Optional)
+                        </label>
+                        <input
+                          id="whatsappNumber"
+                          type="tel"
+                          name="whatsappNumber"
+                          maxLength={10}
+                          className={inputStyles('whatsappNumber')}
+                          placeholder="10-digit WhatsApp number"
+                          value={formData.whatsappNumber || ''}
+                          onChange={handleChange}
+                          aria-invalid={!!errors.whatsappNumber}
+                          aria-describedby={errors.whatsappNumber ? "whatsappNumber-error" : undefined}
+                        />
+                        {errors.whatsappNumber && <p id="whatsappNumber-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.whatsappNumber}</p>}
+                      </div>
+
+                      <div className="space-y-1.5">
                         <label className="text-label-sm font-extrabold text-on-surface" htmlFor="email">
                           Email Address (Optional)
                         </label>
@@ -1007,21 +1049,34 @@ export function JoinFormSection() {
                         />
                       </div>
 
-                      <div className="space-y-1.5 md:col-span-2">
+                      <div className="space-y-1.5">
                         <label className="text-label-sm font-extrabold text-on-surface" htmlFor="occupation">
                           Occupation / Primary Produce Activity *
                         </label>
-                        <input
+                        <select
                           id="occupation"
-                          type="text"
                           name="occupation"
                           className={inputStyles('occupation')}
-                          placeholder="e.g. Rice Cultivator, Broom Grass Collector"
                           value={formData.occupation}
                           onChange={handleChange}
                           aria-invalid={!!errors.occupation}
                           aria-describedby={errors.occupation ? "occupation-error" : undefined}
-                        />
+                        >
+                          <option value="">Select Occupation</option>
+                          <option value="Farmer">Farmer</option>
+                          <option value="Forest Produce Collector">Forest Produce Collector</option>
+                          <option value="Horticulture">Horticulture</option>
+                          <option value="Livestock">Livestock</option>
+                          <option value="Handicraft">Handicraft</option>
+                          <option value="SHG Member">SHG Member</option>
+                          <option value="Rural Entrepreneur">Rural Entrepreneur</option>
+                          <option value="Self-Employed">Self-Employed</option>
+                          <option value="Student">Student</option>
+                          <option value="Youth">Youth</option>
+                          <option value="Employee">Employee</option>
+                          <option value="Social Worker">Social Worker</option>
+                          <option value="Others">Others</option>
+                        </select>
                         {errors.occupation && <p id="occupation-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.occupation}</p>}
                       </div>
                     </div>
@@ -1310,22 +1365,7 @@ export function JoinFormSection() {
                         {errors.nomineeRelationship && <p id="nomineeRelationship-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.nomineeRelationship}</p>}
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-label-sm font-extrabold text-on-surface" htmlFor="nomineeDateOfBirth">
-                          Nominee Date of Birth *
-                        </label>
-                        <input
-                          id="nomineeDateOfBirth"
-                          type="date"
-                          name="nomineeDateOfBirth"
-                          className={inputStyles('nomineeDateOfBirth')}
-                          value={formData.nomineeDateOfBirth}
-                          onChange={handleChange}
-                          aria-invalid={!!errors.nomineeDateOfBirth}
-                          aria-describedby={errors.nomineeDateOfBirth ? "nomineeDateOfBirth-error" : undefined}
-                        />
-                        {errors.nomineeDateOfBirth && <p id="nomineeDateOfBirth-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.nomineeDateOfBirth}</p>}
-                      </div>
+
 
                       <div className="space-y-1.5 md:col-span-2">
                         <label className="text-label-sm font-extrabold text-on-surface" htmlFor="nomineeAddress">
@@ -1409,6 +1449,24 @@ export function JoinFormSection() {
                           aria-describedby={errors.bankName ? "bankName-error" : undefined}
                         />
                         {errors.bankName && <p id="bankName-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.bankName}</p>}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-label-sm font-extrabold text-on-surface" htmlFor="bankBranch">
+                          Bank Branch *
+                        </label>
+                        <input
+                          id="bankBranch"
+                          type="text"
+                          name="bankBranch"
+                          className={inputStyles('bankBranch')}
+                          placeholder="e.g. Rayagada Branch"
+                          value={formData.bankBranch || ''}
+                          onChange={handleChange}
+                          aria-invalid={!!errors.bankBranch}
+                          aria-describedby={errors.bankBranch ? "bankBranch-error" : undefined}
+                        />
+                        {errors.bankBranch && <p id="bankBranch-error" role="alert" className="text-[11px] text-red-500 font-semibold mt-1">⚠ {errors.bankBranch}</p>}
                       </div>
 
                       <div className="space-y-1.5">
@@ -1537,12 +1595,13 @@ export function JoinFormSection() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                           <p><span className="font-bold text-on-surface-variant/80">Full Name:</span> {formData.fullName}</p>
-                          <p><span className="font-bold text-on-surface-variant/80">Father/Husband:</span> {formData.fatherHusbandName}</p>
+                          <p><span className="font-bold text-on-surface-variant/80">Father/Mother/Spouse:</span> {formData.fatherHusbandName}</p>
                           <p><span className="font-bold text-on-surface-variant/80">DOB:</span> {formData.dateOfBirth}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Gender:</span> {formData.gender}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Aadhaar Card:</span> {formData.aadhaarNumber}</p>
                           <p><span className="font-bold text-on-surface-variant/80">PAN Code:</span> {formData.panNumber || 'N/A'}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Mobile Number:</span> {formData.mobileNumber}</p>
+                          <p><span className="font-bold text-on-surface-variant/80">WhatsApp Number:</span> {formData.whatsappNumber || 'N/A'}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Email:</span> {formData.email || 'N/A'}</p>
                           <p className="sm:col-span-2"><span className="font-bold text-on-surface-variant/80">Occupation:</span> {formData.occupation}</p>
                         </div>
@@ -1601,7 +1660,6 @@ export function JoinFormSection() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                           <p><span className="font-bold text-on-surface-variant/80">Nominee Name:</span> {formData.nomineeName}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Relationship:</span> {formData.nomineeRelationship}</p>
-                          <p><span className="font-bold text-on-surface-variant/80">Nominee DOB:</span> {formData.nomineeDateOfBirth}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Nominee Mobile:</span> {formData.nomineeMobileNumber}</p>
                           <p className="sm:col-span-2"><span className="font-bold text-on-surface-variant/80">Nominee Address:</span> {formData.nomineeAddress}</p>
                         </div>
@@ -1618,6 +1676,7 @@ export function JoinFormSection() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                           <p><span className="font-bold text-on-surface-variant/80">Account Holder:</span> {formData.bankAccountHolderName}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Bank Name:</span> {formData.bankName}</p>
+                          <p><span className="font-bold text-on-surface-variant/80">Bank Branch:</span> {formData.bankBranch}</p>
                           <p><span className="font-bold text-on-surface-variant/80">Account Number:</span> {formData.bankAccountNumber}</p>
                           <p><span className="font-bold text-on-surface-variant/80">IFSC Code:</span> {formData.bankIfscCode}</p>
                         </div>

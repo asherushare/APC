@@ -113,6 +113,7 @@ model ShareholderApplication {
   panEncrypted           String?
   panMasked              String?
   mobileNumber           String
+  whatsappNumber         String?
   email                  String?
   occupation             String
   
@@ -134,13 +135,13 @@ model ShareholderApplication {
   // Step 5: Nominee Details
   nomineeName            String
   nomineeRelationship    String
-  nomineeDateOfBirth     DateTime
   nomineeAddress         String
   nomineeMobileNumber    String
 
   // Step 6: Bank Details
   bankAccountHolderName  String
   bankName               String
+  bankBranch             String
   bankAccountNumberEnc   String            // Encrypted Bank Account Number
   bankAccountNumberMask  String            // e.g. XXXXXX1234
   bankIfscCode           String

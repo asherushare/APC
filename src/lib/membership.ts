@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 /**
  * Generates a professional, print-ready 2-page PDF summary receipt of the shareholder application.
  */
-export function generateSummaryPdf(data: ShareholderApplication, appId: string, submittedDate: string): Blob {
+export function generateSummaryPdf(data: ShareholderApplication, appId: string, submittedDate: string, passportPhotoBase64?: string): Blob {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -21,37 +21,71 @@ export function generateSummaryPdf(data: ShareholderApplication, appId: string, 
 
   // ---------------- PAGE 1 ----------------
   // Header Branding
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('MINISTRY OF CORPORATE AFFAIRS (MCA)', 15, 12);
+
   doc.setTextColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('ADIVASI PRODUCER COMPANY (APC)', 15, 20);
+  doc.setFontSize(16);
+  doc.text('ADIVASI PRODUCER COMPANY (APC)', 15, 18);
+
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8);
+  doc.text('(Proposed Producer Company under the Companies Act, 2013)', 15, 22.5);
 
   doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text('COMMUNITY OWNED • TRADITION GUIDED • DIGITALLY EMPOWERED', 15, 25);
+  doc.setFontSize(7.5);
+  doc.text('COMMUNITY OWNED • TRADITION GUIDED • DIGITALLY EMPOWERED', 15, 26.5);
 
-  // Gold separator line
+  // Passport Photo Box in Top-Right Corner
+  if (passportPhotoBase64) {
+    try {
+      doc.addImage(passportPhotoBase64, 'JPEG', 160, 10, 30, 37);
+    } catch (err) {
+      console.error('Error adding photo to PDF:', err);
+      // Fallback border
+      doc.setDrawColor(textMuted[0], textMuted[1], textMuted[2]);
+      doc.setLineWidth(0.2);
+      doc.rect(160, 10, 30, 37, 'S');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text('Photo Error', 166, 28);
+    }
+  } else {
+    doc.setDrawColor(textMuted[0], textMuted[1], textMuted[2]);
+    doc.setLineWidth(0.2);
+    doc.rect(160, 10, 30, 37, 'S');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.text('Affix Passport', 164, 26);
+    doc.text('Photo Here', 167, 30);
+  }
+
+  // Gold separator line (shifted down)
   doc.setDrawColor(secondaryGold[0], secondaryGold[1], secondaryGold[2]);
   doc.setLineWidth(0.5);
-  doc.line(15, 28, 195, 28);
+  doc.line(15, 49, 195, 49);
 
   // Receipt Acknowledgement Box
   doc.setFillColor(bgLight[0], bgLight[1], bgLight[2]);
-  doc.rect(15, 33, 180, 20, 'F');
+  doc.rect(15, 52, 180, 20, 'F');
   doc.setDrawColor(229, 231, 235); // border light gray
-  doc.rect(15, 33, 180, 20, 'S');
+  doc.rect(15, 52, 180, 20, 'S');
 
   doc.setTextColor(secondaryGold[0], secondaryGold[1], secondaryGold[2]);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text('SHAREHOLDER APPLICATION SUMMARY RECEIPT', 20, 39);
+  doc.text('SHAREHOLDER APPLICATION SUMMARY RECEIPT', 20, 58);
 
   doc.setTextColor(textDark[0], textDark[1], textDark[2]);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.text(`Application ID: ${appId}`, 20, 47);
-  doc.text(`Submitted On: ${submittedDate}`, 110, 47);
+  doc.text(`Application ID: ${appId}`, 20, 66);
+  doc.text(`Submitted On: ${submittedDate}`, 110, 66);
 
   // Helper function to draw section headers
   const drawSectionHeader = (title: string, y: number) => {
@@ -65,7 +99,7 @@ export function generateSummaryPdf(data: ShareholderApplication, appId: string, 
   };
 
   // Helper to draw grid items
-  const drawField = (label: string, value: string, x: number, y: number, labelWidth = 50) => {
+  const drawField = (label: string, value: string, x: number, y: number, labelWidth = 55) => {
     doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
@@ -77,136 +111,191 @@ export function generateSummaryPdf(data: ShareholderApplication, appId: string, 
     doc.text(value || 'N/A', x + labelWidth, y);
   };
 
-  // 1. Applicant Personal Details
-  drawSectionHeader('1. APPLICANT PERSONAL DETAILS', 63);
-  drawField('Full Name:', data.fullName, 15, 71);
-  drawField("Father's/Husband's Name:", data.fatherHusbandName, 15, 78);
-  drawField('Date of Birth:', data.dateOfBirth, 15, 85);
-  drawField('Gender:', data.gender ? data.gender.toUpperCase() : 'N/A', 15, 92);
-  drawField('Aadhaar Number:', data.aadhaarNumber, 15, 99);
-  drawField('PAN Number:', data.panNumber || 'N/A', 15, 106);
-  drawField('Mobile Number:', data.mobileNumber, 15, 113);
-  drawField('Email Address:', data.email || 'N/A', 15, 120);
-  drawField('Occupation / Activity:', data.occupation, 15, 127);
+  // 1. Applicant Personal Details (shifted down)
+  drawSectionHeader('1. APPLICANT PERSONAL DETAILS', 78);
+  drawField('Full Name:', data.fullName, 15, 86);
+  drawField("Father's/Mother's/Spouse's Name:", data.fatherHusbandName, 15, 92);
+  drawField('Date of Birth:', data.dateOfBirth, 15, 98);
+  drawField('Gender:', data.gender ? data.gender.toUpperCase() : 'N/A', 15, 104);
+  drawField('Aadhaar Number:', data.aadhaarNumber, 15, 110);
+  drawField('PAN Number:', data.panNumber || 'N/A', 15, 116);
+  drawField('Mobile Number:', data.mobileNumber, 15, 122);
+  drawField('WhatsApp Number:', data.whatsappNumber || 'N/A', 15, 128);
+  drawField('Email Address:', data.email || 'N/A', 15, 134);
+  drawField('Occupation / Activity:', data.occupation, 15, 140);
 
-  // 2. Residential Address
-  drawSectionHeader('2. RESIDENTIAL ADDRESS', 140);
-  drawField('Village:', data.village, 15, 148);
-  drawField('Gram Panchayat (GP):', data.gramPanchayat, 15, 155);
-  drawField('Block Name:', data.block, 15, 162);
-  drawField('District:', data.district, 15, 169);
-  drawField('State:', data.state, 15, 176);
-  drawField('PIN Code:', data.pinCode, 15, 183);
+  // 2. Residential Address (shifted down)
+  drawSectionHeader('2. RESIDENTIAL ADDRESS', 148);
+  drawField('Village:', data.village, 15, 156);
+  drawField('Gram Panchayat (GP):', data.gramPanchayat, 15, 162);
+  drawField('Block Name:', data.block, 15, 168);
+  drawField('District:', data.district, 15, 174);
+  drawField('State:', data.state, 15, 180);
+  drawField('PIN Code:', data.pinCode, 15, 186);
 
-  // 3. Producer Eligibility
-  drawSectionHeader('3. PRODUCER ELIGIBILITY', 196);
+  // 3. Producer Eligibility (shifted down)
+  drawSectionHeader('3. PRODUCER ELIGIBILITY', 194);
   doc.setTextColor(textDark[0], textDark[1], textDark[2]);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   const activitiesStr = data.producerActivities.join(', ');
-  doc.text(activitiesStr || 'No activities selected', 15, 204, { maxWidth: 175 });
+  doc.text(activitiesStr || 'No activities selected', 15, 201, { maxWidth: 175 });
 
-  // 4. Share Subscription
-  drawSectionHeader('4. SHARE SUBSCRIPTION', 218);
-  drawField('Shares Subscribed:', `${data.numberOfShares} Share(s)`, 15, 226);
-  drawField('Estimated Contribution:', `₹${(data.numberOfShares * 10000).toLocaleString('en-IN')}`, 15, 233);
-  drawField('Share Face Value:', '₹10,000 per Share', 15, 240);
+  // 4. Share Subscription (shifted down)
+  drawSectionHeader('4. SHARE SUBSCRIPTION', 215);
+  drawField('Shares Subscribed:', `${data.numberOfShares} Share(s)`, 15, 223);
+  drawField('Estimated Contribution:', `₹${(data.numberOfShares * 10000).toLocaleString('en-IN')}`, 15, 229);
+  doc.setFont('helvetica', 'bold');
+  drawField('Share Face Value:', '₹10,000 per Share', 15, 235);
 
-  // Disclaimer Note at the bottom
+  // Disclaimer Note at the bottom (shifted down)
   doc.setFillColor(bgLight[0], bgLight[1], bgLight[2]);
-  doc.rect(15, 250, 180, 15, 'F');
+  doc.rect(15, 244, 180, 15, 'F');
   doc.setDrawColor(229, 231, 235);
-  doc.rect(15, 250, 180, 15, 'S');
+  doc.rect(15, 244, 180, 15, 'S');
   doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('Note: This is page 1 of the official shareholder portal submission summary.', 20, 259);
+  doc.text('Note: This is page 1 of the official shareholder portal submission summary.', 20, 253);
 
   // Page 1 Footer
   doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
-  doc.setFontSize(8);
-  doc.text('Page 1 of 2', 98, 285);
+  doc.setFontSize(7.5);
+  doc.text('Adivasi Producer Company (APC) • Founder: Bijaya Kumar Mellaka', 15, 285);
+  doc.text('Page 1 of 2', 178, 285);
 
   // ---------------- PAGE 2 ----------------
   doc.addPage();
 
-  // Header Branding (Simplified)
-  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text('ADIVASI PRODUCER COMPANY (APC) - APPLICATION SUMMARY', 15, 15);
-
-  doc.setDrawColor(secondaryGold[0], secondaryGold[1], secondaryGold[2]);
-  doc.setLineWidth(0.5);
-  doc.line(15, 18, 195, 18);
-
   // 5. Nominee Designation
-  drawSectionHeader('5. NOMINEE DESIGNATION', 27);
-  drawField('Nominee Full Name:', data.nomineeName, 15, 35);
-  drawField('Relationship to Applicant:', data.nomineeRelationship, 15, 42);
-  drawField('Nominee Date of Birth:', data.nomineeDateOfBirth, 15, 49);
-  drawField('Nominee Address:', data.nomineeAddress, 15, 56);
-  drawField('Nominee Mobile Number:', data.nomineeMobileNumber, 15, 63);
+  drawSectionHeader('5. NOMINEE DESIGNATION', 24);
+  drawField('Nominee Full Name:', data.nomineeName, 15, 32);
+  drawField('Relationship to Applicant:', data.nomineeRelationship, 15, 38);
+  drawField('Nominee Address:', data.nomineeAddress, 15, 44);
+  drawField('Nominee Mobile Number:', data.nomineeMobileNumber, 15, 50);
 
   // 6. Shareholder Bank Details
-  drawSectionHeader('6. SHAREHOLDER BANK DETAILS', 76);
-  drawField('Account Holder Name:', data.bankAccountHolderName, 15, 84);
-  drawField('Bank Name:', data.bankName, 15, 91);
-  drawField('Bank Account Number:', data.bankAccountNumber, 15, 98);
-  drawField('IFSC Code:', data.bankIfscCode, 15, 105);
+  drawSectionHeader('6. SHAREHOLDER BANK DETAILS', 57);
+  drawField('Account Holder Name:', data.bankAccountHolderName, 15, 65);
+  drawField('Bank Name:', data.bankName, 15, 71);
+  drawField('Bank Branch:', data.bankBranch, 15, 77);
+  drawField('Bank Account Number:', data.bankAccountNumber, 15, 83);
+  drawField('IFSC Code:', data.bankIfscCode, 15, 89);
 
   // 7. Supporting Documents Uploaded
-  drawSectionHeader('7. SUPPORTING DOCUMENTS UPLOADED', 118);
+  drawSectionHeader('7. SUPPORTING DOCUMENTS UPLOADED', 96);
   const docs = data.uploadedDocuments;
-  drawField('Aadhaar Card:', docs?.aadhaarCard ? `${docs.aadhaarCard.filename} (${(docs.aadhaarCard.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 126, 60);
-  drawField('PAN Card:', docs?.panCard ? `${docs.panCard.filename} (${(docs.panCard.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided (Optional)', 15, 133, 60);
-  drawField('Passport Photograph:', docs?.passportPhoto ? `${docs.passportPhoto.filename} (${(docs.passportPhoto.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 140, 60);
-  drawField('Producer Activity Proof:', docs?.producerActivityProof ? `${docs.producerActivityProof.filename} (${(docs.producerActivityProof.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 147, 60);
-  drawField('Bank Passbook Front Page:', docs?.bankPassbook ? `${docs.bankPassbook.filename} (${(docs.bankPassbook.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 154, 60);
+  drawField('Aadhaar Card:', docs?.aadhaarCard ? `${docs.aadhaarCard.filename} (${(docs.aadhaarCard.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 104, 60);
+  drawField('PAN Card:', docs?.panCard ? `${docs.panCard.filename} (${(docs.panCard.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided (Optional)', 15, 110, 60);
+  drawField('Passport Photograph:', docs?.passportPhoto ? `${docs.passportPhoto.filename} (${(docs.passportPhoto.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 116, 60);
+  drawField('Producer Activity Proof:', docs?.producerActivityProof ? `${docs.producerActivityProof.filename} (${(docs.producerActivityProof.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 122, 60);
+  drawField('Bank Passbook Front Page:', docs?.bankPassbook ? `${docs.bankPassbook.filename} (${(docs.bankPassbook.fileSize / 1024 / 1024).toFixed(2)} MB)` : 'Not Provided', 15, 128, 60);
 
-  // Declarations & Signatures Section
+  // New Legal MoA/AoA Declaration & Undertaking
   doc.setFillColor(bgLight[0], bgLight[1], bgLight[2]);
-  doc.rect(15, 168, 180, 48, 'F');
+  doc.rect(15, 136, 180, 35, 'F');
   doc.setDrawColor(229, 231, 235);
-  doc.rect(15, 168, 180, 48, 'S');
+  doc.rect(15, 136, 180, 35, 'S');
 
   doc.setTextColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text('Digital Self-Declaration & Trust Confirmed:', 20, 174);
+  doc.setFontSize(8.5);
+  doc.text('MoA / AoA Declaration & Undertaking:', 20, 141);
 
   doc.setTextColor(textDark[0], textDark[1], textDark[2]);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.text('✓ Applicant confirmed all info is correct and matches supporting documents.', 20, 180);
-  doc.text('✓ Applicant agreed to follow rules, guidelines and general bylaws of Adivasi Producer Company.', 20, 185);
-  doc.text('✓ Applicant accepted that membership requires block verification and formal board advisory approval.', 20, 190);
-  
-  doc.setFont('helvetica', 'bold');
-  doc.text('Trust Disclaimer:', 20, 197);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Documents are used only for APC verification. No online payment is collected through this site. Personal data remains confidential.', 20, 202);
+  doc.setFontSize(7.2);
+  const declarationText = "I hereby declare that the information furnished in this application is true and correct to the best of my knowledge and belief. I voluntarily apply for subscription to shares in the Proposed Adivasi Producer Company (APC). I agree to abide by the Memorandum of Association (MoA), Articles of Association (AoA), and the rules, regulations, and decisions of the Company after its incorporation under the Companies Act, 2013. I understand that submission of this application and payment of the share subscription amount do not automatically confer shareholder status or any ownership rights. Share allotment and membership shall be subject to the successful incorporation of the Company and approval by its Board of Directors in accordance with the Companies Act, 2013 and other applicable laws.";
+  doc.text(declarationText, 20, 146, { maxWidth: 170 });
 
-  // Signatures Lines
+  // Signatures Lines (Applicant, Nominee, Coordinator)
   doc.setDrawColor(156, 163, 175); // gray-400
   doc.setLineWidth(0.3);
-  doc.line(25, 245, 85, 245);
-  doc.line(125, 245, 185, 245);
+  doc.line(15, 195, 65, 195);
+  doc.line(75, 195, 125, 195);
+  doc.line(135, 195, 185, 195);
 
   doc.setTextColor(textDark[0], textDark[1], textDark[2]);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('Signature of Applicant', 38, 250);
-  doc.text('Block Coordinator Verification', 133, 250);
+  doc.setFontSize(8);
+  doc.text('Signature of Applicant', 22, 199);
+  doc.text('Signature of Nominee', 82, 199);
+  doc.text('Authorized Signatory', 145, 199);
 
   doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text('Date: ________________________', 25, 257);
-  doc.text('Date: ________________________', 125, 257);
+  doc.text('Date: ________________', 15, 204);
+  doc.text('Date: ________________', 75, 204);
+  doc.text('Date: ________________', 135, 204);
+
+  // FOR OFFICE USE ONLY section
+  doc.setTextColor(secondaryGold[0], secondaryGold[1], secondaryGold[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('FOR OFFICE USE ONLY', 15, 214);
+
+  // Draw grid table for Office Use
+  doc.setDrawColor(primaryGreen[0], primaryGreen[1], primaryGreen[2]);
+  doc.setLineWidth(0.4);
+  doc.rect(15, 217, 180, 30, 'S');
+
+  doc.setLineWidth(0.25);
+  doc.line(75, 217, 75, 247);
+  doc.line(135, 217, 135, 247);
+  doc.line(15, 232, 195, 232);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+
+  // Row 1 filling
+  doc.text('Application Ref ID:', 17, 221);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text(appId, 17, 227);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.text('Date Received:', 77, 221);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text(submittedDate.split(',')[0] || 'N/A', 77, 227);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.text('Verification Status:', 137, 221);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text('PENDING / UNDER REVIEW', 137, 227);
+
+  // Row 2 filling
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.text('Membership Folio No:', 17, 236);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text('____________________', 17, 242);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.text('Board Approval Date:', 77, 236);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text('____________________', 77, 242);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.text('Director Signature:', 137, 236);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text('____________________', 137, 242);
 
   // Page 2 Footer
-  doc.text('Page 2 of 2', 98, 285);
+  doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+  doc.setFontSize(7.5);
+  doc.text('Adivasi Producer Company (APC) • Founder: Bijaya Kumar Mellaka', 15, 285);
+  doc.text('Page 2 of 2', 178, 285);
 
   return doc.output('blob');
 }
@@ -217,7 +306,8 @@ export function generateSummaryPdf(data: ShareholderApplication, appId: string, 
 export function compileSubmissionAssets(
   data: ShareholderApplication,
   appId: string,
-  submittedDate: string
+  submittedDate: string,
+  passportPhotoBase64?: string
 ): { whatsappLink: string; summaryPdfBlob: Blob } {
   const formattedDate = new Date(submittedDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
@@ -228,12 +318,13 @@ export function compileSubmissionAssets(
 ---------------------------------------
 *1. PERSONAL DETAILS*
 - *Full Name:* ${data.fullName}
-- *Father/Husband:* ${data.fatherHusbandName}
+- *Father/Mother/Spouse:* ${data.fatherHusbandName}
 - *DOB:* ${data.dateOfBirth}
 - *Gender:* ${data.gender}
 - *Aadhaar No:* ${data.aadhaarNumber}
 - *PAN No:* ${data.panNumber || 'N/A'}
 - *Mobile No:* ${data.mobileNumber}
+- *WhatsApp No:* ${data.whatsappNumber || 'N/A'}
 - *Email:* ${data.email || 'N/A'}
 - *Occupation:* ${data.occupation}
 
@@ -255,13 +346,13 @@ ${data.producerActivities.map(act => `✓ ${act}`).join('\n')}
 *5. NOMINEE DETAILS*
 - *Nominee Name:* ${data.nomineeName}
 - *Relationship:* ${data.nomineeRelationship}
-- *Nominee DOB:* ${data.nomineeDateOfBirth}
 - *Nominee Address:* ${data.nomineeAddress}
 - *Nominee Mobile:* ${data.nomineeMobileNumber}
 
 *6. BANK DETAILS*
 - *Holder Name:* ${data.bankAccountHolderName}
 - *Bank Name:* ${data.bankName}
+- *Bank Branch:* ${data.bankBranch}
 - *Account Number:* ${data.bankAccountNumber}
 - *IFSC Code:* ${data.bankIfscCode}`;
 
@@ -289,7 +380,7 @@ _Sent via APC Shareholder Portal_`;
   const whatsappLink = getWhatsAppLink(message);
 
   // Generate the PDF receipt
-  const summaryPdfBlob = generateSummaryPdf(data, appId, formattedDate);
+  const summaryPdfBlob = generateSummaryPdf(data, appId, formattedDate, passportPhotoBase64);
 
   return {
     whatsappLink,

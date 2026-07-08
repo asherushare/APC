@@ -20,6 +20,12 @@ exports.CreateApplicationSchema = zod_1.z.object({
         .nullable()
         .or(zod_1.z.literal('')),
     mobileNumber: zod_1.z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits'),
+    whatsappNumber: zod_1.z
+        .string()
+        .regex(/^\d{10}$/, 'WhatsApp number must be exactly 10 digits')
+        .optional()
+        .nullable()
+        .or(zod_1.z.literal('')),
     email: zod_1.z
         .string()
         .trim()
@@ -27,7 +33,23 @@ exports.CreateApplicationSchema = zod_1.z.object({
         .optional()
         .nullable()
         .or(zod_1.z.literal('')),
-    occupation: zod_1.z.string().trim().min(1, 'Occupation is required').max(100),
+    occupation: zod_1.z.enum([
+        'Farmer',
+        'Forest Produce Collector',
+        'Horticulture',
+        'Livestock',
+        'Handicraft',
+        'SHG Member',
+        'Rural Entrepreneur',
+        'Self-Employed',
+        'Student',
+        'Youth',
+        'Employee',
+        'Social Worker',
+        'Others',
+    ], {
+        errorMap: () => ({ message: 'Invalid occupation selected' }),
+    }),
     // Step 2: Address
     village: zod_1.z.string().trim().min(1, 'Village is required').max(100),
     gramPanchayat: zod_1.z.string().trim().min(1, 'Gram Panchayat is required').max(100),
@@ -43,12 +65,12 @@ exports.CreateApplicationSchema = zod_1.z.object({
     // Step 5: Nominee Details
     nomineeName: zod_1.z.string().trim().min(1, 'Nominee name is required').max(100),
     nomineeRelationship: zod_1.z.string().trim().min(1, 'Nominee relationship is required').max(100),
-    nomineeDateOfBirth: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Nominee date of birth must be in YYYY-MM-DD format'),
     nomineeAddress: zod_1.z.string().trim().min(1, 'Nominee address is required').max(200),
     nomineeMobileNumber: zod_1.z.string().regex(/^\d{10}$/, 'Nominee mobile number must be exactly 10 digits'),
     // Step 6: Bank Details
     bankAccountHolderName: zod_1.z.string().trim().min(1, 'Bank account holder name is required').max(100),
     bankName: zod_1.z.string().trim().min(1, 'Bank name is required').max(100),
+    bankBranch: zod_1.z.string().trim().min(1, 'Bank branch name is required').max(100),
     bankAccountNumber: zod_1.z.string().regex(/^\d{9,18}$/, 'Bank account number must be between 9 and 18 digits'),
     bankIfscCode: zod_1.z.string().toUpperCase().trim().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format'),
     // Step 7: Declarations (Must be true on submission)
