@@ -28,4 +28,4 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 EXPOSE 4000
-CMD npx prisma migrate resolve --applied 20260708170000_add_failed_login_attempts && npx prisma migrate deploy && npx prisma db seed && npm run start
+CMD npx prisma migrate deploy && npx prisma db seed && npm run start
