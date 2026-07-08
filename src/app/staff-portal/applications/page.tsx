@@ -37,7 +37,7 @@ export default function AdminApplicationsPage() {
   // Auth gate check
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.push('/admin/login');
+      router.push('/staff-portal/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
@@ -242,7 +242,7 @@ export default function AdminApplicationsPage() {
           pagination={pagination}
           onPageChange={(p) => setFilters(prev => ({ ...prev, page: p }))}
           onViewDetails={(id) => {
-            router.push(`/admin/applications/${id}`);
+            router.push(`/staff-portal/applications/${id}`);
           }}
         />
       </Container>

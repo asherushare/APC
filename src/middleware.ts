@@ -8,5 +8,5 @@ export function middleware() {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/staff-portal/:path*'],
 };

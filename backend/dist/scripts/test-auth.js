@@ -255,7 +255,7 @@ async function runTests() {
     // Clear any existing attempts
     await db_1.prisma.user.update({
         where: { email: adminEmail },
-        data: { loginAttempts: 0, lockoutUntil: null },
+        data: { failedLoginAttempts: 0, lockedUntil: null },
     });
     // Send 4 failed attempts
     for (let i = 1; i <= 4; i++) {
@@ -287,7 +287,7 @@ async function runTests() {
     }
     // Verify locked out status in database
     const lockedUser = await db_1.prisma.user.findUnique({ where: { email: adminEmail } });
-    if (lockedUser && lockedUser.loginAttempts === 5 && lockedUser.lockoutUntil) {
+    if (lockedUser && lockedUser.failedLoginAttempts === 5 && lockedUser.lockedUntil) {
         console.log('✅ User marked as locked out in database.');
     }
     else {
@@ -327,7 +327,7 @@ async function runTests() {
     // Reset lockout state
     await db_1.prisma.user.update({
         where: { id: lockedUser.id },
-        data: { loginAttempts: 0, lockoutUntil: null },
+        data: { failedLoginAttempts: 0, lockedUntil: null },
     });
     // 9. Test Forgot Password (Token generation & rate limits)
     console.log('\n--- 9. Testing Forgot Password Flow ---');

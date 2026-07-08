@@ -120,7 +120,7 @@ export default function AdminForgotPasswordPage() {
 
             <div className="pt-4 border-t border-outline-variant/30 text-center select-none">
               <Link
-                href="/admin/login"
+                href="/staff-portal/login"
                 className="text-body-sm font-extrabold text-primary hover:text-dark-green transition-colors uppercase tracking-wider"
               >
                 Back to Login

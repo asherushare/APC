@@ -75,10 +75,10 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     // Check account lockout
-    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
       await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { reason: 'Account locked out' });
       throw new ForbiddenError(
-        'Account is temporarily locked due to repeated failed login attempts. Please try again later.',
+        'Too many failed attempts. Account locked.',
         'ACCOUNT_LOCKED'
       );
     }
@@ -86,18 +86,18 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const isPasswordValid = await verifyPassword(password, user.passwordHash);
 
     if (!isPasswordValid) {
-      const attempts = user.loginAttempts + 1;
-      const lockoutUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+      const attempts = user.failedLoginAttempts + 1;
+      const lockedUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
       
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          loginAttempts: attempts,
-          lockoutUntil,
+          failedLoginAttempts: attempts,
+          lockedUntil,
         },
       });
 
-      if (lockoutUntil) {
+      if (lockedUntil) {
         await recordAuditLog(user.id, 'ACCOUNT_LOCKED', 'User', user.id, req, { attempts });
       }
       await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { attempts });
@@ -106,12 +106,12 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     // Reset login attempts on success
-    if (user.loginAttempts > 0 || user.lockoutUntil) {
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          loginAttempts: 0,
-          lockoutUntil: null,
+          failedLoginAttempts: 0,
+          lockedUntil: null,
         },
       });
     }
@@ -484,8 +484,8 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         where: { id: user.id },
         data: {
           passwordHash: newHash,
-          loginAttempts: 0,
-          lockoutUntil: null,
+          failedLoginAttempts: 0,
+          lockedUntil: null,
         },
       }),
       prisma.passwordResetToken.update({

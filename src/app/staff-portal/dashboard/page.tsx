@@ -23,9 +23,9 @@ export default function AdminDashboardPage() {
 
   const handleTabChange = (tabName: 'applications' | 'stats' | 'audit_logs') => {
     if (tabName === 'applications') {
-      router.push('/admin/applications');
+      router.push('/staff-portal/applications');
     } else {
-      router.push(`/admin/dashboard?tab=${tabName}`);
+      router.push(`/staff-portal/dashboard?tab=${tabName}`);
     }
   };
 
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
   // 1. Gating and routing check
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.push('/admin/login');
+      router.push('/staff-portal/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
@@ -324,7 +324,7 @@ export default function AdminDashboardPage() {
                 pagination={pagination || { total: 0, page: 1, limit: 10, totalPages: 1 }}
                 onPageChange={(p) => setFilters(prev => ({ ...prev, page: p }))}
                 onViewDetails={(id) => {
-                  router.push(`/admin/applications/${id}`);
+                  router.push(`/staff-portal/applications/${id}`);
                 }}
               />
             </>

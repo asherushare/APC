@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // If token cleared (session expired or logged out)
         setUser(null);
         setIsLoading(false);
-        if (pathname && pathname.startsWith('/admin') && pathname !== '/admin/login') {
-          router.push('/admin/login');
+        if (pathname && pathname.startsWith('/staff-portal') && pathname !== '/staff-portal/login') {
+          router.push('/staff-portal/login');
         }
       }
     });
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       setAccessToken(data.accessToken);
       setUser(data.user);
-      router.push('/admin/dashboard');
+      router.push('/staff-portal/dashboard');
     } catch (err) {
       setAccessToken(null);
       throw err;
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(null);
       setUser(null);
       setIsLoading(false);
-      router.push('/admin/login');
+      router.push('/staff-portal/login');
     }
   };
 

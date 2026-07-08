@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { prisma } from '../config/db';
 import { hashRefreshToken, verifyPassword, hashPassword } from '../utils/auth';
 
@@ -18,14 +19,27 @@ function extractRefreshToken(setCookieHeaders: string[]): string | null {
 async function runTests(): Promise<void> {
   console.log('🏁 Starting Authentication Integration Tests...');
 
-  // Ensure default admin user is seeded
+  // Ensure default admin user is seeded and reset to legacy bcrypt state
   console.log('🌱 Seeding database...');
   const adminEmail = 'admin@adivasiproducer.com';
-  const userCount = await prisma.user.count({ where: { email: adminEmail } });
-  if (userCount === 0) {
-    console.error('❌ Database not seeded. Please run npm run prisma:seed first.');
-    process.exit(1);
-  }
+  const legacyBcryptHash = await bcrypt.hash('AdminPassword123!', 12);
+  
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash: legacyBcryptHash,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
+    create: {
+      email: adminEmail,
+      fullName: 'APC Admin User',
+      passwordHash: legacyBcryptHash,
+      role: 'ADMIN',
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
+  });
 
   // Clear existing refresh tokens to start fresh
   await prisma.refreshToken.deleteMany({});
@@ -283,7 +297,7 @@ async function runTests(): Promise<void> {
   // Clear any existing attempts
   await prisma.user.update({
     where: { email: adminEmail },
-    data: { loginAttempts: 0, lockoutUntil: null },
+    data: { failedLoginAttempts: 0, lockedUntil: null },
   });
 
   // Send 4 failed attempts
@@ -318,7 +332,7 @@ async function runTests(): Promise<void> {
 
   // Verify locked out status in database
   const lockedUser = await prisma.user.findUnique({ where: { email: adminEmail } });
-  if (lockedUser && lockedUser.loginAttempts === 5 && lockedUser.lockoutUntil) {
+  if (lockedUser && lockedUser.failedLoginAttempts === 5 && lockedUser.lockedUntil) {
     console.log('✅ User marked as locked out in database.');
   } else {
     console.error('❌ User was not locked out in database.');
@@ -359,7 +373,7 @@ async function runTests(): Promise<void> {
   // Reset lockout state
   await prisma.user.update({
     where: { id: lockedUser.id },
-    data: { loginAttempts: 0, lockoutUntil: null },
+    data: { failedLoginAttempts: 0, lockedUntil: null },
   });
 
   // 9. Test Forgot Password (Token generation & rate limits)

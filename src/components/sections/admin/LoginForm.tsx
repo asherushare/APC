@@ -167,7 +167,7 @@ export function LoginForm() {
             </label>
 
             <Link
-              href="/admin/forgot-password"
+              href="/staff-portal/forgot-password"
               className="font-bold text-primary hover:text-dark-green hover:underline transition-colors"
             >
               Forgot Password?

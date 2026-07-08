@@ -152,7 +152,7 @@ export function ForgotPasswordForm() {
         )}
 
         <div className="text-center pt-2">
-          <Link href="/admin/login" className="text-label-sm font-extrabold text-primary hover:text-dark-green transition-all uppercase tracking-wide">
+          <Link href="/staff-portal/login" className="text-label-sm font-extrabold text-primary hover:text-dark-green transition-all uppercase tracking-wide">
             Back to Sign In
           </Link>
         </div>

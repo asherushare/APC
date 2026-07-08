@@ -45,7 +45,7 @@ export default function AdminCoordinatorsPage() {
   // Auth gate check
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.push('/admin/login');
+      router.push('/staff-portal/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
@@ -133,7 +133,7 @@ export default function AdminCoordinatorsPage() {
             Only administrators are authorized to manage block coordinator accounts. Please sign in with an admin profile.
           </p>
           <button
-            onClick={() => router.push('/admin/dashboard')}
+            onClick={() => router.push('/staff-portal/dashboard')}
             className="w-full bg-primary hover:bg-dark-green text-white font-extrabold py-2.5 px-6 rounded-xl transition-all shadow-sm uppercase tracking-wider text-xs"
           >
             Return to Dashboard

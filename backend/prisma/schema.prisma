@@ -66,8 +66,8 @@ model User {
   phoneNumber         String?
   role                Role                    @default(COORDINATOR)
   block               String?                 // Assigned geographical block
-  loginAttempts       Int                     @default(0)
-  lockoutUntil        DateTime?
+  failedLoginAttempts Int                     @default(0)
+  lockedUntil         DateTime?
   applications        ShareholderApplication[] // Applications reviewed
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]

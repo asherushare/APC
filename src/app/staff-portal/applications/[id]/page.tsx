@@ -36,7 +36,7 @@ export default function ApplicationDetailPage() {
   // ---- Auth gating ---------------------------------------------------------
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
-      router.push('/admin/login');
+      router.push('/staff-portal/login');
     }
   }, [isAuthenticated, isAuthLoading, router]);
 
@@ -130,7 +130,7 @@ export default function ApplicationDetailPage() {
           <div className="space-y-1 select-none text-left">
             <button
               type="button"
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push('/staff-portal/dashboard')}
               className="text-[10px] font-black uppercase tracking-widest text-primary/70 hover:underline cursor-pointer"
             >
               ← Back to Dashboard
@@ -198,7 +198,7 @@ export default function ApplicationDetailPage() {
             )}
             <button
               type="button"
-              onClick={() => router.push('/admin/dashboard')}
+              onClick={() => router.push('/staff-portal/dashboard')}
               className="mt-2 px-5 py-2.5 rounded-xl bg-primary text-white text-label-sm font-black uppercase tracking-wider hover:bg-primary/90 transition-all cursor-pointer"
             >
               Return to Dashboard

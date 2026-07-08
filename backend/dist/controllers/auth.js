@@ -54,34 +54,34 @@ const login = async (req, res, next) => {
             throw new errors_1.UnauthorizedError('Invalid email or password', 'INVALID_CREDENTIALS');
         }
         // Check account lockout
-        if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
             await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { reason: 'Account locked out' });
-            throw new errors_1.ForbiddenError('Account is temporarily locked due to repeated failed login attempts. Please try again later.', 'ACCOUNT_LOCKED');
+            throw new errors_1.ForbiddenError('Too many failed attempts. Account locked.', 'ACCOUNT_LOCKED');
         }
         const isPasswordValid = await (0, auth_1.verifyPassword)(password, user.passwordHash);
         if (!isPasswordValid) {
-            const attempts = user.loginAttempts + 1;
-            const lockoutUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
+            const attempts = user.failedLoginAttempts + 1;
+            const lockedUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
             await db_1.prisma.user.update({
                 where: { id: user.id },
                 data: {
-                    loginAttempts: attempts,
-                    lockoutUntil,
+                    failedLoginAttempts: attempts,
+                    lockedUntil,
                 },
             });
-            if (lockoutUntil) {
+            if (lockedUntil) {
                 await recordAuditLog(user.id, 'ACCOUNT_LOCKED', 'User', user.id, req, { attempts });
             }
             await recordAuditLog(user.id, 'LOGIN_FAILED', 'User', user.id, req, { attempts });
             throw new errors_1.UnauthorizedError('Invalid email or password', 'INVALID_CREDENTIALS');
         }
         // Reset login attempts on success
-        if (user.loginAttempts > 0 || user.lockoutUntil) {
+        if (user.failedLoginAttempts > 0 || user.lockedUntil) {
             await db_1.prisma.user.update({
                 where: { id: user.id },
                 data: {
-                    loginAttempts: 0,
-                    lockoutUntil: null,
+                    failedLoginAttempts: 0,
+                    lockedUntil: null,
                 },
             });
         }
@@ -397,8 +397,8 @@ const resetPassword = async (req, res, next) => {
                 where: { id: user.id },
                 data: {
                     passwordHash: newHash,
-                    loginAttempts: 0,
-                    lockoutUntil: null,
+                    failedLoginAttempts: 0,
+                    lockedUntil: null,
                 },
             }),
             db_1.prisma.passwordResetToken.update({
