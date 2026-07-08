@@ -141,7 +141,7 @@ model ShareholderApplication {
   // Step 6: Bank Details
   bankAccountHolderName  String
   bankName               String
-  bankBranch             String
+  bankBranch             String            @default("N/A")
   bankAccountNumberEnc   String            // Encrypted Bank Account Number
   bankAccountNumberMask  String            // e.g. XXXXXX1234
   bankIfscCode           String
