@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { WhatsAppButton } from '@/components/common/WhatsAppButton';
+import { ClientLayout } from '@/components/layout/ClientLayout';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -53,10 +51,6 @@ export const metadata: Metadata = {
   },
 };
 
-
-import { AuthProvider } from '@/context/AuthContext';
-import { PublicAuthProvider } from '@/context/PublicAuthContext';
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -65,14 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={plusJakarta.variable}>
       <body className="bg-surface text-on-surface antialiased">
-        <AuthProvider>
-          <PublicAuthProvider>
-            <Navbar />
-            <main className="pt-[72px]">{children}</main>
-            <Footer />
-            <WhatsAppButton />
-          </PublicAuthProvider>
-        </AuthProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

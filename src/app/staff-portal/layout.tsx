@@ -71,18 +71,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     pathname === '/staff-portal/forgot-password' ||
     pathname === '/staff-portal/reset-password';
 
-  // 1. DOM manipulation to override parent main padding pt-[72px] for admin pages
-  useEffect(() => {
-    const mainElement = document.querySelector('main');
-    if (mainElement) {
-      const originalPadding = mainElement.style.paddingTop;
-      mainElement.style.paddingTop = '0px';
-      return () => {
-        mainElement.style.paddingTop = originalPadding;
-      };
-    }
-  }, []);
-
   // 2. Auth Gate Checks
   useEffect(() => {
     if (isAuthPage) return;
@@ -148,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest flex relative w-full">
+    <div className="h-screen min-h-screen bg-surface-container-lowest flex relative w-full overflow-hidden">
       {/* 1. Desktop Sidebar Panel */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-outline-variant/35 shrink-0 fixed inset-y-0 left-0 z-30 shadow-sm">
         {/* Sidebar Brand Header */}
@@ -216,7 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* 2. Mobile Nav Header & Sidebar Overlay Drawer */}
-      <div className="flex-1 flex flex-col lg:pl-64 min-w-0 w-full">
+      <div className="flex-1 flex flex-col lg:pl-64 min-w-0 w-full h-screen overflow-hidden">
         <header className="lg:hidden h-[72px] bg-white border-b border-outline-variant/35 px-5 flex items-center justify-between sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-3">
             <Image
@@ -317,10 +305,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Content Wrapper */}
-        <div className="flex-1 flex flex-col min-h-screen relative w-full animate-fadeIn">
+        <div className="flex-1 flex flex-col h-[calc(100vh-72px)] lg:h-screen overflow-y-auto relative w-full animate-fadeIn">
           <ErrorBoundary>
             {isLoading ? (
-              <div className="flex-1 flex items-center justify-center min-h-screen bg-surface">
+              <div className="flex-1 flex items-center justify-center h-full bg-surface">
                 <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
               </div>
             ) : (
