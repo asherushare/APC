@@ -57,6 +57,26 @@ export async function uploadToS3(key: string, body: Buffer, mimeType: string): P
 }
 
 /**
+ * Deletes an object from Supabase Storage.
+ */
+export async function deleteFromS3(key: string): Promise<void> {
+  try {
+    const { error } = await supabase.storage
+      .from(env.SUPABASE_BUCKET)
+      .remove([key]);
+
+    if (error) {
+      throw error;
+    }
+    logger.info(`Successfully deleted object from Supabase Storage: "${key}"`);
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error(`Failed to delete object from Supabase Storage: "${key}". Error: ${err.message}`);
+  }
+}
+
+
+/**
  * Streams an object from Supabase Storage directly to the provided Express response.
  *
  * Returns the resolved MIME type so the controller can set headers consistently.

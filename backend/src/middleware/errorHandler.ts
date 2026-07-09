@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { MulterError } from 'multer';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
@@ -28,6 +29,26 @@ export const errorHandlerMiddleware = (
         code: err.code,
         message: err.message,
         details: err.details,
+        requestId,
+      },
+    });
+    return;
+  }
+
+  // Intercept Multer errors to return clear bad request errors
+  if (err instanceof MulterError) {
+    const isSizeLimit = err.code === 'LIMIT_FILE_SIZE';
+    logger.warn({
+      message: err.message,
+      code: err.code,
+      requestId,
+    });
+
+    res.status(400).json({
+      success: false,
+      error: {
+        code: isSizeLimit ? 'FILE_TOO_LARGE' : 'INVALID_FILE_UPLOAD',
+        message: isSizeLimit ? 'File exceeds the maximum allowed size.' : err.message,
         requestId,
       },
     });

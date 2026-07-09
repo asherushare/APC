@@ -205,6 +205,7 @@ export function JoinFormSection() {
   const [submittedAppId, setSubmittedAppId] = useState<string>('');
   const [submittedTime, setSubmittedTime] = useState<string>('');
   const [summaryPdfBlob, setSummaryPdfBlob] = useState<Blob | null>(null);
+  const [pdfGenerationFailed, setPdfGenerationFailed] = useState<boolean>(false);
 
   // File upload queue states for Milestone 2
   const [submissionStep, setSubmissionStep] = useState<'form' | 'submitting_metadata' | 'uploading_files' | 'success'>('form');
@@ -563,24 +564,29 @@ export function JoinFormSection() {
           uploadedDocuments: uploadedDocsMetadata
         };
 
-        let photoBase64 = '';
-        if (files.passportPhoto) {
-          try {
-            photoBase64 = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(files.passportPhoto!);
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = (error) => reject(error);
-            });
-          } catch (err) {
-            console.error('Failed to read passport photo for PDF:', err);
+        try {
+          let photoBase64 = '';
+          if (files.passportPhoto) {
+            try {
+              photoBase64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(files.passportPhoto!);
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = (error) => reject(error);
+              });
+            } catch (err) {
+              console.error('Failed to read passport photo for PDF:', err);
+            }
           }
-        }
 
-        if (!summaryPdfBlob) {
-          const assets = compileSubmissionAssets(finalData, response.application.applicationId, response.application.submittedAt, photoBase64);
-          setSubmittedWaLink(assets.whatsappLink);
-          setSummaryPdfBlob(assets.summaryPdfBlob);
+          if (!summaryPdfBlob) {
+            const assets = compileSubmissionAssets(finalData, response.application.applicationId, response.application.submittedAt, photoBase64);
+            setSubmittedWaLink(assets.whatsappLink);
+            setSummaryPdfBlob(assets.summaryPdfBlob);
+          }
+        } catch (pdfErr) {
+          console.error('PDF receipt compilation failed:', pdfErr);
+          setPdfGenerationFailed(true);
         }
 
         setIsSuccess(true);
@@ -678,9 +684,15 @@ export function JoinFormSection() {
                 <h3 className="text-headline-md md:text-display-mobile font-black text-primary">
                   Application Submitted Successfully
                 </h3>
-                <p className="text-body-md text-on-surface-variant font-medium leading-relaxed max-w-lg mx-auto">
-                  Your digital shareholder application has been received and compiled.
-                </p>
+                {pdfGenerationFailed ? (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-body-xs font-semibold leading-relaxed max-w-lg mx-auto text-left">
+                    ⚠️ Application submitted successfully, but receipt generation failed. You can download it from your dashboard later.
+                  </div>
+                ) : (
+                  <p className="text-body-md text-on-surface-variant font-medium leading-relaxed max-w-lg mx-auto">
+                    Your digital shareholder application has been received and compiled.
+                  </p>
+                )}
               </div>
 
               {/* Official Receipt Metadata */}
@@ -781,12 +793,14 @@ export function JoinFormSection() {
               {/* Onboarding Dashboard Action Panel */}
               <div className="pt-4 flex flex-col gap-3 max-w-lg mx-auto">
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={downloadSummaryPdfHandler}
-                    className="w-full sm:w-auto flex-1 bg-primary hover:bg-dark-green text-white font-extrabold py-3.5 px-6 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-label-md uppercase tracking-wider select-none cursor-pointer"
-                  >
-                    Download Summary PDF
-                  </button>
+                  {!pdfGenerationFailed && (
+                    <button
+                      onClick={downloadSummaryPdfHandler}
+                      className="w-full sm:w-auto flex-1 bg-primary hover:bg-dark-green text-white font-extrabold py-3.5 px-6 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-label-md uppercase tracking-wider select-none cursor-pointer"
+                    >
+                      Download Summary PDF
+                    </button>
+                  )}
                   <a
                     href={submittedWaLink}
                     target="_blank"

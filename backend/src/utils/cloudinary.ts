@@ -33,3 +33,23 @@ export const uploadToCloudinary = (
     uploadStream.end(fileBuffer);
   });
 };
+
+/**
+ * Deletes an uploaded asset from Cloudinary using its public ID.
+ */
+export const deleteFromCloudinary = (
+  publicId: string,
+  resourceType: 'image' | 'raw' | 'video' = 'image'
+): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(
+      publicId,
+      { resource_type: resourceType },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
+};
+

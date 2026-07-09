@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadToCloudinary = void 0;
+exports.deleteFromCloudinary = exports.uploadToCloudinary = void 0;
 const cloudinary_1 = require("cloudinary");
 // Configure Cloudinary using process.env directly to allow flexible runtime keys
 cloudinary_1.v2.config({
@@ -29,3 +29,16 @@ const uploadToCloudinary = (fileBuffer, folder, resourceType = 'auto') => {
     });
 };
 exports.uploadToCloudinary = uploadToCloudinary;
+/**
+ * Deletes an uploaded asset from Cloudinary using its public ID.
+ */
+const deleteFromCloudinary = (publicId, resourceType = 'image') => {
+    return new Promise((resolve, reject) => {
+        cloudinary_1.v2.uploader.destroy(publicId, { resource_type: resourceType }, (error, result) => {
+            if (error)
+                return reject(error);
+            resolve(result);
+        });
+    });
+};
+exports.deleteFromCloudinary = deleteFromCloudinary;

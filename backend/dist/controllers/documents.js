@@ -127,20 +127,27 @@ const uploadDocument = async (req, res, next) => {
         // 7. Upload to Supabase Storage
         await (0, s3_1.uploadToS3)(key, file.buffer, file.mimetype);
         // 8. Save Document in DB
-        const savedDoc = await db_1.prisma.document.create({
-            data: {
-                applicationId: application.id,
-                documentType: docType,
-                filename: file.originalname,
-                fileSize: file.size,
-                mimeType: file.mimetype,
-                storageKey: key,
-                checksum,
-                uploadStatus: 'DONE',
-                uploadedBy: uploaderId,
-                virusScanStatus: client_1.VirusScanStatus.PENDING,
-            },
-        });
+        let savedDoc;
+        try {
+            savedDoc = await db_1.prisma.document.create({
+                data: {
+                    applicationId: application.id,
+                    documentType: docType,
+                    filename: file.originalname,
+                    fileSize: file.size,
+                    mimeType: file.mimetype,
+                    storageKey: key,
+                    checksum,
+                    uploadStatus: 'DONE',
+                    uploadedBy: uploaderId,
+                    virusScanStatus: client_1.VirusScanStatus.PENDING,
+                },
+            });
+        }
+        catch (dbErr) {
+            await (0, s3_1.deleteFromS3)(key);
+            throw dbErr;
+        }
         // 9. Record Audit Log
         await recordAuditLog(uploaderId !== 'applicant' ? uploaderId : null, 'DOCUMENT_UPLOADED', 'Document', savedDoc.id, req, { documentType: docType, filename: file.originalname });
         // 10. Async Mock Virus Scanning Processor

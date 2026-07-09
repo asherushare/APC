@@ -4,7 +4,7 @@ import { Prisma, Role, ApplicationStatus, PaymentStatus, VerificationStatus, Doc
 import { prisma } from '../config/db';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
-import { uploadToCloudinary } from '../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 import {
   encrypt,
   decrypt,
@@ -829,98 +829,110 @@ export const applyShareholderApplication = async (
     let retries = 5;
     let savedApp = null;
 
-    // Retry loop for unique ID generation conflicts
-    while (retries > 0) {
-      try {
-        const count = await prisma.shareholderApplication.count({
-          where: {
-            applicationId: {
-              startsWith: `APC-${currentYear}-`,
-            },
-          },
-        });
-
-        const nextSeq = count + 1;
-        const formattedSeq = String(nextSeq).padStart(6, '0');
-        const applicationId = `APC-${currentYear}-${formattedSeq}`;
-
-        savedApp = await prisma.$transaction(async (tx) => {
-          // Double check inside transaction if applicationId is already taken (safety fallback)
-          const conflictingApp = await tx.shareholderApplication.findUnique({
-            where: { applicationId },
-          });
-
-          if (conflictingApp) {
-            throw new Prisma.PrismaClientKnownRequestError(
-              'Application ID conflict',
-              { code: 'P2002', clientVersion: '5.22.0', meta: { target: ['applicationId'] } }
-            );
-          }
-
-          return await tx.shareholderApplication.create({
-            data: {
-              applicationId,
-              fullName: data.fullName,
-              fatherHusbandName: data.fatherHusbandName,
-              dateOfBirth: new Date(data.dateOfBirth),
-              gender: data.gender,
-              aadhaarHash,
-              aadhaarEncrypted,
-              aadhaarMasked,
-              panEncrypted,
-              panMasked,
-              mobileNumber: data.mobileNumber,
-              whatsappNumber: data.whatsappNumber || null,
-              email: data.email || null,
-              occupation: data.occupation,
-              village: data.village,
-              gramPanchayat: data.gramPanchayat,
-              block: data.block,
-              district: data.district,
-              state: data.state,
-              pinCode: data.pinCode,
-              numberOfShares: data.numberOfShares,
-              calculatedContribution: new Prisma.Decimal(data.calculatedContribution),
-              nomineeName: data.nomineeName,
-              nomineeRelationship: data.nomineeRelationship,
-              nomineeAddress: data.nomineeAddress,
-              nomineeMobileNumber: data.nomineeMobileNumber,
-              bankAccountHolderName: data.bankAccountHolderName,
-              bankName: data.bankName,
-              bankBranch: data.bankBranch,
-              bankAccountNumberEnc,
-              bankAccountNumberMask,
-              bankIfscCode: data.bankIfscCode,
-              status: ApplicationStatus.SUBMITTED,
-              paymentStatus: PaymentStatus.PENDING,
-              verificationStatus: VerificationStatus.PENDING,
-              publicUserId: req.publicUser!.id,
-              producerActivities: {
-                create: data.producerActivities.map((act) => ({
-                  activityName: act,
-                })),
-              },
-              documents: {
-                create: uploadedDocs,
+    try {
+      // Retry loop for unique ID generation conflicts
+      while (retries > 0) {
+        try {
+          const count = await prisma.shareholderApplication.count({
+            where: {
+              applicationId: {
+                startsWith: `APC-${currentYear}-`,
               },
             },
           });
-        });
-        break;
-      } catch (err) {
-        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-          const target = err.meta?.target as string[];
-          if (target && target.includes('applicationId')) {
-            retries--;
-            continue;
+
+          const nextSeq = count + 1;
+          const formattedSeq = String(nextSeq).padStart(6, '0');
+          const applicationId = `APC-${currentYear}-${formattedSeq}`;
+
+          savedApp = await prisma.$transaction(async (tx) => {
+            // Double check inside transaction if applicationId is already taken (safety fallback)
+            const conflictingApp = await tx.shareholderApplication.findUnique({
+              where: { applicationId },
+            });
+
+            if (conflictingApp) {
+              throw new Prisma.PrismaClientKnownRequestError(
+                'Application ID conflict',
+                { code: 'P2002', clientVersion: '5.22.0', meta: { target: ['applicationId'] } }
+              );
+            }
+
+            return await tx.shareholderApplication.create({
+              data: {
+                applicationId,
+                fullName: data.fullName,
+                fatherHusbandName: data.fatherHusbandName,
+                dateOfBirth: new Date(data.dateOfBirth),
+                gender: data.gender,
+                aadhaarHash,
+                aadhaarEncrypted,
+                aadhaarMasked,
+                panEncrypted,
+                panMasked,
+                mobileNumber: data.mobileNumber,
+                whatsappNumber: data.whatsappNumber || null,
+                email: data.email || null,
+                occupation: data.occupation,
+                village: data.village,
+                gramPanchayat: data.gramPanchayat,
+                block: data.block,
+                district: data.district,
+                state: data.state,
+                pinCode: data.pinCode,
+                numberOfShares: data.numberOfShares,
+                calculatedContribution: new Prisma.Decimal(data.calculatedContribution),
+                nomineeName: data.nomineeName,
+                nomineeRelationship: data.nomineeRelationship,
+                nomineeAddress: data.nomineeAddress,
+                nomineeMobileNumber: data.nomineeMobileNumber,
+                bankAccountHolderName: data.bankAccountHolderName,
+                bankName: data.bankName,
+                bankBranch: data.bankBranch,
+                bankAccountNumberEnc,
+                bankAccountNumberMask,
+                bankIfscCode: data.bankIfscCode,
+                status: ApplicationStatus.SUBMITTED,
+                paymentStatus: PaymentStatus.PENDING,
+                verificationStatus: VerificationStatus.PENDING,
+                publicUserId: req.publicUser!.id,
+                producerActivities: {
+                  create: data.producerActivities.map((act) => ({
+                    activityName: act,
+                  })),
+                },
+                documents: {
+                  create: uploadedDocs,
+                },
+              },
+            });
+          });
+          break;
+        } catch (err) {
+          if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+            const target = err.meta?.target as string[];
+            if (target && target.includes('applicationId')) {
+              retries--;
+              continue;
+            }
           }
+          throw err;
         }
-        throw err;
       }
-    }
 
-    if (!savedApp) {
-      throw new Error('Failed to save application due to internal unique ID generation conflict');
+      if (!savedApp) {
+        throw new Error('Failed to save application due to internal unique ID generation conflict');
+      }
+    } catch (dbErr) {
+      await Promise.all(
+        uploadedDocs.map((doc) => {
+          const resType = doc.documentType === DocumentType.PHOTOGRAPH ? 'image' : 'raw';
+          return deleteFromCloudinary(doc.storageKey, resType).catch((err) => {
+            logger.error(`Failed to clean up Cloudinary file on DB rollback: ${doc.storageKey}. Error: ${err.message || err}`);
+          });
+        })
+      );
+      throw dbErr;
     }
 
     await recordAuditLog(null, 'PUBLIC_APPLICATION_SUBMITTED', 'ShareholderApplication', savedApp.id, req, { applicationId: savedApp.applicationId });

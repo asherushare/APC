@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandlerMiddleware = void 0;
+const multer_1 = require("multer");
 const errors_1 = require("../utils/errors");
 const logger_1 = require("../utils/logger");
 const env_1 = require("../config/env");
@@ -22,6 +23,24 @@ const errorHandlerMiddleware = (err, req, res, _next) => {
                 code: err.code,
                 message: err.message,
                 details: err.details,
+                requestId,
+            },
+        });
+        return;
+    }
+    // Intercept Multer errors to return clear bad request errors
+    if (err instanceof multer_1.MulterError) {
+        const isSizeLimit = err.code === 'LIMIT_FILE_SIZE';
+        logger_1.logger.warn({
+            message: err.message,
+            code: err.code,
+            requestId,
+        });
+        res.status(400).json({
+            success: false,
+            error: {
+                code: isSizeLimit ? 'FILE_TOO_LARGE' : 'INVALID_FILE_UPLOAD',
+                message: isSizeLimit ? 'File exceeds the maximum allowed size.' : err.message,
                 requestId,
             },
         });

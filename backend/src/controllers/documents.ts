@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import path from 'path';
 import { prisma } from '../config/db';
 import { logger } from '../utils/logger';
-import { uploadToS3, streamObjectFromS3 } from '../utils/s3';
+import { uploadToS3, streamObjectFromS3, deleteFromS3 } from '../utils/s3';
 import { verifyAccessToken, verifyUploadToken } from '../utils/auth';
 import { validateFileSignature } from '../utils/fileTypeCheck';
 import {
@@ -158,20 +158,26 @@ export const uploadDocument = async (
     await uploadToS3(key, file.buffer, file.mimetype);
 
     // 8. Save Document in DB
-    const savedDoc = await prisma.document.create({
-      data: {
-        applicationId: application.id,
-        documentType: docType,
-        filename: file.originalname,
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        storageKey: key,
-        checksum,
-        uploadStatus: 'DONE',
-        uploadedBy: uploaderId,
-        virusScanStatus: VirusScanStatus.PENDING,
-      },
-    });
+    let savedDoc;
+    try {
+      savedDoc = await prisma.document.create({
+        data: {
+          applicationId: application.id,
+          documentType: docType,
+          filename: file.originalname,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          storageKey: key,
+          checksum,
+          uploadStatus: 'DONE',
+          uploadedBy: uploaderId,
+          virusScanStatus: VirusScanStatus.PENDING,
+        },
+      });
+    } catch (dbErr) {
+      await deleteFromS3(key);
+      throw dbErr;
+    }
 
     // 9. Record Audit Log
     await recordAuditLog(

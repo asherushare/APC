@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.supabase = void 0;
 exports.verifyAndCreateBucket = verifyAndCreateBucket;
 exports.uploadToS3 = uploadToS3;
+exports.deleteFromS3 = deleteFromS3;
 exports.streamObjectFromS3 = streamObjectFromS3;
 const supabase_js_1 = require("@supabase/supabase-js");
 const stream_1 = require("stream");
@@ -59,6 +60,24 @@ async function uploadToS3(key, body, mimeType) {
         const err = error;
         logger_1.logger.error(`Failed to upload object to Supabase Storage: "${key}". Error: ${err.message}`);
         throw error;
+    }
+}
+/**
+ * Deletes an object from Supabase Storage.
+ */
+async function deleteFromS3(key) {
+    try {
+        const { error } = await exports.supabase.storage
+            .from(env_1.env.SUPABASE_BUCKET)
+            .remove([key]);
+        if (error) {
+            throw error;
+        }
+        logger_1.logger.info(`Successfully deleted object from Supabase Storage: "${key}"`);
+    }
+    catch (error) {
+        const err = error;
+        logger_1.logger.error(`Failed to delete object from Supabase Storage: "${key}". Error: ${err.message}`);
     }
 }
 /**
