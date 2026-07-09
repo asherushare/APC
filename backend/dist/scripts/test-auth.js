@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = __importDefault(require("crypto"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const db_1 = require("../config/db");
 const auth_1 = require("../utils/auth");
 const PORT = 4000;
@@ -19,14 +20,26 @@ function extractRefreshToken(setCookieHeaders) {
 }
 async function runTests() {
     console.log('🏁 Starting Authentication Integration Tests...');
-    // Ensure default admin user is seeded
+    // Ensure default admin user is seeded and reset to legacy bcrypt state
     console.log('🌱 Seeding database...');
     const adminEmail = 'admin@adivasiproducer.com';
-    const userCount = await db_1.prisma.user.count({ where: { email: adminEmail } });
-    if (userCount === 0) {
-        console.error('❌ Database not seeded. Please run npm run prisma:seed first.');
-        process.exit(1);
-    }
+    const legacyBcryptHash = await bcrypt_1.default.hash('AdminPassword123!', 12);
+    await db_1.prisma.user.upsert({
+        where: { email: adminEmail },
+        update: {
+            passwordHash: legacyBcryptHash,
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+        },
+        create: {
+            email: adminEmail,
+            fullName: 'APC Admin User',
+            passwordHash: legacyBcryptHash,
+            role: 'ADMIN',
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+        },
+    });
     // Clear existing refresh tokens to start fresh
     await db_1.prisma.refreshToken.deleteMany({});
     await db_1.prisma.auditLog.deleteMany({});

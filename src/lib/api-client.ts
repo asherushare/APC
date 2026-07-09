@@ -249,19 +249,46 @@ export async function fetchBlob(endpoint: string, options: ApiRequestOptions = {
     return await attempt(currentAccessToken);
   } catch (err) {
     if (err instanceof ApiError && err.statusCode === 401) {
-      // Attempt a single refresh + retry, mirroring apiRequest's recovery path.
+      if (isRefreshing) {
+        return new Promise<Blob>((resolve, reject) => {
+          refreshQueue.push({
+            resolve: (token) => {
+              resolve(attempt(token));
+            },
+            reject: (e) => reject(e),
+          });
+        });
+      }
+
+      isRefreshing = true;
+
       try {
         const refreshResponse = await fetchWithTimeout(`${API_URL}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
         });
-        if (!refreshResponse.ok) throw new Error('Session expired');
+
+        if (!refreshResponse.ok) {
+          throw new Error('Session expired');
+        }
+
         const data = await refreshResponse.json() as { accessToken: string };
-        setAccessToken(data.accessToken);
-        return await attempt(data.accessToken);
-      } catch {
-        setAccessToken(null);
+        const newAccessToken = data.accessToken;
+
+        setAccessToken(newAccessToken, 'admin');
+        isRefreshing = false;
+
+        // Process all requests waiting in the queue
+        refreshQueue.forEach((q) => q.resolve(newAccessToken));
+        refreshQueue = [];
+
+        return await attempt(newAccessToken);
+      } catch (refreshErr) {
+        isRefreshing = false;
+        setAccessToken(null, 'admin'); // Log out locally
+        refreshQueue.forEach((q) => q.reject(refreshErr));
+        refreshQueue = [];
         throw new ApiError('Session expired', 401, 'INVALID_ACCESS_TOKEN');
       }
     }

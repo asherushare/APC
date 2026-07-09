@@ -7,6 +7,7 @@ const express_1 = require("express");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const publicAuth_1 = require("../controllers/publicAuth");
 const publicAuth_2 = require("../middleware/publicAuth");
+const rateLimiter_1 = require("../middleware/rateLimiter");
 const router = (0, express_1.Router)();
 // Rate limiter for registration requests: max 5 requests per 15 minutes per IP
 const registrationLimiter = (0, express_rate_limit_1.default)({
@@ -41,6 +42,6 @@ router.post('/login', loginLimiter, publicAuth_1.login);
 router.post('/refresh', publicAuth_1.refresh);
 router.post('/logout', publicAuth_1.logout);
 router.get('/me', publicAuth_2.publicAuthMiddleware, publicAuth_1.me);
-router.post('/forgot-password', publicAuth_1.forgotPassword);
-router.post('/reset-password', publicAuth_1.resetPassword);
+router.post('/forgot-password', rateLimiter_1.forgotPasswordIpLimiter, publicAuth_1.forgotPassword);
+router.post('/reset-password', rateLimiter_1.forgotPasswordIpLimiter, publicAuth_1.resetPassword);
 exports.default = router;
