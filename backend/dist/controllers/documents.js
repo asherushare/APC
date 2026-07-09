@@ -262,7 +262,7 @@ const downloadApplicationDocument = async (req, res, next) => {
                 // Stream from Supabase Storage S3 API (Legacy fallback)
                 mimeType = await (0, s3_1.streamObjectFromS3)(document.storageKey, res, document.mimeType, document.filename, document.fileSize);
                 // Override disposition to attachment when explicitly requested
-                if (forceAttachment) {
+                if (forceAttachment && !res.headersSent) {
                     res.setHeader('Content-Disposition', `attachment; filename="${document.filename.replace(/"/g, '')}"`);
                 }
             }

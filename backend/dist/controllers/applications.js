@@ -76,14 +76,28 @@ const submitApplication = async (req, res, next) => {
         // 5. Attempt creation with dynamic unique ID and retry loop for concurrency conflicts
         while (retries > 0) {
             try {
-                const count = await db_1.prisma.shareholderApplication.count({
+                const lastApp = await db_1.prisma.shareholderApplication.findFirst({
                     where: {
                         applicationId: {
                             startsWith: `APC-${currentYear}-`,
                         },
                     },
+                    orderBy: {
+                        applicationId: 'desc',
+                    },
+                    select: {
+                        applicationId: true,
+                    },
                 });
-                const nextSeq = count + 1;
+                let nextSeq = 1;
+                if (lastApp) {
+                    const parts = lastApp.applicationId.split('-');
+                    const lastNumStr = parts[parts.length - 1];
+                    const lastNum = parseInt(lastNumStr, 10);
+                    if (!isNaN(lastNum)) {
+                        nextSeq = lastNum + 1;
+                    }
+                }
                 const formattedSeq = String(nextSeq).padStart(6, '0');
                 const applicationId = `APC-${currentYear}-${formattedSeq}`;
                 savedApp = await db_1.prisma.$transaction(async (tx) => {
@@ -669,14 +683,28 @@ const applyShareholderApplication = async (req, res, next) => {
             // Retry loop for unique ID generation conflicts
             while (retries > 0) {
                 try {
-                    const count = await db_1.prisma.shareholderApplication.count({
+                    const lastApp = await db_1.prisma.shareholderApplication.findFirst({
                         where: {
                             applicationId: {
                                 startsWith: `APC-${currentYear}-`,
                             },
                         },
+                        orderBy: {
+                            applicationId: 'desc',
+                        },
+                        select: {
+                            applicationId: true,
+                        },
                     });
-                    const nextSeq = count + 1;
+                    let nextSeq = 1;
+                    if (lastApp) {
+                        const parts = lastApp.applicationId.split('-');
+                        const lastNumStr = parts[parts.length - 1];
+                        const lastNum = parseInt(lastNumStr, 10);
+                        if (!isNaN(lastNum)) {
+                            nextSeq = lastNum + 1;
+                        }
+                    }
                     const formattedSeq = String(nextSeq).padStart(6, '0');
                     const applicationId = `APC-${currentYear}-${formattedSeq}`;
                     savedApp = await db_1.prisma.$transaction(async (tx) => {

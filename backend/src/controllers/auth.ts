@@ -421,7 +421,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     });
 
     // Send reset link
-    const resetLink = `${env.FRONTEND_URL}/admin/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
+    const resetLink = `${env.FRONTEND_URL}/staff-portal/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
     await emailService.sendPasswordResetEmail(user.email, resetLink, user.fullName);
 
     // Audit request

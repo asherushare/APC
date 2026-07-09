@@ -347,7 +347,7 @@ const forgotPassword = async (req, res, next) => {
             },
         });
         // Send reset link
-        const resetLink = `${env_1.env.FRONTEND_URL}/admin/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
+        const resetLink = `${env_1.env.FRONTEND_URL}/staff-portal/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
         await email_1.emailService.sendPasswordResetEmail(user.email, resetLink, user.fullName);
         // Audit request
         await recordAuditLog(user.id, 'PASSWORD_RESET_REQUESTED', 'User', user.id, req);

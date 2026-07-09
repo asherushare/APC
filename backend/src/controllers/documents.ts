@@ -331,7 +331,7 @@ export const downloadApplicationDocument = async (
         );
 
         // Override disposition to attachment when explicitly requested
-        if (forceAttachment) {
+        if (forceAttachment && !res.headersSent) {
           res.setHeader(
             'Content-Disposition',
             `attachment; filename="${document.filename.replace(/"/g, '')}"`

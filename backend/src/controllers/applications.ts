@@ -109,15 +109,30 @@ export const submitApplication = async (
     // 5. Attempt creation with dynamic unique ID and retry loop for concurrency conflicts
     while (retries > 0) {
       try {
-        const count = await prisma.shareholderApplication.count({
+        const lastApp = await prisma.shareholderApplication.findFirst({
           where: {
             applicationId: {
               startsWith: `APC-${currentYear}-`,
             },
           },
+          orderBy: {
+            applicationId: 'desc',
+          },
+          select: {
+            applicationId: true,
+          },
         });
 
-        const nextSeq = count + 1;
+        let nextSeq = 1;
+        if (lastApp) {
+          const parts = lastApp.applicationId.split('-');
+          const lastNumStr = parts[parts.length - 1];
+          const lastNum = parseInt(lastNumStr, 10);
+          if (!isNaN(lastNum)) {
+            nextSeq = lastNum + 1;
+          }
+        }
+
         const formattedSeq = String(nextSeq).padStart(6, '0');
         const applicationId = `APC-${currentYear}-${formattedSeq}`;
 
@@ -833,15 +848,30 @@ export const applyShareholderApplication = async (
       // Retry loop for unique ID generation conflicts
       while (retries > 0) {
         try {
-          const count = await prisma.shareholderApplication.count({
+          const lastApp = await prisma.shareholderApplication.findFirst({
             where: {
               applicationId: {
                 startsWith: `APC-${currentYear}-`,
               },
             },
+            orderBy: {
+              applicationId: 'desc',
+            },
+            select: {
+              applicationId: true,
+            },
           });
 
-          const nextSeq = count + 1;
+          let nextSeq = 1;
+          if (lastApp) {
+            const parts = lastApp.applicationId.split('-');
+            const lastNumStr = parts[parts.length - 1];
+            const lastNum = parseInt(lastNumStr, 10);
+            if (!isNaN(lastNum)) {
+              nextSeq = lastNum + 1;
+            }
+          }
+
           const formattedSeq = String(nextSeq).padStart(6, '0');
           const applicationId = `APC-${currentYear}-${formattedSeq}`;
 
