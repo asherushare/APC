@@ -83,22 +83,17 @@ export function PublicAuthProvider({ children }: { children: ReactNode }) {
     const savedToken = typeof window !== 'undefined' ? localStorage.getItem('public_token') : null;
     if (savedToken) {
       setAccessToken(savedToken, 'public');
-      (async () => {
-        try {
-          const data = await fetchMe();
-          setUser(data.user);
-        } catch {
-          setAccessToken(null, 'public');
-        } finally {
-          setIsLoading(false);
-        }
-      })();
-    } else {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 0);
-      return () => clearTimeout(timer);
     }
+    (async () => {
+      try {
+        const data = await fetchMe();
+        setUser(data.user);
+      } catch {
+        setAccessToken(null, 'public');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const login = async (phoneNumber: string, password: string) => {
