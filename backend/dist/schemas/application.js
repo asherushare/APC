@@ -6,7 +6,22 @@ exports.CreateApplicationSchema = zod_1.z.object({
     // Step 1: Personal Details
     fullName: zod_1.z.string().trim().min(1, 'Full name is required').max(100),
     fatherHusbandName: zod_1.z.string().trim().min(1, 'Father or Husband name is required').max(100),
-    dateOfBirth: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
+    dateOfBirth: zod_1.z.string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
+        .refine((dobString) => {
+        const dob = new Date(dobString);
+        if (isNaN(dob.getTime()))
+            return false;
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        return age >= 18;
+    }, {
+        message: 'Applicant must be at least 18 years old.',
+    }),
     gender: zod_1.z.enum(['male', 'female', 'other'], {
         errorMap: () => ({ message: 'Gender must be male, female, or other' }),
     }),

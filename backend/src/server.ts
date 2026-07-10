@@ -17,6 +17,15 @@ async function startServer() {
       logger.warn(`⚠️ Supabase Storage verification failed: ${(err as Error).message}. Continuing startup in non-production mode.`);
     }
 
+    // 1.5. Verify Database connectivity
+    try {
+      await prisma.$connect();
+      logger.info('✅ Database connection verified successfully.');
+    } catch (err: unknown) {
+      logger.error(`❌ Critical: Database connection check failed: ${(err as Error).message}. Exiting process immediately.`);
+      process.exit(1);
+    }
+
     // 2. Start HTTP server
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 API Server started in [${env.NODE_ENV}] mode, listening on port: ${env.PORT}`);

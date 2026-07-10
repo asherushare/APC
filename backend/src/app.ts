@@ -133,8 +133,8 @@ app.options('*', cors(corsOptions));
 
 // 5. Cookie & Body Parsing
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Attach socket.io server instance to requests
 app.use((req, _res, next) => {

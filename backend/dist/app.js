@@ -120,8 +120,8 @@ app.use((0, cors_1.default)(corsOptions));
 app.options('*', (0, cors_1.default)(corsOptions));
 // 5. Cookie & Body Parsing
 app.use((0, cookie_parser_1.default)());
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json({ limit: '1mb' }));
+app.use(express_1.default.urlencoded({ limit: '1mb', extended: true }));
 // Attach socket.io server instance to requests
 app.use((req, _res, next) => {
     try {
